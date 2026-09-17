@@ -31,7 +31,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        /* Custom scrollbars for clean UI */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
@@ -78,6 +77,14 @@
                 <i class="fa-solid fa-users"></i>
                 <span>Voluntários</span>
             </button>
+            <button onclick="switchTab('gallery')" id="tab-gallery" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fa-solid fa-images"></i>
+                <span>Galeria de Artes & Fotos</span>
+            </button>
+            <button onclick="switchTab('references')" id="tab-references" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Referências de Design</span>
+            </button>
             <button onclick="switchTab('generator')" id="tab-generator" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                 <span>Sugerir Escala</span>
@@ -99,12 +106,11 @@
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        <!-- TAB 1: SCHEDULES (ESCALAS) -->
         <section id="section-schedule" class="space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-xl font-bold">Escalas dos Cultos</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Acompanhe confirmações de presença e contate voluntários com 1 clique.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Notifique voluntários diretamente via WhatsApp com mensagem personalizada contendo data e função.</p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button onclick="switchTab('generator')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center space-x-2">
@@ -120,7 +126,6 @@
             </div>
         </section>
 
-        <!-- TAB 2: VOLUNTEERS & TEAM -->
         <section id="section-team" class="space-y-6 hidden">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -133,13 +138,69 @@
                 </button>
             </div>
 
-            <!-- Team Cards Grid -->
             <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <!-- Dynamically rendered by JavaScript -->
             </div>
         </section>
 
-        <!-- TAB 3: AUTOMATIC SCHEDULE GENERATOR -->
+        <section id="section-gallery" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold">Galeria de Artes & Fotos Guardadas</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Repositório visual separado por meses e categorias para fácil acesso.</p>
+                </div>
+                <button onclick="openUploadGalleryModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Subir Imagem / Arte</span>
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-wrap items-center gap-3 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-filter text-gray-400"></i>
+                    <span class="text-xs font-semibold">Filtrar por Mês:</span>
+                    <select id="filterGalleryMonth" onchange="renderGallery()" class="text-xs px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                        <option value="ALL">Todos os Meses</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold">Categoria:</span>
+                    <select id="filterGalleryCategory" onchange="renderGallery()" class="text-xs px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                        <option value="ALL">Todas as Categorias</option>
+                        <option value="Feed">Feed</option>
+                        <option value="Stories">Stories / Reels</option>
+                        <option value="Telão">Telão / Projeção</option>
+                        <option value="Foto Culto">Foto de Culto</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Gallery Items Grid -->
+            <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- JS Populated -->
+            </div>
+        </section>
+
+        <section id="section-references" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold">Painel de Referências de Design</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Inspirações visuais, paletas de cores, estilos de layouts e links de referência.</p>
+                </div>
+                <button onclick="openReferenceModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                    <i class="fa-solid fa-bookmark"></i>
+                    <span>Nova Referência</span>
+                </button>
+            </div>
+
+            <div id="referencesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- JS Populated -->
+            </div>
+        </section>
+
         <section id="section-generator" class="space-y-6 hidden">
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm max-w-2xl mx-auto space-y-6">
                 <div class="text-center space-y-2">
@@ -176,7 +237,6 @@
             </div>
         </section>
 
-        <!-- TAB 4: KANBAN BOARD FOR GRAPHICS & DESIGN -->
         <section id="section-kanban" class="space-y-6 hidden">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -235,7 +295,6 @@
             </div>
         </section>
 
-        <!-- TAB 5: PRE-SERVICE CHECKLIST -->
         <section id="section-checklist" class="space-y-6 hidden">
             <div class="max-w-3xl mx-auto space-y-6">
                 <div>
@@ -244,7 +303,6 @@
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm space-y-6">
-                    <!-- Progress Bar -->
                     <div>
                         <div class="flex justify-between text-xs font-semibold mb-2">
                             <span>Progresso da Checagem</span>
@@ -255,7 +313,6 @@
                         </div>
                     </div>
 
-                    <!-- Categories -->
                     <div class="space-y-4" id="checklistItemsContainer">
                         <!-- JS populated -->
                     </div>
@@ -269,7 +326,6 @@
             </div>
         </section>
 
-        <!-- TAB 6: MEDIA RESOLUTION & FORMATS GUIDE -->
         <section id="section-guide" class="space-y-6 hidden">
             <div>
                 <h2 class="text-xl font-bold">Guia de Formatos e Resoluções Padrão</h2>
@@ -277,7 +333,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Card 1 -->
                 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
                     <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 flex items-center justify-center text-lg font-bold">
                         <i class="fa-brands fa-instagram"></i>
@@ -290,7 +345,6 @@
                     </ul>
                 </div>
 
-                <!-- Card 2 -->
                 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
                     <div class="w-10 h-10 rounded-xl bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300 flex items-center justify-center text-lg font-bold">
                         <i class="fa-solid fa-mobile-screen"></i>
@@ -303,7 +357,6 @@
                     </ul>
                 </div>
 
-                <!-- Card 3 -->
                 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
                     <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center text-lg font-bold">
                         <i class="fa-solid fa-desktop"></i>
@@ -316,7 +369,6 @@
                     </ul>
                 </div>
 
-                <!-- Card 4 -->
                 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
                     <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 flex items-center justify-center text-lg font-bold">
                         <i class="fa-brands fa-youtube"></i>
@@ -334,7 +386,7 @@
     </main>
 
     
-    <!-- MODAL 1: WhatsApp Group Notice Generator -->
+    <!-- MODAL: WhatsApp Group Notice Generator -->
     <div id="noticeModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
             <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
@@ -365,7 +417,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: Find Substitute Automatically -->
+    <!-- MODAL: Find Substitute Automatically -->
     <div id="substituteModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
             <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
@@ -382,7 +434,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: Add / Edit Volunteer -->
+    <!-- MODAL: Add / Edit Volunteer -->
     <div id="volunteerModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
             <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
@@ -418,7 +470,7 @@
         </div>
     </div>
 
-    <!-- MODAL 4: New Kanban Card Request -->
+    <!-- MODAL: New Kanban Card Request -->
     <div id="artModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
             <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
@@ -454,6 +506,83 @@
         </div>
     </div>
 
+    <!-- MODAL: Upload to Gallery -->
+    <div id="uploadGalleryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg">Subir Foto ou Arte</h3>
+                <button onclick="closeUploadGalleryModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="uploadForm" onsubmit="saveGalleryItem(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Título da Imagem</label>
+                    <input type="text" id="galTitle" required placeholder="Ex: Banner Culto Domingo" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Mês / Ano</label>
+                        <input type="month" id="galMonth" required class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Categoria</label>
+                        <select id="galCategory" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                            <option value="Feed">Feed</option>
+                            <option value="Stories">Stories / Reels</option>
+                            <option value="Telão">Telão / Projeção</option>
+                            <option value="Foto Culto">Foto de Culto</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Selecione o Arquivo de Imagem</label>
+                    <input type="file" id="galFile" accept="image/*" required class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeUploadGalleryModal()" class="px-3 py-2 border rounded-lg text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">Salvar na Galeria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Add Design Reference -->
+    <div id="referenceModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg">Nova Referência de Design</h3>
+                <button onclick="closeReferenceModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="refForm" onsubmit="saveReferenceItem(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Título / Estilo</label>
+                    <input type="text" id="refTitle" required placeholder="Ex: Layout Neon Typo Worship" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">URL da Imagem de Prévia (ou Arquivo)</label>
+                    <input type="text" id="refImageUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm mb-1">
+                    <input type="file" id="refFile" accept="image/*" class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-gray-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Tags (separadas por vírgula)</label>
+                    <input type="text" id="refTags" placeholder="Ex: Minimalista, Cores Frias, Bold Text" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Link de Referência Externa (Behance, Pinterest, Instagram)</label>
+                    <input type="url" id="refLink" placeholder="https://pinterest.com/..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeReferenceModal()" class="px-3 py-2 border rounded-lg text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700">Salvar Referência</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl transition opacity-0 pointer-events-none z-50 flex items-center space-x-2 border border-gray-700">
         <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -461,9 +590,9 @@
     </div>
 
     <script>
-        // Default Pre-loaded Volunteers Data
+        // Default Pre-loaded Volunteers Data (Lais Líder)
         const DEFAULT_TEAM = [
-            { id: '1', name: 'Lais', phone: '5518991234567', roles: ['Fotografia', 'Transmissão/Projeção'] },
+            { id: '1', name: 'Lais (Líder)', phone: '5518991234567', roles: ['Fotografia', 'Transmissão/Projeção'] },
             { id: '2', name: 'Bruna', phone: '5518991234568', roles: ['Fotografia', 'Câmera'] },
             { id: '3', name: 'João', phone: '5518991234569', roles: ['Mesa de Som', 'Transmissão/Projeção'] },
             { id: '4', name: 'Pedro Rocha', phone: '5518991234570', roles: ['Câmera', 'Mesa de Som'] },
@@ -503,11 +632,27 @@
             { id: 'ck-5', text: 'Verificar baterias dos microfones sem fio', checked: false }
         ];
 
+        // Default Gallery Storage
+        const DEFAULT_GALLERY = [];
+
+        // Default References Storage
+        const DEFAULT_REFERENCES = [
+            {
+                id: 'ref-1',
+                title: 'Typography & Gradient Worship',
+                imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=60',
+                tags: ['Cores Neon', 'Bold Text', 'Moderno'],
+                link: 'https://pinterest.com'
+            }
+        ];
+
         // LocalStorage Initializations
         let team = JSON.parse(localStorage.getItem('midia_hub_team')) || DEFAULT_TEAM;
         let schedules = JSON.parse(localStorage.getItem('midia_hub_schedules')) || DEFAULT_SCHEDULES;
         let kanban = JSON.parse(localStorage.getItem('midia_hub_kanban')) || DEFAULT_KANBAN;
         let checklist = JSON.parse(localStorage.getItem('midia_hub_checklist')) || DEFAULT_CHECKLIST;
+        let gallery = JSON.parse(localStorage.getItem('midia_hub_gallery')) || DEFAULT_GALLERY;
+        let references = JSON.parse(localStorage.getItem('midia_hub_references')) || DEFAULT_REFERENCES;
 
         // Initialize App on Window Load
         window.onload = function() {
@@ -516,6 +661,8 @@
             renderSchedules();
             renderKanban();
             renderChecklist();
+            renderGallery();
+            renderReferences();
         };
 
         // Theme Initialization & Switcher
@@ -542,6 +689,8 @@
             localStorage.setItem('midia_hub_schedules', JSON.stringify(schedules));
             localStorage.setItem('midia_hub_kanban', JSON.stringify(kanban));
             localStorage.setItem('midia_hub_checklist', JSON.stringify(checklist));
+            localStorage.setItem('midia_hub_gallery', JSON.stringify(gallery));
+            localStorage.setItem('midia_hub_references', JSON.stringify(references));
         }
 
         // Toast Notification System
@@ -556,15 +705,23 @@
 
         // Tab Navigation Logic
         function switchTab(tab) {
-            ['schedule', 'team', 'generator', 'kanban', 'checklist', 'guide'].forEach(t => {
-                document.getElementById(`section-${t}`).classList.add('hidden');
-                document.getElementById(`tab-${t}`).classList.remove('border-emerald-500', 'text-emerald-600', 'dark:text-emerald-400');
-                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            ['schedule', 'team', 'gallery', 'references', 'generator', 'kanban', 'checklist', 'guide'].forEach(t => {
+                const sec = document.getElementById(`section-${t}`);
+                const tb = document.getElementById(`tab-${t}`);
+                if (sec) sec.classList.add('hidden');
+                if (tb) {
+                    tb.classList.remove('border-emerald-500', 'text-emerald-600', 'dark:text-emerald-400');
+                    tb.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                }
             });
 
-            document.getElementById(`section-${tab}`).classList.remove('hidden');
-            document.getElementById(`tab-${tab}`).classList.add('border-emerald-500', 'text-emerald-600', 'dark:text-emerald-400');
-            document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            const targetSec = document.getElementById(`section-${tab}`);
+            const targetTb = document.getElementById(`tab-${tab}`);
+            if (targetSec) targetSec.classList.remove('hidden');
+            if (targetTb) {
+                targetTb.classList.add('border-emerald-500', 'text-emerald-600', 'dark:text-emerald-400');
+                targetTb.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            }
         }
 
         // Render Team Grid Cards
@@ -606,6 +763,12 @@
             });
         }
 
+        // Helper: Check if date is today
+        function isToday(dateString) {
+            const today = new Date().toISOString().split('T')[0];
+            return dateString === today;
+        }
+
         // Render Schedules Section
         function renderSchedules() {
             const container = document.getElementById('scheduleContainer');
@@ -617,8 +780,9 @@
             }
 
             schedules.forEach(sch => {
-                const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
-                
+                const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+                const dateLabel = isToday(sch.date) ? 'HOJE' : `no dia ${formattedDate}`;
+
                 let assignmentsHTML = sch.assignments.map((asgn, index) => {
                     const member = team.find(m => m.id === asgn.volunteerId);
                     const memberName = member ? member.name : 'Não Atribuído';
@@ -632,7 +796,9 @@
                         statusBadge = `<span class="px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[11px] font-semibold flex items-center gap-1"><i class="fa-solid fa-clock"></i> Pendente</span>`;
                     }
 
-                    const waLink = member ? `https://wa.me/${member.phone}?text=${encodeURIComponent(`Olá ${member.name}, sobre a escala do ${sch.title} (${formattedDate}):`)}` : '#';
+                    // Customized WhatsApp message directly referencing today/date, event, and exact role
+                    const customMsg = member ? `Olá ${member.name}! Shalom! Passando para avisar que ${dateLabel} você está escalado(a) na Mídia! 🎥\n\n📌 Culto: ${sch.title}\n📅 Data/Hora: ${formattedDate} às ${sch.time}\n⚡ Sua função: ${asgn.role}\n\nPor favor, confirme sua presença nesta mensagem!` : '';
+                    const waLink = member ? `https://wa.me/${member.phone}?text=${encodeURIComponent(customMsg)}` : '#';
 
                     return `
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 border border-gray-100 dark:border-gray-700 gap-2">
@@ -644,8 +810,9 @@
                             </div>
                             <div class="flex items-center space-x-2 justify-end">
                                 ${member ? `
-                                    <a href="${waLink}" target="_blank" class="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg transition" title="Contato via WhatsApp">
+                                    <a href="${waLink}" target="_blank" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition text-xs font-medium flex items-center space-x-1" title="Avisar no WhatsApp com Mensagem Pronta">
                                         <i class="fa-brands fa-whatsapp text-sm"></i>
+                                        <span class="hidden sm:inline">Chamar</span>
                                     </a>
                                 ` : ''}
                                 ${statusBadge}
@@ -705,11 +872,198 @@
             showToast("Escala excluída.");
         }
 
+        // GALLERY / STORAGE LOGIC
+        function renderGallery() {
+            const grid = document.getElementById('galleryGrid');
+            const monthFilter = document.getElementById('filterGalleryMonth').value;
+            const categoryFilter = document.getElementById('filterGalleryCategory').value;
+            
+            // Populate month filter dropdown dynamically from saved data
+            const monthSelect = document.getElementById('filterGalleryMonth');
+            const months = [...new Set(gallery.map(i => i.month))].sort().reverse();
+            
+            const currentMonthVal = monthSelect.value;
+            monthSelect.innerHTML = '<option value="ALL">Todos os Meses</option>';
+            months.forEach(m => {
+                const [year, monthNum] = m.split('-');
+                const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                monthSelect.innerHTML += `<option value="${m}" ${currentMonthVal === m ? 'selected' : ''}>${monthName.toUpperCase()}</option>`;
+            });
+
+            grid.innerHTML = '';
+
+            let filtered = gallery;
+            if (monthFilter !== 'ALL') filtered = filtered.filter(i => i.month === monthFilter);
+            if (categoryFilter !== 'ALL') filtered = filtered.filter(i => i.category === categoryFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhuma imagem guardada nesta seleção.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const [year, monthNum] = item.month.split('-');
+                const monthName = new Date(year, monthNum - 1).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm flex flex-col justify-between group";
+                card.innerHTML = `
+                    <div>
+                        <div class="h-44 w-full bg-gray-100 dark:bg-gray-900 relative overflow-hidden">
+                            <img src="${item.imageData}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <span class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-full uppercase font-bold">${item.category}</span>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-bold text-xs truncate">${item.title}</h4>
+                            <p class="text-[10px] text-gray-400 capitalize mt-0.5"><i class="fa-regular fa-calendar"></i> ${monthName}</p>
+                        </div>
+                    </div>
+                    <div class="p-3 pt-0 flex justify-between items-center">
+                        <a href="${item.imageData}" download="${item.title}.png" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-medium">
+                            <i class="fa-solid fa-download"></i> Baixar
+                        </a>
+                        <button onclick="deleteGalleryItem('${item.id}')" class="text-gray-400 hover:text-red-500 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openUploadGalleryModal() {
+            document.getElementById('uploadGalleryModal').classList.remove('hidden');
+        }
+
+        function closeUploadGalleryModal() {
+            document.getElementById('uploadGalleryModal').classList.add('hidden');
+        }
+
+        function saveGalleryItem(e) {
+            e.preventDefault();
+            const title = document.getElementById('galTitle').value;
+            const month = document.getElementById('galMonth').value;
+            const category = document.getElementById('galCategory').value;
+            const fileInput = document.getElementById('galFile');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    gallery.unshift({
+                        id: 'gal-' + Date.now(),
+                        title,
+                        month,
+                        category,
+                        imageData: evt.target.result
+                    });
+                    saveData();
+                    renderGallery();
+                    closeUploadGalleryModal();
+                    showToast("Imagem salva na galeria!");
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function deleteGalleryItem(id) {
+            gallery = gallery.filter(g => g.id !== id);
+            saveData();
+            renderGallery();
+            showToast("Imagem removida da galeria.");
+        }
+
+        // REFERENCES / MOODBOARD LOGIC
+        function renderReferences() {
+            const grid = document.getElementById('referencesGrid');
+            grid.innerHTML = '';
+
+            if (references.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhuma referência adicionada ainda.</div>`;
+                return;
+            }
+
+            references.forEach(ref => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="h-40 w-full bg-gray-100 dark:bg-gray-900 overflow-hidden relative">
+                            <img src="${ref.imageUrl}" alt="${ref.title}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-3 space-y-2">
+                            <h4 class="font-bold text-xs">${ref.title}</h4>
+                            <div class="flex flex-wrap gap-1">
+                                ${ref.tags.map(t => `<span class="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 text-[9px] font-semibold">${t}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 pt-0 flex justify-between items-center border-t border-gray-100 dark:border-gray-700/60 mt-2">
+                        ${ref.link ? `
+                            <a href="${ref.link}" target="_blank" class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Link
+                            </a>
+                        ` : '<span></span>'}
+                        <button onclick="deleteReference('${ref.id}')" class="text-gray-400 hover:text-red-500 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openReferenceModal() {
+            document.getElementById('referenceModal').classList.remove('hidden');
+        }
+
+        function closeReferenceModal() {
+            document.getElementById('referenceModal').classList.add('hidden');
+        }
+
+        function saveReferenceItem(e) {
+            e.preventDefault();
+            const title = document.getElementById('refTitle').value;
+            const urlInput = document.getElementById('refImageUrl').value;
+            const fileInput = document.getElementById('refFile');
+            const tags = document.getElementById('refTags').value.split(',').map(t => t.trim()).filter(Boolean);
+            const link = document.getElementById('refLink').value;
+
+            const saveRef = (imgSrc) => {
+                references.unshift({
+                    id: 'ref-' + Date.now(),
+                    title,
+                    imageUrl: imgSrc || 'https://placehold.co/400x300/1e293b/ffffff?text=Referencia',
+                    tags,
+                    link
+                });
+                saveData();
+                renderReferences();
+                closeReferenceModal();
+                showToast("Referência salva com sucesso!");
+            };
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    saveRef(evt.target.result);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                saveRef(urlInput);
+            }
+        }
+
+        function deleteReference(id) {
+            references = references.filter(r => r.id !== id);
+            saveData();
+            renderReferences();
+            showToast("Referência removida.");
+        }
+
         // Find Substitute Modal Logic
         function openFindSubstitute(schId, role) {
             const modal = document.getElementById('substituteModal');
             const content = document.getElementById('substituteContent');
-            
             const eligible = team.filter(m => m.roles.includes(role));
 
             content.innerHTML = `
@@ -819,7 +1173,7 @@
                 return;
             }
 
-            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
 
             let text = `📢 *ESCALA DE MÍDIA - ${sch.title.toUpperCase()}*\n`;
             text += `📅 *Data:* ${formattedDate}\n`;
