@@ -1,1025 +1,1031 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Mídia Hub - Gestão de Mídia</title>
-
-    <!-- PWA Settings (Para virar aplicativo no celular) -->
-    <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#2563eb">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Mídia Hub">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3178/3178283.png">
-
-    <!-- Tailwind CSS & Lucide Icons -->
+    <title>Portal Mídia Hub - Gestão Interna</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        dark: {
-                            bg: '#090d16',
-                            card: '#111827',
-                            border: '#1f2937',
-                            hover: '#374151'
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
                         }
                     }
                 }
             }
         }
     </script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #090d16; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #090d16; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbars for clean UI */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col md:flex-row text-slate-100">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
 
-    <!-- SIDEBAR / NAVIGATION -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0">
-        <div>
-            <!-- LOGO & HEADING -->
-            <div class="flex items-center gap-3 px-2 py-3 border-b border-slate-800 mb-6">
-                <div class="p-2 bg-blue-600 rounded-xl text-white">
-                    <i data-lucide="video" class="w-6 h-6"></i>
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Portal Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid fa-photo-film text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold leading-tight">Portal Mídia Hub</h1>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Gestão do Ministério de Comunicação</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">Mídia Hub</h1>
-                    <p class="text-xs text-slate-400">Portal Interno da Equipe</p>
+
+                <!-- Theme Toggle & WhatsApp Broadcast Quick Button -->
+                <div class="flex items-center space-x-3">
+                    <button id="themeToggleBtn" class="p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition" title="Alternar Tema">
+                        <i id="themeIcon" class="fa-solid fa-moon text-gray-600 dark:text-yellow-400"></i>
+                    </button>
+                    <button onclick="openNoticeModal()" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition flex items-center space-x-2 shadow-sm">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span class="hidden sm:inline">Gerar Aviso pro Grupo</span>
+                    </button>
                 </div>
             </div>
-
-            <!-- MENU ITEM LINKS -->
-            <nav class="space-y-1">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
-                </button>
-                <button onclick="switchTab('roster')" id="nav-roster" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="calendar" class="w-4 h-4"></i> Escala & Avisos
-                </button>
-                <button onclick="switchTab('team')" id="nav-team" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="users" class="w-4 h-4"></i> Equipe da Mídia
-                </button>
-                <button onclick="switchTab('kanban')" id="nav-kanban" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="kanban" class="w-4 h-4"></i> Pedidos de Design
-                </button>
-                <button onclick="switchTab('resolutions')" id="nav-resolutions" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="monitor" class="w-4 h-4"></i> Guia de Telas & Artes
-                </button>
-                <button onclick="switchTab('checklist')" id="nav-checklist" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="check-square" class="w-4 h-4"></i> Checklist Pré-Culto
-                </button>
-            </nav>
         </div>
+    </header>
 
-        <!-- FOOTER INFOS -->
-        <div class="mt-8 pt-4 border-t border-slate-800 space-y-2">
-            <button onclick="exportData()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors">
-                <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Backup
+    <nav class="bg-white dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 backdrop-blur sticky top-16 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-4 sm:space-x-8 overflow-x-auto">
+            <button onclick="switchTab('schedule')" id="tab-schedule" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-emerald-500 text-emerald-600 dark:text-emerald-400">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Escalas</span>
             </button>
-            <label class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg cursor-pointer transition-colors">
-                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Restaurar Backup
-                <input type="file" id="importFile" onchange="importData(event)" class="hidden" accept=".json">
-            </label>
+            <button onclick="switchTab('team')" id="tab-team" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fa-solid fa-users"></i>
+                <span>Voluntários</span>
+            </button>
+            <button onclick="switchTab('generator')" id="tab-generator" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Sugerir Escala</span>
+            </button>
+            <button onclick="switchTab('kanban')" id="tab-kanban" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fa-solid fa-palette"></i>
+                <span>Kanban de Artes</span>
+            </button>
+            <button onclick="switchTab('checklist')" id="tab-checklist" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Checklist Pré-Culto</span>
+            </button>
+            <button onclick="switchTab('guide')" id="tab-guide" class="py-3.5 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Guia de Resoluções</span>
+            </button>
         </div>
-    </aside>
+    </nav>
 
-    <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        <!-- DASHBOARD TAB -->
-        <section id="tab-dashboard" class="space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <!-- TAB 1: SCHEDULES (ESCALAS) -->
+        <section id="section-schedule" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Painel Geral de Mídia</h2>
-                    <p class="text-slate-400 text-sm">Disparo direto para o WhatsApp da equipe e organização do culto.</p>
+                    <h2 class="text-xl font-bold">Escalas dos Cultos</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Acompanhe confirmações de presença e contate voluntários com 1 clique.</p>
                 </div>
-                <button onclick="openGroupMessageModal()" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-green-900/30">
-                    <i data-lucide="message-square" class="w-4 h-4"></i> Gerar Aviso p/ Grupo
-                </button>
-            </div>
-
-            <!-- DASHBOARD CARDS GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- ROSTER PREVIEW CARD -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-400">Próximo Culto</span>
-                        <i data-lucide="calendar" class="w-5 h-5 text-slate-500"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-100" id="dash-next-service-title">Culto de Domingo</h3>
-                        <p class="text-xs text-slate-400 mt-1" id="dash-next-service-date">Carregando...</p>
-                    </div>
-                    <div class="space-y-2 pt-2 border-t border-slate-800/60" id="dash-roster-summary">
-                        <!-- Dynamic content -->
-                    </div>
-                    <button onclick="switchTab('roster')" class="w-full text-center text-xs text-blue-400 hover:underline pt-2">Ver Escala Completa &rarr;</button>
-                </div>
-
-                <!-- DESIGN TASKS PREVIEW CARD -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-amber-400">Demandas de Design</span>
-                        <i data-lucide="image" class="w-5 h-5 text-slate-500"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-3xl font-bold text-slate-100" id="dash-pending-tasks-count">0</h3>
-                        <p class="text-xs text-slate-400">Artes pendentes ou em produção</p>
-                    </div>
-                    <div class="space-y-2 pt-2 border-t border-slate-800/60" id="dash-recent-tasks">
-                        <!-- Dynamic content -->
-                    </div>
-                    <button onclick="switchTab('kanban')" class="w-full text-center text-xs text-blue-400 hover:underline pt-2">Abrir Quadro de Artes &rarr;</button>
-                </div>
-
-                <!-- QUICK LINKS CARD -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-purple-400">Acesso Rápido</span>
-                        <i data-lucide="link" class="w-5 h-5 text-slate-500"></i>
-                    </div>
-                    <div class="space-y-2">
-                        <a href="https://drive.google.com" target="_blank" class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 rounded-xl text-xs font-medium transition-all">
-                            <span class="flex items-center gap-2"><i data-lucide="hard-drive" class="w-4 h-4 text-blue-400"></i> Google Drive da Mídia</span>
-                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
-                        </a>
-                        <a href="https://canva.com" target="_blank" class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 rounded-xl text-xs font-medium transition-all">
-                            <span class="flex items-center gap-2"><i data-lucide="palette" class="w-4 h-4 text-purple-400"></i> Canva / Editáveis</span>
-                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
-                        </a>
-                        <a href="https://figma.com" target="_blank" class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 rounded-xl text-xs font-medium transition-all">
-                            <span class="flex items-center gap-2"><i data-lucide="layout" class="w-4 h-4 text-pink-400"></i> Figma de Identidade</span>
-                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
-                        </a>
-                    </div>
-                    <div class="pt-2 border-t border-slate-800/60">
-                        <p class="text-xs text-slate-500 text-center">Toda a equipe possui botões dedicados de envio individual no WhatsApp.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ROSTER TAB (ESCALA E AVISOS) -->
-        <section id="tab-roster" class="hidden space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div>
-                    <h2 class="text-2xl font-bold">Escala da Mídia & Lembretes</h2>
-                    <p class="text-slate-400 text-sm">Dispare convocações diretas no WhatsApp de cada voluntário escalado.</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="openRosterModal()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Escala
-                    </button>
-                    <button onclick="openGroupMessageModal()" class="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-all">
-                        <i data-lucide="share-2" class="w-4 h-4"></i> Copiar p/ Grupo do WhatsApp
+                <div class="flex items-center space-x-2">
+                    <button onclick="switchTab('generator')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Gerar Nova Escala</span>
                     </button>
                 </div>
             </div>
 
-            <!-- ROSTER CARDS CONTAINER -->
-            <div id="roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Content dynamically populated -->
+            <!-- List of Schedules -->
+            <div id="scheduleContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Dynamically rendered by JavaScript -->
             </div>
         </section>
 
-        <!-- TEAM MANAGEMENT TAB -->
-        <section id="tab-team" class="hidden space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <!-- TAB 2: VOLUNTEERS & TEAM -->
+        <section id="section-team" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Gerenciar Equipe da Mídia</h2>
-                    <p class="text-slate-400 text-sm">Cadastre, edite números de telefone e atribua funções aos voluntários.</p>
+                    <h2 class="text-xl font-bold">Equipe de Mídia</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Lista completa dos integrantes, contatos e funções habilitadas.</p>
                 </div>
-                <button onclick="openMemberModal()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i> Novo Voluntário
+                <button onclick="openVolunteerModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Adicionar Voluntário</span>
                 </button>
             </div>
 
-            <div id="team-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Dynamic Team Cards -->
+            <!-- Team Cards Grid -->
+            <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Dynamically rendered by JavaScript -->
             </div>
         </section>
 
-        <!-- KANBAN DESIGNS TAB -->
-        <section id="tab-kanban" class="hidden space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div>
-                    <h2 class="text-2xl font-bold">Quadro de Solicitações de Design</h2>
-                    <p class="text-slate-400 text-sm">Acompanhe e produza os designs de Culto, Eventos, Stories e Telão.</p>
+        <!-- TAB 3: AUTOMATIC SCHEDULE GENERATOR -->
+        <section id="section-generator" class="space-y-6 hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm max-w-2xl mx-auto space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xl">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h2 class="text-xl font-bold">Sugerir Escala Automática</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">O sistema fará um sorteio inteligente distribuindo voluntários aptos em cada função sem repetições.</p>
                 </div>
-                <button onclick="openTaskModal()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all">
-                    <i data-lucide="plus" class="w-4 h-4"></i> Novo Pedido de Arte
+
+                <form id="autoGenForm" onsubmit="generateAutoSchedule(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Título do Culto / Evento</label>
+                        <input type="text" id="genTitle" required placeholder="Ex: Culto de Celebração - Domingo Tarde" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Data</label>
+                            <input type="date" id="genDate" required class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Horário</label>
+                            <input type="time" id="genTime" value="19:00" required class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Gerar e Adicionar Escala</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 4: KANBAN BOARD FOR GRAPHICS & DESIGN -->
+        <section id="section-kanban" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold">Kanban de Pedidos de Artes & Design</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Gerencie a criação de banners, artes de Feed, Stories e vídeos.</p>
+                </div>
+                <button onclick="openNewArtModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Novo Pedido de Arte</span>
                 </button>
             </div>
 
-            <!-- KANBAN BOARD COLUMNS -->
+            <!-- Kanban Columns Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- PENDING COLUMN -->
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-col space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                        <span class="font-bold text-amber-400 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Pendentes / A Fazer</span>
-                        <span id="count-pending" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">0</span>
+                <!-- Column: Pendente -->
+                <div class="bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-200 dark:border-gray-700/80 flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="font-bold text-sm text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-spinner"></i>
+                            Pendente / A Fazer
+                        </span>
+                        <span id="count-todo" class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-semibold">0</span>
                     </div>
-                    <div id="column-pending" class="space-y-3 min-h-[300px]">
-                        <!-- Tasks dynamically populated -->
-                    </div>
-                </div>
-
-                <!-- DOING COLUMN -->
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-col space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                        <span class="font-bold text-blue-400 flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4"></i> Em Produção</span>
-                        <span id="count-doing" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">0</span>
-                    </div>
-                    <div id="column-doing" class="space-y-3 min-h-[300px]">
-                        <!-- Tasks dynamically populated -->
+                    <div id="kanban-todo" class="space-y-3 flex-grow min-h-[200px]">
+                        <!-- JS populated -->
                     </div>
                 </div>
 
-                <!-- DONE COLUMN -->
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-col space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                        <span class="font-bold text-green-400 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> Concluídos</span>
-                        <span id="count-done" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">0</span>
+                <!-- Column: Em Produção -->
+                <div class="bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-200 dark:border-gray-700/80 flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="font-bold text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                            <i class="fa-solid fa-paintbrush"></i>
+                            Em Produção
+                        </span>
+                        <span id="count-doing" class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-xs font-semibold">0</span>
                     </div>
-                    <div id="column-done" class="space-y-3 min-h-[300px]">
-                        <!-- Tasks dynamically populated -->
+                    <div id="kanban-doing" class="space-y-3 flex-grow min-h-[200px]">
+                        <!-- JS populated -->
+                    </div>
+                </div>
+
+                <!-- Column: Concluído -->
+                <div class="bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-200 dark:border-gray-700/80 flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i>
+                            Aprovado & Pronto
+                        </span>
+                        <span id="count-done" class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">0</span>
+                    </div>
+                    <div id="kanban-done" class="space-y-3 flex-grow min-h-[200px]">
+                        <!-- JS populated -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- RESOLUTIONS CHEAT SHEET TAB -->
-        <section id="tab-resolutions" class="hidden space-y-6">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <h2 class="text-2xl font-bold">Guia Rápido de Resoluções e Formatos</h2>
-                <p class="text-slate-400 text-sm">Padrões de tamanho e proporção para Telão, Stories, Feed e Mídia Interna.</p>
+        <!-- TAB 5: PRE-SERVICE CHECKLIST -->
+        <section id="section-checklist" class="space-y-6 hidden">
+            <div class="max-w-3xl mx-auto space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold">Checklist Técnico Pré-Culto</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Verificação de equipamentos de Câmera, Projeção e Som antes do culto começar.</p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm space-y-6">
+                    <!-- Progress Bar -->
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-2">
+                            <span>Progresso da Checagem</span>
+                            <span id="checklistPercent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 h-2.5 rounded-full overflow-hidden">
+                            <div id="checklistBar" class="bg-emerald-500 h-2.5 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="space-y-4" id="checklistItemsContainer">
+                        <!-- JS populated -->
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button onclick="resetChecklist()" class="px-3.5 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-xs font-semibold transition">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Reiniciar Checagem
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: MEDIA RESOLUTION & FORMATS GUIDE -->
+        <section id="section-guide" class="space-y-6 hidden">
+            <div>
+                <h2 class="text-xl font-bold">Guia de Formatos e Resoluções Padrão</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Referência rápida para designers e operadores de mídia.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- TELÃO & HOLYRICS -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="p-3 bg-blue-600/10 text-blue-400 rounded-xl w-fit">
-                        <i data-lucide="tv" class="w-6 h-6"></i>
+                <!-- Card 1 -->
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-brands fa-instagram"></i>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-lg">Telão / Holyrics</h3>
-                        <p class="text-xs text-slate-400">Fundo para louvor, pregador e avisos</p>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Resolução:</span>
-                            <span class="font-mono font-bold text-white">1920 x 1080 px</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Proporção:</span>
-                            <span class="font-mono text-white">16:9 (Full HD)</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Formato:</span>
-                            <span class="font-mono text-white">JPG ou PNG</span>
-                        </div>
-                    </div>
+                    <h3 class="font-bold text-base">Instagram Feed (1:1 & 4:5)</h3>
+                    <ul class="text-xs space-y-1.5 text-gray-600 dark:text-gray-300">
+                        <li>• <strong>Quadrado:</strong> 1080 x 1080 px</li>
+                        <li>• <strong>Retrato:</strong> 1080 x 1350 px (Recomendado)</li>
+                        <li>• <strong>Formato:</strong> JPG / PNG (sRGB)</li>
+                    </ul>
                 </div>
 
-                <!-- STORIES & REELS -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="p-3 bg-purple-600/10 text-purple-400 rounded-xl w-fit">
-                        <i data-lucide="smartphone" class="w-6 h-6"></i>
+                <!-- Card 2 -->
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-solid fa-mobile-screen"></i>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-lg">Stories & Reels</h3>
-                        <p class="text-xs text-slate-400">Instagram, WhatsApp e Shorts</p>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Resolução:</span>
-                            <span class="font-mono font-bold text-white">1080 x 1920 px</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Proporção:</span>
-                            <span class="font-mono text-white">9:16 (Vertical)</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Margem Segura:</span>
-                            <span class="font-mono text-white">250px topo/base</span>
-                        </div>
-                    </div>
+                    <h3 class="font-bold text-base">Stories & Reels (9:16)</h3>
+                    <ul class="text-xs space-y-1.5 text-gray-600 dark:text-gray-300">
+                        <li>• <strong>Resolução:</strong> 1080 x 1920 px</li>
+                        <li>• <strong>Margem de Segurança:</strong> 250px topo/base</li>
+                        <li>• <strong>Vídeo:</strong> MP4 (H.264), 30/60 fps</li>
+                    </ul>
                 </div>
 
-                <!-- FEED INSTAGRAM -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="p-3 bg-pink-600/10 text-pink-400 rounded-xl w-fit">
-                        <i data-lucide="instagram" class="w-6 h-6"></i>
+                <!-- Card 3 -->
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-solid fa-desktop"></i>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-lg">Feed Instagram</h3>
-                        <p class="text-xs text-slate-400">Posts de Avisos e Eventos</p>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Retrato (Recomendado):</span>
-                            <span class="font-mono font-bold text-white">1080 x 1350 px</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Proporção:</span>
-                            <span class="font-mono text-white">4:5</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Quadrado:</span>
-                            <span class="font-mono text-white">1080 x 1080 px</span>
-                        </div>
-                    </div>
+                    <h3 class="font-bold text-base">Telão & Datashow (16:9)</h3>
+                    <ul class="text-xs space-y-1.5 text-gray-600 dark:text-gray-300">
+                        <li>• <strong>Resolução:</strong> 1920 x 1080 px (Full HD)</li>
+                        <li>• <strong>Fundo:</strong> Cores escuras para contraste</li>
+                        <li>• <strong>Letras:</strong> Mínimo 40pt para boa leitura</li>
+                    </ul>
                 </div>
 
-                <!-- YOUTUBE & TRANSMISSÃO -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="p-3 bg-red-600/10 text-red-400 rounded-xl w-fit">
-                        <i data-lucide="youtube" class="w-6 h-6"></i>
+                <!-- Card 4 -->
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-brands fa-youtube"></i>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-lg">YouTube & Capas</h3>
-                        <p class="text-xs text-slate-400">Thumbnails e Capas da Live</p>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Resolução:</span>
-                            <span class="font-mono font-bold text-white">1280 x 720 px</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Proporção:</span>
-                            <span class="font-mono text-white">16:9</span>
-                        </div>
-                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
-                            <span class="text-slate-400">Tamanho Máx:</span>
-                            <span class="font-mono text-white">2 MB</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CHECKLIST TAB -->
-        <section id="tab-checklist" class="hidden space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div>
-                    <h2 class="text-2xl font-bold">Checklist Pré-Culto</h2>
-                    <p class="text-slate-400 text-sm">Garantia de funcionamento antes de iniciar o culto.</p>
-                </div>
-                <button onclick="resetChecklist()" class="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition-colors">
-                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reiniciar Checklist
-                </button>
-            </div>
-
-            <!-- SECTOR CHECKLISTS -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- CÂMERAS & FOTO -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-blue-400 flex items-center gap-2 border-b border-slate-800 pb-2">
-                        <i data-lucide="camera" class="w-4 h-4"></i> Câmeras & Stories
-                    </h3>
-                    <div class="space-y-2" id="checklist-cameras">
-                        <!-- Dynamic items -->
-                    </div>
-                </div>
-
-                <!-- TELÃO & HOLYRICS -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-purple-400 flex items-center gap-2 border-b border-slate-800 pb-2">
-                        <i data-lucide="monitor" class="w-4 h-4"></i> Telão / Holyrics
-                    </h3>
-                    <div class="space-y-2" id="checklist-telao">
-                        <!-- Dynamic items -->
-                    </div>
+                    <h3 class="font-bold text-base">Transmissão & Thumbnails</h3>
+                    <ul class="text-xs space-y-1.5 text-gray-600 dark:text-gray-300">
+                        <li>• <strong>Thumb YouTube:</strong> 1280 x 720 px</li>
+                        <li>• <strong>Bitrate Vídeo:</strong> 6000 Kbps (1080p 60fps)</li>
+                        <li>• <strong>Áudio OBS:</strong> AAC 160Kbps / 48kHz</li>
+                    </ul>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- MODAL: NOVA ESCALA -->
-    <div id="modal-roster" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Adicionar Nova Escala</h3>
-                <button onclick="closeRosterModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    
+    <!-- MODAL 1: WhatsApp Group Notice Generator -->
+    <div id="noticeModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-emerald-500 text-xl"></i>
+                    Aviso Formatado para Grupo
+                </h3>
+                <button onclick="closeNoticeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold">&times;</button>
             </div>
-            <form id="form-roster" onsubmit="saveRoster(event)" class="space-y-3 text-sm">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Culto / Evento</label>
-                    <input type="text" id="roster-title" required placeholder="Ex: Culto de Celebração" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Data e Horário</label>
-                    <input type="datetime-local" id="roster-date" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Câmera 1</label>
-                        <select id="roster-cam1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Câmera 2</label>
-                        <select id="roster-cam2" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Stories / Redes</label>
-                        <select id="roster-stories" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Telão / Holyrics</label>
-                        <select id="roster-telao" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Designer Culto</label>
-                        <select id="roster-desculto" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Designer Eventos</label>
-                        <select id="roster-desevento" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
-                    </div>
-                </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeRosterModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Escala</button>
-                </div>
-            </form>
-        </div>
-    </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-1">Selecione a Escala:</label>
+                <select id="noticeScheduleSelect" onchange="updateNoticeText()" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-emerald-500">
+                </select>
+            </div>
 
-    <!-- MODAL: CADASTRAR/EDITAR VOLUNTÁRIO -->
-    <div id="modal-member" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg" id="member-modal-title">Cadastrar Voluntário</h3>
-                <button onclick="closeMemberModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div>
+                <label class="block text-sm font-medium mb-1">Mensagem Gerada:</label>
+                <textarea id="noticeTextArea" rows="9" readonly class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 font-mono text-xs focus:outline-none"></textarea>
             </div>
-            <form id="form-member" onsubmit="saveMember(event)" class="space-y-3 text-sm">
-                <input type="hidden" id="member-id">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Voluntário</label>
-                    <input type="text" id="member-name" required placeholder="Ex: Lais" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">WhatsApp com DDD (apenas números)</label>
-                    <input type="text" id="member-phone" required placeholder="Ex: 18997144842" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Funções no Ministério</label>
-                    <input type="text" id="member-role" placeholder="Ex: Stories / Câmera 1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeMemberModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Voluntário</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- MODAL: NOVO PEDIDO DE ARTE -->
-    <div id="modal-task" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Nova Demanda de Design</h3>
-                <button onclick="closeTaskModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <form id="form-task" onsubmit="saveTask(event)" class="space-y-3 text-sm">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Título do Pedido</label>
-                    <input type="text" id="task-title" required placeholder="Ex: Banner do Acampamento" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Categoria / Formato</label>
-                    <select id="task-category" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                        <option value="Designer de Culto">Designer de Culto</option>
-                        <option value="Designer de Eventos">Designer de Eventos</option>
-                        <option value="Stories">Stories / Redes</option>
-                        <option value="Telão">Telão / Holyrics</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Data Limite (Prazo)</label>
-                    <input type="date" id="task-deadline" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Observações / Detalhes</label>
-                    <textarea id="task-desc" rows="3" placeholder="Fontes, texto do aviso, cores..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
-                </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Criar Pedido</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: GERAR MENSAGEM DO GRUPO -->
-    <div id="modal-group-msg" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Aviso Formatado para Grupo do WhatsApp</h3>
-                <button onclick="closeGroupMessageModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <p class="text-xs text-slate-400">Copie o texto abaixo e cole no grupo oficial da mídia da igreja:</p>
-            <textarea id="group-message-text" rows="10" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-green-400 focus:outline-none custom-scrollbar"></textarea>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                <button onclick="copyGroupMessage()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl text-xs transition-colors">
-                    <i data-lucide="copy" class="w-4 h-4"></i> Copiar Texto
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="copyNoticeText()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center space-x-2">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>Copiar Texto</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- PWA REGISTRATION SCRIPT -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('PWA Service Worker registrado com sucesso!'))
-                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
-            });
-        }
-    </script>
+    <!-- MODAL 2: Find Substitute Automatically -->
+    <div id="substituteModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-user-gear"></i>
+                    Localizar Substituto
+                </h3>
+                <button onclick="closeSubstituteModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
 
-    <!-- MAIN JAVASCRIPT APP LOGIC -->
+            <div id="substituteContent" class="space-y-3">
+                <!-- JS Populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Add / Edit Volunteer -->
+    <div id="volunteerModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg" id="volunteerModalTitle">Novo Voluntário</h3>
+                <button onclick="closeVolunteerModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="volunteerForm" onsubmit="saveVolunteer(event)" class="space-y-3">
+                <input type="hidden" id="volId">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Nome Completo</label>
+                    <input type="text" id="volName" required class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">WhatsApp (DDD + Número, ex: 5518991234567)</label>
+                    <input type="text" id="volPhone" placeholder="5518991234567" required class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Funções Habilitadas</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Mesa de Som" class="rounded text-emerald-600"> <span>Mesa de Som</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Transmissão/Projeção" class="rounded text-emerald-600"> <span>Projeção</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Câmera" class="rounded text-emerald-600"> <span>Câmera</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Fotografia" class="rounded text-emerald-600"> <span>Fotografia</span></label>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeVolunteerModal()" class="px-3 py-2 border rounded-lg text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: New Kanban Card Request -->
+    <div id="artModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3 border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg">Novo Pedido de Arte</h3>
+                <button onclick="closeArtModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="artForm" onsubmit="saveArtRequest(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Título / Evento</label>
+                    <input type="text" id="artTitle" required placeholder="Ex: Arte Culto das Mulheres" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Formato</label>
+                    <select id="artFormat" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                        <option value="Feed (1080x1350)">Feed (1080x1350)</option>
+                        <option value="Stories/Reels (1080x1920)">Stories/Reels (1080x1920)</option>
+                        <option value="Telão (1920x1080)">Telão (1920x1080)</option>
+                        <option value="Thumb YouTube">Thumb YouTube</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Designer Responsável</label>
+                    <select id="artAssignee" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+                    </select>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeArtModal()" class="px-3 py-2 border rounded-lg text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">Criar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl transition opacity-0 pointer-events-none z-50 flex items-center space-x-2 border border-gray-700">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">Notificação</span>
+    </div>
+
     <script>
-        // Initial Team Data
-        let appData = {
-            team: [
-                { id: 1, name: "Lais (Líder)", phone: "18997144842", role: "Stories / Câmera" },
-                { id: 2, name: "Bruna", phone: "18998182229", role: "Stories / Arte Eventos" },
-                { id: 3, name: "João", phone: "18996485335", role: "Câmera" },
-                { id: 4, name: "Pedro Rocha", phone: "18998202566", role: "Stories / Câmera" },
-                { id: 5, name: "Tayná", phone: "18996943888", role: "Stories / Arte Telão" },
-                { id: 6, name: "Emily", phone: "18996600865", role: "Stories" },
-                { id: 7, name: "Pedro Ramos", phone: "18997747636", role: "Stories / Câmera" }
-            ],
-            roster: [
-                {
-                    id: 1,
-                    title: "Culto de Celebração",
-                    date: "2026-03-22T19:00",
-                    cam1: "João",
-                    cam2: "Pedro Rocha",
-                    stories: "Lais (Líder)",
-                    telao: "Tayná",
-                    desculto: "Emily",
-                    desevento: "Bruna"
-                }
-            ],
-            tasks: [
-                { id: 1, title: "Arte de Avisos do Culto", category: "Designer de Culto", deadline: "2026-03-20", status: "pending", desc: "Criar slide 16:9 com avisos da semana" },
-                { id: 2, title: "Vídeo Reels Retrospectiva", category: "Stories", deadline: "2026-03-21", status: "doing", desc: "Editar cortes do último culto" }
-            ],
-            checklist: {
-                cams: [
-                    { id: 1, text: "Baterias das câmeras carregadas", done: false },
-                    { id: 2, text: "Cartões de memória formatados", done: false },
-                    { id: 3, text: "Limpeza das lentes", done: false }
-                ],
-                telao: [
-                    { id: 1, text: "Projetor/LED ligado e testado", done: false },
-                    { id: 2, text: "Letras do louvor atualizadas no Holyrics", done: false },
-                    { id: 3, text: "Slide de avisos pronto na fila", done: false }
+        // Default Pre-loaded Volunteers Data
+        const DEFAULT_TEAM = [
+            { id: '1', name: 'Lais', phone: '5518991234567', roles: ['Fotografia', 'Transmissão/Projeção'] },
+            { id: '2', name: 'Bruna', phone: '5518991234568', roles: ['Fotografia', 'Câmera'] },
+            { id: '3', name: 'João', phone: '5518991234569', roles: ['Mesa de Som', 'Transmissão/Projeção'] },
+            { id: '4', name: 'Pedro Rocha', phone: '5518991234570', roles: ['Câmera', 'Mesa de Som'] },
+            { id: '5', name: 'Tayná', phone: '5518991234571', roles: ['Transmissão/Projeção', 'Fotografia'] },
+            { id: '6', name: 'Emily', phone: '5518991234572', roles: ['Fotografia', 'Câmera'] },
+            { id: '7', name: 'Pedro Ramos', phone: '5518991234573', roles: ['Mesa de Som', 'Câmera'] }
+        ];
+
+        // Default Initial Schedules
+        const DEFAULT_SCHEDULES = [
+            {
+                id: 'sch-1',
+                title: 'Culto de Celebração',
+                date: '2026-09-20',
+                time: '19:00',
+                assignments: [
+                    { role: 'Mesa de Som', volunteerId: '3', status: 'Confirmed' },
+                    { role: 'Transmissão/Projeção', volunteerId: '1', status: 'Confirmed' },
+                    { role: 'Câmera', volunteerId: '4', status: 'Pending' },
+                    { role: 'Fotografia', volunteerId: '2', status: 'Declined' }
                 ]
             }
-        };
+        ];
 
-        // Load saved data from LocalStorage
-        function loadData() {
-            const saved = localStorage.getItem('midia_hub_data');
-            if (saved) {
-                try {
-                    appData = JSON.parse(saved);
-                } catch(e) {
-                    console.error("Erro ao carregar dados salvos:", e);
-                }
-            }
-            renderAll();
-        }
+        // Default Kanban Items
+        const DEFAULT_KANBAN = [
+            { id: 'art-1', title: 'Banner Série de Mensagens', format: 'Telão (1920x1080)', assigneeId: '1', status: 'doing' },
+            { id: 'art-2', title: 'Divulgação Culto de Jovens', format: 'Stories/Reels (1080x1920)', assigneeId: '5', status: 'todo' }
+        ];
 
-        // Save data to LocalStorage
-        function saveData() {
-            localStorage.setItem('midia_hub_data', JSON.stringify(appData));
-            renderAll();
-        }
+        // Default Checklist Items
+        const DEFAULT_CHECKLIST = [
+            { id: 'ck-1', text: 'Ligar Mesa de Som e verificar níveis do Microfone do Pr.', checked: true },
+            { id: 'ck-2', text: 'Ligar Telão / Projetores e testar software de letras (Holyrics/ProPresenter)', checked: true },
+            { id: 'ck-3', text: 'Limpar lentes e testar cartões de memória da Câmera / Fotografia', checked: false },
+            { id: 'ck-4', text: 'Conferir sinal de áudio e vídeo no OBS para a Transmissão', checked: false },
+            { id: 'ck-5', text: 'Verificar baterias dos microfones sem fio', checked: false }
+        ];
 
-        // Switch Tabs
-        function switchTab(tabId) {
-            ['dashboard', 'roster', 'team', 'kanban', 'resolutions', 'checklist'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`nav-${t}`).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800";
-            });
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.getElementById(`nav-${tabId}`).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white";
-        }
+        // LocalStorage Initializations
+        let team = JSON.parse(localStorage.getItem('midia_hub_team')) || DEFAULT_TEAM;
+        let schedules = JSON.parse(localStorage.getItem('midia_hub_schedules')) || DEFAULT_SCHEDULES;
+        let kanban = JSON.parse(localStorage.getItem('midia_hub_kanban')) || DEFAULT_KANBAN;
+        let checklist = JSON.parse(localStorage.getItem('midia_hub_checklist')) || DEFAULT_CHECKLIST;
 
-        // Render Functions
-        function renderAll() {
-            renderDashboard();
-            renderRoster();
+        // Initialize App on Window Load
+        window.onload = function() {
+            initTheme();
             renderTeam();
+            renderSchedules();
             renderKanban();
             renderChecklist();
-            populateTeamSelects();
-            lucide.createIcons();
-        }
+        };
 
-        function populateTeamSelects() {
-            const selects = document.querySelectorAll('.team-select-options');
-            selects.forEach(select => {
-                const currentVal = select.value;
-                select.innerHTML = '<option value="">-- Selecionar Voluntário --</option>' + 
-                    appData.team.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-                select.value = currentVal;
+        // Theme Initialization & Switcher
+        function initTheme() {
+            const isDark = localStorage.getItem('theme') !== 'light';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-sun text-yellow-400';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-moon text-gray-600';
+            }
+
+            document.getElementById('themeToggleBtn').addEventListener('click', () => {
+                const dark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', dark ? 'dark' : 'light');
+                document.getElementById('themeIcon').className = dark ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-gray-600';
             });
         }
 
-        function renderDashboard() {
-            if(appData.roster.length > 0) {
-                const next = appData.roster[0];
-                document.getElementById('dash-next-service-title').innerText = next.title;
-                const d = new Date(next.date);
-                document.getElementById('dash-next-service-date').innerText = d.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
-                
-                document.getElementById('dash-roster-summary').innerHTML = `
-                    <div class="flex justify-between text-xs"><span class="text-slate-400">Câmeras:</span> <span class="font-medium text-slate-200">${next.cam1 || '-'} / ${next.cam2 || '-'}</span></div>
-                    <div class="flex justify-between text-xs"><span class="text-slate-400">Stories:</span> <span class="font-medium text-slate-200">${next.stories || '-'}</span></div>
-                    <div class="flex justify-between text-xs"><span class="text-slate-400">Telão:</span> <span class="font-medium text-slate-200">${next.telao || '-'}</span></div>
-                `;
-            } else {
-                document.getElementById('dash-next-service-title').innerText = "Nenhuma escala";
-                document.getElementById('dash-next-service-date').innerText = "Cadastre no menu Escalas";
-                document.getElementById('dash-roster-summary').innerHTML = "";
-            }
-
-            const pending = appData.tasks.filter(t => t.status !== 'done');
-            document.getElementById('dash-pending-tasks-count').innerText = pending.length;
-            
-            document.getElementById('dash-recent-tasks').innerHTML = pending.slice(0, 3).map(t => `
-                <div class="flex items-center justify-between text-xs p-2 bg-slate-800/40 rounded-lg">
-                    <span class="truncate font-medium text-slate-300">${t.title}</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">${t.category}</span>
-                </div>
-            `).join('') || '<p class="text-xs text-slate-500">Nenhuma arte pendente.</p>';
+        // Save State to LocalStorage
+        function saveData() {
+            localStorage.setItem('midia_hub_team', JSON.stringify(team));
+            localStorage.setItem('midia_hub_schedules', JSON.stringify(schedules));
+            localStorage.setItem('midia_hub_kanban', JSON.stringify(kanban));
+            localStorage.setItem('midia_hub_checklist', JSON.stringify(checklist));
         }
 
-        function renderRoster() {
-            const container = document.getElementById('roster-container');
-            if (appData.roster.length === 0) {
-                container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800">Nenhuma escala cadastrada. Clique em "Nova Escala".</div>`;
+        // Toast Notification System
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Tab Navigation Logic
+        function switchTab(tab) {
+            ['schedule', 'team', 'generator', 'kanban', 'checklist', 'guide'].forEach(t => {
+                document.getElementById(`section-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('border-emerald-500', 'text-emerald-600', 'dark:text-emerald-400');
+                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            });
+
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('border-emerald-500', 'text-emerald-600', 'dark:text-emerald-400');
+            document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        }
+
+        // Render Team Grid Cards
+        function renderTeam() {
+            const grid = document.getElementById('teamGrid');
+            grid.innerHTML = '';
+
+            team.forEach(member => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm flex flex-col justify-between hover:border-emerald-500/50 transition";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-sm">
+                                    ${member.name.split(' ').map(n=>n[0]).join('')}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-gray-900 dark:text-gray-100">${member.name}</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${member.phone}</p>
+                                </div>
+                            </div>
+                            <button onclick="editVolunteer('${member.id}')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            ${member.roles.map(r => `<span class="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-medium">${r}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
+                        <a href="https://wa.me/${member.phone}" target="_blank" class="w-full py-1.5 px-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>Abrir WhatsApp</span>
+                        </a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Render Schedules Section
+        function renderSchedules() {
+            const container = document.getElementById('scheduleContainer');
+            container.innerHTML = '';
+
+            if (schedules.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">Nenhuma escala cadastrada no momento.</div>`;
                 return;
             }
 
-            container.innerHTML = appData.roster.map(r => {
-                const d = new Date(r.date);
-                const dateStr = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            schedules.forEach(sch => {
+                const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
                 
-                // Get list of unique assigned names
-                const assignedNames = [...new Set([r.cam1, r.cam2, r.stories, r.telao, r.desculto, r.desevento].filter(n => n && n !== ''))];
+                let assignmentsHTML = sch.assignments.map((asgn, index) => {
+                    const member = team.find(m => m.id === asgn.volunteerId);
+                    const memberName = member ? member.name : 'Não Atribuído';
+                    
+                    let statusBadge = '';
+                    if (asgn.status === 'Confirmed') {
+                        statusBadge = `<span class="px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-[11px] font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Confirmado</span>`;
+                    } else if (asgn.status === 'Declined') {
+                        statusBadge = `<span class="px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-[11px] font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-xmark"></i> Indisponível</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[11px] font-semibold flex items-center gap-1"><i class="fa-solid fa-clock"></i> Pendente</span>`;
+                    }
 
-                return `
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                        <div class="flex items-start justify-between border-b border-slate-800 pb-3">
-                            <div>
-                                <h3 class="font-bold text-slate-100">${r.title}</h3>
-                                <p class="text-xs text-blue-400 font-mono mt-0.5">${dateStr}</p>
+                    const waLink = member ? `https://wa.me/${member.phone}?text=${encodeURIComponent(`Olá ${member.name}, sobre a escala do ${sch.title} (${formattedDate}):`)}` : '#';
+
+                    return `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 border border-gray-100 dark:border-gray-700 gap-2">
+                            <div class="flex items-center justify-between sm:justify-start space-x-2">
+                                <div>
+                                    <p class="text-[11px] text-gray-400 dark:text-gray-400 font-medium">${asgn.role}</p>
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">${memberName}</p>
+                                </div>
                             </div>
-                            <button onclick="deleteRoster(${r.id})" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                        <div class="space-y-2 text-xs">
-                            <div class="flex justify-between"><span class="text-slate-400">Câmera 1:</span> <span class="font-medium">${r.cam1 || '-'}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Câmera 2:</span> <span class="font-medium">${r.cam2 || '-'}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Stories:</span> <span class="font-medium">${r.stories || '-'}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Telão / Holyrics:</span> <span class="font-medium">${r.telao || '-'}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Des. Culto:</span> <span class="font-medium">${r.desculto || '-'}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Des. Eventos:</span> <span class="font-medium">${r.desevento || '-'}</span></div>
-                        </div>
-
-                        <!-- INDIVIDUAL WHATSAPP DISPATCH BUTTONS -->
-                        <div class="pt-2 border-t border-slate-800/80 space-y-1.5">
-                            <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Chamar no WhatsApp:</p>
-                            <div class="flex flex-wrap gap-1">
-                                ${assignedNames.map(name => {
-                                    const member = appData.team.find(m => m.name === name);
-                                    if(!member) return '';
-                                    return `
-                                        <button onclick="sendDirectWhatsApp('${member.phone}', '${name}', '${r.title}', '${r.date}')" class="flex items-center gap-1 text-[11px] px-2 py-1 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-lg transition-colors">
-                                            <i data-lucide="message-circle" class="w-3 h-3"></i> ${name.split(' ')[0]}
-                                        </button>
-                                    `;
-                                }).join('')}
+                            <div class="flex items-center space-x-2 justify-end">
+                                ${member ? `
+                                    <a href="${waLink}" target="_blank" class="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg transition" title="Contato via WhatsApp">
+                                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                                    </a>
+                                ` : ''}
+                                ${statusBadge}
+                                <select onchange="updateAssignmentStatus('${sch.id}', ${index}, this.value)" class="text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded p-1">
+                                    <option value="Pending" ${asgn.status === 'Pending' ? 'selected' : ''}>Pendente</option>
+                                    <option value="Confirmed" ${asgn.status === 'Confirmed' ? 'selected' : ''}>Confirmado</option>
+                                    <option value="Declined" ${asgn.status === 'Declined' ? 'selected' : ''}>Declinado</option>
+                                </select>
+                                ${asgn.status === 'Declined' ? `
+                                    <button onclick="openFindSubstitute('${sch.id}', '${asgn.role}')" class="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 rounded-lg transition" title="Substituir Voluntário">
+                                        <i class="fa-solid fa-user-pen text-xs"></i>
+                                    </button>
+                                ` : ''}
                             </div>
                         </div>
+                    `;
+                }).join('');
 
-                        <div class="pt-2 border-t border-slate-800 flex gap-2">
-                            <button onclick="downloadICS('${r.title}', '${r.date}')" class="w-full flex items-center justify-center gap-2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition-colors">
-                                <i data-lucide="calendar-plus" class="w-4 h-4"></i> Baixar na Agenda (.ics)
-                            </button>
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm space-y-4";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b pb-3 border-gray-100 dark:border-gray-700">
+                        <div>
+                            <h3 class="font-bold text-base text-gray-900 dark:text-gray-100">${sch.title}</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
+                                <span><i class="fa-regular fa-calendar"></i> ${formattedDate}</span>
+                                <span>•</span>
+                                <span><i class="fa-regular fa-clock"></i> ${sch.time}</span>
+                            </p>
                         </div>
+                        <button onclick="deleteSchedule('${sch.id}')" class="text-gray-400 hover:text-red-500 p-1">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        ${assignmentsHTML}
                     </div>
                 `;
-            }).join('');
-        }
-
-        function renderTeam() {
-            const container = document.getElementById('team-container');
-            container.innerHTML = appData.team.map(m => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h3 class="font-bold text-slate-100 text-base">${m.name}</h3>
-                            <p class="text-xs text-blue-400 font-mono mt-0.5">${m.phone}</p>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <button onclick="editMember(${m.id})" class="p-1 text-slate-400 hover:text-white"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                            <button onclick="deleteMember(${m.id})" class="p-1 text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Funções</span>
-                        <p class="text-xs text-slate-300 font-medium">${m.role || 'Voluntário'}</p>
-                    </div>
-                    <a href="https://wa.me/55${m.phone}" target="_blank" class="w-full flex items-center justify-center gap-2 py-2 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-xl text-xs font-medium transition-colors">
-                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Abrir WhatsApp
-                    </a>
-                </div>
-            `).join('');
-        }
-
-        function renderKanban() {
-            const cols = { pending: [], doing: [], done: [] };
-            appData.tasks.forEach(t => { if(cols[t.status]) cols[t.status].push(t); });
-
-            ['pending', 'doing', 'done'].forEach(status => {
-                document.getElementById(`count-${status}`).innerText = cols[status].length;
-                document.getElementById(`column-${status}`).innerHTML = cols[status].map(t => `
-                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3">
-                        <div class="flex items-start justify-between">
-                            <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">${t.category}</span>
-                            <button onclick="deleteTask(${t.id})" class="text-slate-500 hover:text-red-400"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                        <h4 class="font-bold text-sm text-slate-100">${t.title}</h4>
-                        <p class="text-xs text-slate-400">${t.desc || ''}</p>
-                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
-                            <span class="text-slate-500 font-mono text-[11px]">Prazo: ${t.deadline}</span>
-                            <select onchange="moveTask(${t.id}, this.value)" class="bg-slate-800 text-xs text-slate-300 rounded px-2 py-1 border border-slate-700 focus:outline-none">
-                                <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>Pendente</option>
-                                <option value="doing" ${t.status === 'doing' ? 'selected' : ''}>Em Produção</option>
-                                <option value="done" ${t.status === 'done' ? 'selected' : ''}>Concluído</option>
-                            </select>
-                        </div>
-                    </div>
-                `).join('') || '<div class="p-4 text-center text-xs text-slate-600 border border-dashed border-slate-800 rounded-xl">Vazio</div>';
+                container.appendChild(card);
             });
         }
 
-        function renderChecklist() {
-            document.getElementById('checklist-cameras').innerHTML = appData.checklist.cams.map((item, idx) => `
-                <label class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl cursor-pointer hover:bg-slate-800/80 transition-colors text-xs">
-                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklist('cams', ${idx})" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0">
-                    <span class="${item.done ? 'line-through text-slate-500' : 'text-slate-200'}">${item.text}</span>
-                </label>
-            `).join('');
-
-            document.getElementById('checklist-telao').innerHTML = appData.checklist.telao.map((item, idx) => `
-                <label class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl cursor-pointer hover:bg-slate-800/80 transition-colors text-xs">
-                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklist('telao', ${idx})" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0">
-                    <span class="${item.done ? 'line-through text-slate-500' : 'text-slate-200'}">${item.text}</span>
-                </label>
-            `).join('');
+        function updateAssignmentStatus(schId, index, status) {
+            const sch = schedules.find(s => s.id === schId);
+            if (sch) {
+                sch.assignments[index].status = status;
+                saveData();
+                renderSchedules();
+                showToast("Status atualizado!");
+            }
         }
 
-        // Direct Individual WhatsApp Dispatch
-        function sendDirectWhatsApp(phone, name, serviceTitle, dateStr) {
-            const d = new Date(dateStr);
-            const formattedDate = d.toLocaleDateString('pt-BR');
-            const formattedTime = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-            
-            const message = `Olá ${name}!  Shalom! %0A%0APassando para lembrar da sua escala de Mídia:%0A📌 *${serviceTitle}*%0A📅 *Data:* ${formattedDate} às ${formattedTime}%0A%0A_Por favor, confirme sua presença nesta mensagem!_`;
-            
-            window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
+        function deleteSchedule(schId) {
+            schedules = schedules.filter(s => s.id !== schId);
+            saveData();
+            renderSchedules();
+            showToast("Escala excluída.");
         }
 
-        // Roster Handlers
-        function openRosterModal() { document.getElementById('modal-roster').classList.remove('hidden'); document.getElementById('modal-roster').classList.add('flex'); }
-        function closeRosterModal() { document.getElementById('modal-roster').classList.add('hidden'); document.getElementById('modal-roster').classList.remove('flex'); }
-        
-        function saveRoster(e) {
+        // Find Substitute Modal Logic
+        function openFindSubstitute(schId, role) {
+            const modal = document.getElementById('substituteModal');
+            const content = document.getElementById('substituteContent');
+            
+            const eligible = team.filter(m => m.roles.includes(role));
+
+            content.innerHTML = `
+                <p class="text-xs text-gray-500 dark:text-gray-400">Voluntários cadastrados para <strong>${role}</strong>:</p>
+                <div class="space-y-2 mt-2">
+                    ${eligible.map(m => `
+                        <div class="flex items-center justify-between p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+                            <div>
+                                <p class="text-sm font-semibold">${m.name}</p>
+                                <p class="text-[10px] text-gray-400">${m.phone}</p>
+                            </div>
+                            <div class="flex space-x-1">
+                                <a href="https://wa.me/${m.phone}?text=${encodeURIComponent(`Olá ${m.name}, você teria disponibilidade para substituir na escala de ${role}?`)}" target="_blank" class="px-2.5 py-1 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700 flex items-center space-x-1">
+                                    <i class="fa-brands fa-whatsapp"></i> <span>Chamar</span>
+                                </a>
+                                <button onclick="assignSubstitute('${schId}', '${role}', '${m.id}')" class="px-2.5 py-1 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700">
+                                    Escalar
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function assignSubstitute(schId, role, newVolId) {
+            const sch = schedules.find(s => s.id === schId);
+            if (sch) {
+                const asgn = sch.assignments.find(a => a.role === role);
+                if (asgn) {
+                    asgn.volunteerId = newVolId;
+                    asgn.status = 'Pending';
+                    saveData();
+                    renderSchedules();
+                    closeSubstituteModal();
+                    showToast("Substituto atribuído com sucesso!");
+                }
+            }
+        }
+
+        function closeSubstituteModal() {
+            document.getElementById('substituteModal').classList.add('hidden');
+        }
+
+        // Automatic Schedule Generator Logic
+        function generateAutoSchedule(e) {
             e.preventDefault();
-            const newRoster = {
-                id: Date.now(),
-                title: document.getElementById('roster-title').value,
-                date: document.getElementById('roster-date').value,
-                cam1: document.getElementById('roster-cam1').value,
-                cam2: document.getElementById('roster-cam2').value,
-                stories: document.getElementById('roster-stories').value,
-                telao: document.getElementById('roster-telao').value,
-                desculto: document.getElementById('roster-desculto').value,
-                desevento: document.getElementById('roster-desevento').value
+            const title = document.getElementById('genTitle').value;
+            const date = document.getElementById('genDate').value;
+            const time = document.getElementById('genTime').value;
+
+            const rolesNeeded = ['Mesa de Som', 'Transmissão/Projeção', 'Câmera', 'Fotografia'];
+            const assignedIds = new Set();
+            const assignments = [];
+
+            rolesNeeded.forEach(role => {
+                const candidates = team.filter(m => m.roles.includes(role) && !assignedIds.has(m.id));
+                if (candidates.length > 0) {
+                    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+                    assignedIds.add(picked.id);
+                    assignments.push({ role, volunteerId: picked.id, status: 'Pending' });
+                } else {
+                    assignments.push({ role, volunteerId: '', status: 'Pending' });
+                }
+            });
+
+            const newSchedule = {
+                id: 'sch-' + Date.now(),
+                title,
+                date,
+                time,
+                assignments
             };
-            appData.roster.push(newRoster);
+
+            schedules.unshift(newSchedule);
             saveData();
-            closeRosterModal();
-            document.getElementById('form-roster').reset();
+            renderSchedules();
+            switchTab('schedule');
+            showToast("Escala gerada automaticamente com sucesso!");
         }
 
-        function deleteRoster(id) {
-            appData.roster = appData.roster.filter(r => r.id !== id);
-            saveData();
+        // WhatsApp Group Notice Modal Logic
+        function openNoticeModal() {
+            const select = document.getElementById('noticeScheduleSelect');
+            select.innerHTML = '';
+
+            if (schedules.length === 0) {
+                select.innerHTML = '<option value="">Nenhuma escala disponível</option>';
+            } else {
+                schedules.forEach(s => {
+                    select.innerHTML += `<option value="${s.id}">${s.title} (${s.date})</option>`;
+                });
+            }
+
+            updateNoticeText();
+            document.getElementById('noticeModal').classList.remove('hidden');
         }
 
-        // Team Management Handlers
-        function openMemberModal() {
-            document.getElementById('member-modal-title').innerText = "Cadastrar Voluntário";
-            document.getElementById('form-member').reset();
-            document.getElementById('member-id').value = "";
-            document.getElementById('modal-member').classList.remove('hidden');
-            document.getElementById('modal-member').classList.add('flex');
+        function updateNoticeText() {
+            const schId = document.getElementById('noticeScheduleSelect').value;
+            const sch = schedules.find(s => s.id === schId);
+            const textArea = document.getElementById('noticeTextArea');
+
+            if (!sch) {
+                textArea.value = "Nenhuma escala selecionada.";
+                return;
+            }
+
+            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+
+            let text = `📢 *ESCALA DE MÍDIA - ${sch.title.toUpperCase()}*\n`;
+            text += `📅 *Data:* ${formattedDate}\n`;
+            text += `⏰ *Horário:* ${sch.time}\n\n`;
+            text += `*ESCALADOS:*\n`;
+
+            sch.assignments.forEach(a => {
+                const member = team.find(m => m.id === a.volunteerId);
+                const name = member ? member.name : 'Pendente';
+                const statusSymbol = a.status === 'Confirmed' ? '✅' : a.status === 'Declined' ? '❌' : '⏳';
+                text += `• *${a.role}:* ${name} ${statusSymbol}\n`;
+            });
+
+            text += `\n📌 *Por favor, confirmem sua presença aqui no grupo!*`;
+            textArea.value = text;
         }
 
-        function closeMemberModal() {
-            document.getElementById('modal-member').classList.add('hidden');
-            document.getElementById('modal-member').classList.remove('flex');
+        function copyNoticeText() {
+            const textArea = document.getElementById('noticeTextArea');
+            textArea.select();
+            document.execCommand('copy');
+            showToast("Aviso copiado para a área de transferência!");
         }
 
-        function editMember(id) {
-            const m = appData.team.find(item => item.id === id);
-            if(!m) return;
-            document.getElementById('member-modal-title').innerText = "Editar Voluntário";
-            document.getElementById('member-id').value = m.id;
-            document.getElementById('member-name').value = m.name;
-            document.getElementById('member-phone').value = m.phone;
-            document.getElementById('member-role').value = m.role || "";
-            document.getElementById('modal-member').classList.remove('hidden');
-            document.getElementById('modal-member').classList.add('flex');
+        function closeNoticeModal() {
+            document.getElementById('noticeModal').classList.add('hidden');
         }
 
-        function saveMember(e) {
+        // Volunteer Modal Functions
+        function openVolunteerModal() {
+            document.getElementById('volunteerModalTitle').innerText = 'Novo Voluntário';
+            document.getElementById('volId').value = '';
+            document.getElementById('volName').value = '';
+            document.getElementById('volPhone').value = '';
+            document.querySelectorAll('input[name="role"]').forEach(c => c.checked = false);
+            document.getElementById('volunteerModal').classList.remove('hidden');
+        }
+
+        function editVolunteer(id) {
+            const member = team.find(m => m.id === id);
+            if (!member) return;
+
+            document.getElementById('volunteerModalTitle').innerText = 'Editar Voluntário';
+            document.getElementById('volId').value = member.id;
+            document.getElementById('volName').value = member.name;
+            document.getElementById('volPhone').value = member.phone;
+
+            document.querySelectorAll('input[name="role"]').forEach(c => {
+                c.checked = member.roles.includes(c.value);
+            });
+
+            document.getElementById('volunteerModal').classList.remove('hidden');
+        }
+
+        function saveVolunteer(e) {
             e.preventDefault();
-            const id = document.getElementById('member-id').value;
-            const name = document.getElementById('member-name').value;
-            const phone = document.getElementById('member-phone').value.replace(/\D/g, '');
-            const role = document.getElementById('member-role').value;
+            const id = document.getElementById('volId').value;
+            const name = document.getElementById('volName').value;
+            const phone = document.getElementById('volPhone').value;
+            const roles = Array.from(document.querySelectorAll('input[name="role"]:checked')).map(c => c.value);
 
-            if(id) {
-                const member = appData.team.find(m => m.id == id);
-                if(member) {
+            if (id) {
+                const member = team.find(m => m.id === id);
+                if (member) {
                     member.name = name;
                     member.phone = phone;
-                    member.role = role;
+                    member.roles = roles;
                 }
             } else {
-                appData.team.push({ id: Date.now(), name, phone, role });
+                team.push({ id: Date.now().toString(), name, phone, roles });
             }
 
             saveData();
-            closeMemberModal();
+            renderTeam();
+            closeVolunteerModal();
+            showToast("Voluntário salvo com sucesso!");
         }
 
-        function deleteMember(id) {
-            appData.team = appData.team.filter(m => m.id !== id);
+        function closeVolunteerModal() {
+            document.getElementById('volunteerModal').classList.add('hidden');
+        }
+
+        // KANBAN BOARD LOGIC
+        function renderKanban() {
+            const cols = { todo: document.getElementById('kanban-todo'), doing: document.getElementById('kanban-doing'), done: document.getElementById('kanban-done') };
+            const counts = { todo: 0, doing: 0, done: 0 };
+
+            Object.values(cols).forEach(c => c.innerHTML = '');
+
+            kanban.forEach(item => {
+                counts[item.status]++;
+                const assignee = team.find(m => m.id === item.assigneeId);
+                const assigneeName = assignee ? assignee.name : 'Não Atribuído';
+
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-2";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-semibold text-xs">${item.title}</h4>
+                        <button onclick="deleteArtRequest('${item.id}')" class="text-gray-400 hover:text-red-500 text-[10px]">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400">Formato: <strong>${item.format}</strong></p>
+                    <div class="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-700/60">
+                        <span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">${assigneeName}</span>
+                        <select onchange="updateKanbanStatus('${item.id}', this.value)" class="text-[10px] bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded p-0.5">
+                            <option value="todo" ${item.status === 'todo' ? 'selected' : ''}>Pendente</option>
+                            <option value="doing" ${item.status === 'doing' ? 'selected' : ''}>Em Produção</option>
+                            <option value="done" ${item.status === 'done' ? 'selected' : ''}>Concluído</option>
+                        </select>
+                    </div>
+                `;
+                cols[item.status].appendChild(card);
+            });
+
+            document.getElementById('count-todo').innerText = counts.todo;
+            document.getElementById('count-doing').innerText = counts.doing;
+            document.getElementById('count-done').innerText = counts.done;
+        }
+
+        function updateKanbanStatus(id, newStatus) {
+            const item = kanban.find(k => k.id === id);
+            if (item) {
+                item.status = newStatus;
+                saveData();
+                renderKanban();
+            }
+        }
+
+        function deleteArtRequest(id) {
+            kanban = kanban.filter(k => k.id !== id);
             saveData();
+            renderKanban();
+            showToast("Pedido de arte removido.");
         }
 
-        // Task Handlers
-        function openTaskModal() { document.getElementById('modal-task').classList.remove('hidden'); document.getElementById('modal-task').classList.add('flex'); }
-        function closeTaskModal() { document.getElementById('modal-task').classList.add('hidden'); document.getElementById('modal-task').classList.remove('flex'); }
+        function openNewArtModal() {
+            const select = document.getElementById('artAssignee');
+            select.innerHTML = '<option value="">Sem designer atribuído</option>';
+            team.forEach(m => {
+                select.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+            });
+            document.getElementById('artModal').classList.remove('hidden');
+        }
 
-        function saveTask(e) {
+        function saveArtRequest(e) {
             e.preventDefault();
-            const newTask = {
-                id: Date.now(),
-                title: document.getElementById('task-title').value,
-                category: document.getElementById('task-category').value,
-                deadline: document.getElementById('task-deadline').value,
-                desc: document.getElementById('task-desc').value,
-                status: 'pending'
-            };
-            appData.tasks.push(newTask);
+            const title = document.getElementById('artTitle').value;
+            const format = document.getElementById('artFormat').value;
+            const assigneeId = document.getElementById('artAssignee').value;
+
+            kanban.push({
+                id: 'art-' + Date.now(),
+                title,
+                format,
+                assigneeId,
+                status: 'todo'
+            });
+
             saveData();
-            closeTaskModal();
-            document.getElementById('form-task').reset();
+            renderKanban();
+            closeArtModal();
+            showToast("Pedido de arte criado com sucesso!");
         }
 
-        function moveTask(id, newStatus) {
-            const task = appData.tasks.find(t => t.id === id);
-            if(task) { task.status = newStatus; saveData(); }
+        function closeArtModal() {
+            document.getElementById('artModal').classList.add('hidden');
         }
 
-        function deleteTask(id) {
-            appData.tasks = appData.tasks.filter(t => t.id !== id);
-            saveData();
+        // CHECKLIST PRE-CULTO LOGIC
+        function renderChecklist() {
+            const container = document.getElementById('checklistItemsContainer');
+            container.innerHTML = '';
+
+            let checkedCount = 0;
+
+            checklist.forEach((item, index) => {
+                if (item.checked) checkedCount++;
+
+                const div = document.createElement('div');
+                div.className = `flex items-center space-x-3 p-3 rounded-xl border transition ${item.checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-700'}`;
+                div.innerHTML = `
+                    <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleChecklistItem(${index})" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
+                    <span class="text-xs sm:text-sm font-medium ${item.checked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'}">${item.text}</span>
+                `;
+                container.appendChild(div);
+            });
+
+            const percent = checklist.length > 0 ? Math.round((checkedCount / checklist.length) * 100) : 0;
+            document.getElementById('checklistPercent').innerText = `${percent}%`;
+            document.getElementById('checklistBar').style.width = `${percent}%`;
         }
 
-        // Checklist Toggle
-        function toggleChecklist(category, idx) {
-            appData.checklist[category][idx].done = !appData.checklist[category][idx].done;
+        function toggleChecklistItem(index) {
+            checklist[index].checked = !checklist[index].checked;
             saveData();
+            renderChecklist();
         }
 
         function resetChecklist() {
-            appData.checklist.cams.forEach(i => i.done = false);
-            appData.checklist.telao.forEach(i => i.done = false);
+            checklist.forEach(item => item.checked = false);
             saveData();
+            renderChecklist();
+            showToast("Checklist reiniciado!");
         }
-
-        // WhatsApp Group Message
-        function openGroupMessageModal() {
-            if(appData.roster.length === 0) {
-                alert("Nenhuma escala disponível para gerar o texto.");
-                return;
-            }
-            const r = appData.roster[0];
-            const d = new Date(r.date);
-            const msg = `🚨 *ESCALA DE MÍDIA - ${r.title.toUpperCase()}* 🚨\n📅 Data: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}\n\n🎥 *Câmera 1:* ${r.cam1 || 'Pendente'}\n🎥 *Câmera 2:* ${r.cam2 || 'Pendente'}\n📱 *Stories/Redes:* ${r.stories || 'Pendente'}\n💻 *Telão/Holyrics:* ${r.telao || 'Pendente'}\n🎨 *Design Culto:* ${r.desculto || 'Pendente'}\n🎨 *Design Eventos:* ${r.desevento || 'Pendente'}\n\n⚠️ *Chegar com 45 minutos de antecedência para o checklist.*`;
-            
-            document.getElementById('group-message-text').value = msg;
-            document.getElementById('modal-group-msg').classList.remove('hidden');
-            document.getElementById('modal-group-msg').classList.add('flex');
-        }
-
-        function closeGroupMessageModal() {
-            document.getElementById('modal-group-msg').classList.add('hidden');
-            document.getElementById('modal-group-msg').classList.remove('flex');
-        }
-
-        function copyGroupMessage() {
-            const txt = document.getElementById('group-message-text');
-            txt.select();
-            document.execCommand('copy');
-            alert("Texto copiado! Agora cole no grupo do WhatsApp da equipe.");
-        }
-
-        // ICS Calendar File Generator
-        function downloadICS(title, dateStr) {
-            const startDate = new Date(dateStr);
-            const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
-
-            const formatDate = (date) => date.toISOString().replace(/-|:|\.\d+/g, '');
-
-            const icsContent = 
-`BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Midia Hub//NONSGML Event//PT
-BEGIN:VEVENT
-SUMMARY:${title} - Escala Mídia
-DTSTART:${formatDate(startDate)}
-DTEND:${formatDate(endDate)}
-DESCRIPTION:Escala do Ministério de Mídia da Igreja
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR`;
-
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', `escala-${title.toLowerCase().replace(/\s+/g, '-')}.ics`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Export/Import Local Data Backup
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `midia_hub_backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importData(event) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    appData = JSON.parse(e.target.result);
-                    saveData();
-                    alert("Dados restaurados com sucesso!");
-                } catch(err) {
-                    alert("Erro ao importar o arquivo. Certifique-se de ser um arquivo JSON válido.");
-                }
-            };
-            reader.readAsText(event.target.files[0]);
-        }
-
-        // Initialize App
-        loadData();
     </script>
 </body>
 </html>
