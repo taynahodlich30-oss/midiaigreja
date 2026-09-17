@@ -45,7 +45,7 @@
 <body class="min-h-screen flex flex-col md:flex-row text-slate-100">
 
     <!-- SIDEBAR / NAVIGATION -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between">
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0">
         <div>
             <!-- LOGO & HEADING -->
             <div class="flex items-center gap-3 px-2 py-3 border-b border-slate-800 mb-6">
@@ -65,6 +65,9 @@
                 </button>
                 <button onclick="switchTab('roster')" id="nav-roster" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
                     <i data-lucide="calendar" class="w-4 h-4"></i> Escala & Avisos
+                </button>
+                <button onclick="switchTab('team')" id="nav-team" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="users" class="w-4 h-4"></i> Equipe da Mídia
                 </button>
                 <button onclick="switchTab('kanban')" id="nav-kanban" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
                     <i data-lucide="kanban" class="w-4 h-4"></i> Pedidos de Design
@@ -98,10 +101,10 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
                 <div>
                     <h2 class="text-2xl font-bold">Painel Geral de Mídia</h2>
-                    <p class="text-slate-400 text-sm">Avisos rápidos, escala do próximo culto e ferramentas técnicas.</p>
+                    <p class="text-slate-400 text-sm">Disparo direto para o WhatsApp da equipe e organização do culto.</p>
                 </div>
                 <button onclick="openGroupMessageModal()" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-green-900/30">
-                    <i data-lucide="message-square" class="w-4 h-4"></i> Gerar Aviso para Grupo
+                    <i data-lucide="message-square" class="w-4 h-4"></i> Gerar Aviso p/ Grupo
                 </button>
             </div>
 
@@ -111,7 +114,7 @@
                 <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold uppercase tracking-wider text-blue-400">Próximo Culto</span>
-                        <i data-lucide="users" class="w-5 h-5 text-slate-500"></i>
+                        <i data-lucide="calendar" class="w-5 h-5 text-slate-500"></i>
                     </div>
                     <div>
                         <h3 class="text-lg font-bold text-slate-100" id="dash-next-service-title">Culto de Domingo</h3>
@@ -160,7 +163,7 @@
                         </a>
                     </div>
                     <div class="pt-2 border-t border-slate-800/60">
-                        <p class="text-xs text-slate-500 text-center">Para atualizar e sincronizar dados, use as funções de backup no menu lateral.</p>
+                        <p class="text-xs text-slate-500 text-center">Toda a equipe possui botões dedicados de envio individual no WhatsApp.</p>
                     </div>
                 </div>
             </div>
@@ -171,14 +174,14 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
                 <div>
                     <h2 class="text-2xl font-bold">Escala da Mídia & Lembretes</h2>
-                    <p class="text-slate-400 text-sm">Organize e envie lembretes automáticos para o WhatsApp do pessoal.</p>
+                    <p class="text-slate-400 text-sm">Dispare convocações diretas no WhatsApp de cada voluntário escalado.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="openRosterModal()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all">
                         <i data-lucide="plus" class="w-4 h-4"></i> Nova Escala
                     </button>
                     <button onclick="openGroupMessageModal()" class="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-all">
-                        <i data-lucide="share-2" class="w-4 h-4"></i> Copiar Escala p/ WhatsApp
+                        <i data-lucide="share-2" class="w-4 h-4"></i> Copiar p/ Grupo do WhatsApp
                     </button>
                 </div>
             </div>
@@ -186,6 +189,23 @@
             <!-- ROSTER CARDS CONTAINER -->
             <div id="roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Content dynamically populated -->
+            </div>
+        </section>
+
+        <!-- TEAM MANAGEMENT TAB -->
+        <section id="tab-team" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold">Gerenciar Equipe da Mídia</h2>
+                    <p class="text-slate-400 text-sm">Cadastre, edite números de telefone e atribua funções aos voluntários.</p>
+                </div>
+                <button onclick="openMemberModal()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i> Novo Voluntário
+                </button>
+            </div>
+
+            <div id="team-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Team Cards -->
             </div>
         </section>
 
@@ -405,36 +425,65 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Câmera 1</label>
-                        <input type="text" id="roster-cam1" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <select id="roster-cam1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Câmera 2</label>
-                        <input type="text" id="roster-cam2" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <select id="roster-cam2" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Stories / Redes</label>
-                        <input type="text" id="roster-stories" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <select id="roster-stories" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Telão / Holyrics</label>
-                        <input type="text" id="roster-telao" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <select id="roster-telao" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Designer Culto</label>
-                        <input type="text" id="roster-desculto" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <select id="roster-desculto" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Designer Eventos</label>
-                        <input type="text" id="roster-desevento" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <select id="roster-desevento" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select-options"></select>
                     </div>
                 </div>
                 <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
                     <button type="button" onclick="closeRosterModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">Cancelar</button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Escala</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CADASTRAR/EDITAR VOLUNTÁRIO -->
+    <div id="modal-member" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-lg" id="member-modal-title">Cadastrar Voluntário</h3>
+                <button onclick="closeMemberModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-member" onsubmit="saveMember(event)" class="space-y-3 text-sm">
+                <input type="hidden" id="member-id">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Nome do Voluntário</label>
+                    <input type="text" id="member-name" required placeholder="Ex: Lais" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">WhatsApp com DDD (apenas números)</label>
+                    <input type="text" id="member-phone" required placeholder="Ex: 18997144842" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Funções no Ministério</label>
+                    <input type="text" id="member-role" placeholder="Ex: Stories / Câmera 1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeMemberModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Voluntário</button>
                 </div>
             </form>
         </div>
@@ -481,7 +530,7 @@
     <div id="modal-group-msg" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Aviso Formatado para WhatsApp</h3>
+                <h3 class="font-bold text-lg">Aviso Formatado para Grupo do WhatsApp</h3>
                 <button onclick="closeGroupMessageModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <p class="text-xs text-slate-400">Copie o texto abaixo e cole no grupo oficial da mídia da igreja:</p>
@@ -507,19 +556,28 @@
 
     <!-- MAIN JAVASCRIPT APP LOGIC -->
     <script>
-        // Default initial data
+        // Initial Team Data
         let appData = {
+            team: [
+                { id: 1, name: "Lais (Líder)", phone: "18997144842", role: "Stories / Câmera" },
+                { id: 2, name: "Bruna", phone: "18998182229", role: "Stories / Arte Eventos" },
+                { id: 3, name: "João", phone: "18996485335", role: "Câmera" },
+                { id: 4, name: "Pedro Rocha", phone: "18998202566", role: "Stories / Câmera" },
+                { id: 5, name: "Tayná", phone: "18996943888", role: "Stories / Arte Telão" },
+                { id: 6, name: "Emily", phone: "18996600865", role: "Stories" },
+                { id: 7, name: "Pedro Ramos", phone: "18997747636", role: "Stories / Câmera" }
+            ],
             roster: [
                 {
                     id: 1,
                     title: "Culto de Celebração",
                     date: "2026-03-22T19:00",
-                    cam1: "Lucas",
-                    cam2: "Mateus",
-                    stories: "Ana",
-                    telao: "João",
-                    desculto: "Gabriel",
-                    desevento: "Carla"
+                    cam1: "João",
+                    cam2: "Pedro Rocha",
+                    stories: "Lais (Líder)",
+                    telao: "Tayná",
+                    desculto: "Emily",
+                    desevento: "Bruna"
                 }
             ],
             tasks: [
@@ -561,7 +619,7 @@
 
         // Switch Tabs
         function switchTab(tabId) {
-            ['dashboard', 'roster', 'kanban', 'resolutions', 'checklist'].forEach(t => {
+            ['dashboard', 'roster', 'team', 'kanban', 'resolutions', 'checklist'].forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
                 document.getElementById(`nav-${t}`).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800";
             });
@@ -573,9 +631,21 @@
         function renderAll() {
             renderDashboard();
             renderRoster();
+            renderTeam();
             renderKanban();
             renderChecklist();
+            populateTeamSelects();
             lucide.createIcons();
+        }
+
+        function populateTeamSelects() {
+            const selects = document.querySelectorAll('.team-select-options');
+            selects.forEach(select => {
+                const currentVal = select.value;
+                select.innerHTML = '<option value="">-- Selecionar Voluntário --</option>' + 
+                    appData.team.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+                select.value = currentVal;
+            });
         }
 
         function renderDashboard() {
@@ -617,6 +687,10 @@
             container.innerHTML = appData.roster.map(r => {
                 const d = new Date(r.date);
                 const dateStr = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+                
+                // Get list of unique assigned names
+                const assignedNames = [...new Set([r.cam1, r.cam2, r.stories, r.telao, r.desculto, r.desevento].filter(n => n && n !== ''))];
+
                 return `
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
                         <div class="flex items-start justify-between border-b border-slate-800 pb-3">
@@ -634,17 +708,56 @@
                             <div class="flex justify-between"><span class="text-slate-400">Des. Culto:</span> <span class="font-medium">${r.desculto || '-'}</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">Des. Eventos:</span> <span class="font-medium">${r.desevento || '-'}</span></div>
                         </div>
-                        <div class="pt-3 border-t border-slate-800 flex gap-2">
-                            <button onclick="sendIndividualWhatsApp(${r.id})" class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-xl text-xs transition-colors">
-                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Avisar no Wpp
-                            </button>
-                            <button onclick="downloadICS('${r.title}', '${r.date}')" class="flex items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors" title="Baixar compromisso na agenda">
-                                <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+
+                        <!-- INDIVIDUAL WHATSAPP DISPATCH BUTTONS -->
+                        <div class="pt-2 border-t border-slate-800/80 space-y-1.5">
+                            <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Chamar no WhatsApp:</p>
+                            <div class="flex flex-wrap gap-1">
+                                ${assignedNames.map(name => {
+                                    const member = appData.team.find(m => m.name === name);
+                                    if(!member) return '';
+                                    return `
+                                        <button onclick="sendDirectWhatsApp('${member.phone}', '${name}', '${r.title}', '${r.date}')" class="flex items-center gap-1 text-[11px] px-2 py-1 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-lg transition-colors">
+                                            <i data-lucide="message-circle" class="w-3 h-3"></i> ${name.split(' ')[0]}
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-800 flex gap-2">
+                            <button onclick="downloadICS('${r.title}', '${r.date}')" class="w-full flex items-center justify-center gap-2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition-colors">
+                                <i data-lucide="calendar-plus" class="w-4 h-4"></i> Baixar na Agenda (.ics)
                             </button>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        function renderTeam() {
+            const container = document.getElementById('team-container');
+            container.innerHTML = appData.team.map(m => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-100 text-base">${m.name}</h3>
+                            <p class="text-xs text-blue-400 font-mono mt-0.5">${m.phone}</p>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="editMember(${m.id})" class="p-1 text-slate-400 hover:text-white"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                            <button onclick="deleteMember(${m.id})" class="p-1 text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Funções</span>
+                        <p class="text-xs text-slate-300 font-medium">${m.role || 'Voluntário'}</p>
+                    </div>
+                    <a href="https://wa.me/55${m.phone}" target="_blank" class="w-full flex items-center justify-center gap-2 py-2 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-xl text-xs font-medium transition-colors">
+                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Abrir WhatsApp
+                    </a>
+                </div>
+            `).join('');
         }
 
         function renderKanban() {
@@ -690,6 +803,17 @@
             `).join('');
         }
 
+        // Direct Individual WhatsApp Dispatch
+        function sendDirectWhatsApp(phone, name, serviceTitle, dateStr) {
+            const d = new Date(dateStr);
+            const formattedDate = d.toLocaleDateString('pt-BR');
+            const formattedTime = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            
+            const message = `Olá ${name}!  Shalom! %0A%0APassando para lembrar da sua escala de Mídia:%0A📌 *${serviceTitle}*%0A📅 *Data:* ${formattedDate} às ${formattedTime}%0A%0A_Por favor, confirme sua presença nesta mensagem!_`;
+            
+            window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
+        }
+
         // Roster Handlers
         function openRosterModal() { document.getElementById('modal-roster').classList.remove('hidden'); document.getElementById('modal-roster').classList.add('flex'); }
         function closeRosterModal() { document.getElementById('modal-roster').classList.add('hidden'); document.getElementById('modal-roster').classList.remove('flex'); }
@@ -715,6 +839,59 @@
 
         function deleteRoster(id) {
             appData.roster = appData.roster.filter(r => r.id !== id);
+            saveData();
+        }
+
+        // Team Management Handlers
+        function openMemberModal() {
+            document.getElementById('member-modal-title').innerText = "Cadastrar Voluntário";
+            document.getElementById('form-member').reset();
+            document.getElementById('member-id').value = "";
+            document.getElementById('modal-member').classList.remove('hidden');
+            document.getElementById('modal-member').classList.add('flex');
+        }
+
+        function closeMemberModal() {
+            document.getElementById('modal-member').classList.add('hidden');
+            document.getElementById('modal-member').classList.remove('flex');
+        }
+
+        function editMember(id) {
+            const m = appData.team.find(item => item.id === id);
+            if(!m) return;
+            document.getElementById('member-modal-title').innerText = "Editar Voluntário";
+            document.getElementById('member-id').value = m.id;
+            document.getElementById('member-name').value = m.name;
+            document.getElementById('member-phone').value = m.phone;
+            document.getElementById('member-role').value = m.role || "";
+            document.getElementById('modal-member').classList.remove('hidden');
+            document.getElementById('modal-member').classList.add('flex');
+        }
+
+        function saveMember(e) {
+            e.preventDefault();
+            const id = document.getElementById('member-id').value;
+            const name = document.getElementById('member-name').value;
+            const phone = document.getElementById('member-phone').value.replace(/\D/g, '');
+            const role = document.getElementById('member-role').value;
+
+            if(id) {
+                const member = appData.team.find(m => m.id == id);
+                if(member) {
+                    member.name = name;
+                    member.phone = phone;
+                    member.role = role;
+                }
+            } else {
+                appData.team.push({ id: Date.now(), name, phone, role });
+            }
+
+            saveData();
+            closeMemberModal();
+        }
+
+        function deleteMember(id) {
+            appData.team = appData.team.filter(m => m.id !== id);
             saveData();
         }
 
@@ -760,15 +937,7 @@
             saveData();
         }
 
-        // WhatsApp Messaging Logic
-        function sendIndividualWhatsApp(id) {
-            const r = appData.roster.find(item => item.id === id);
-            if(!r) return;
-            const d = new Date(r.date);
-            const text = `Olá! Lembrete da escala de Mídia para *${r.title}* (%0AData: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}):%0A%0A- *Câmera 1:* ${r.cam1 || '-' }%0A- *Câmera 2:* ${r.cam2 || '-' }%0A- *Stories:* ${r.stories || '-' }%0A- *Telão:* ${r.telao || '-' }%0A- *Des. Culto:* ${r.desculto || '-' }%0A- *Des. Eventos:* ${r.desevento || '-' }%0A%0A_Por favor, confirme sua presença!_`;
-            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-        }
-
+        // WhatsApp Group Message
         function openGroupMessageModal() {
             if(appData.roster.length === 0) {
                 alert("Nenhuma escala disponível para gerar o texto.");
@@ -776,7 +945,7 @@
             }
             const r = appData.roster[0];
             const d = new Date(r.date);
-            const msg = `🚨 *ESCALA DE MÍDIA - ${r.title.toUpperCase()}* 🚨\n📅 Date: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}\n\n🎥 *Câmera 1:* ${r.cam1 || 'Pendente'}\n🎥 *Câmera 2:* ${r.cam2 || 'Pendente'}\n📱 *Stories/Redes:* ${r.stories || 'Pendente'}\n💻 *Telão/Holyrics:* ${r.telao || 'Pendente'}\n🎨 *Design Culto:* ${r.desculto || 'Pendente'}\n🎨 *Design Eventos:* ${r.desevento || 'Pendente'}\n\n⚠️ *Chegar com 45 minutos de antecedência para o checklist.*`;
+            const msg = `🚨 *ESCALA DE MÍDIA - ${r.title.toUpperCase()}* 🚨\n📅 Data: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}\n\n🎥 *Câmera 1:* ${r.cam1 || 'Pendente'}\n🎥 *Câmera 2:* ${r.cam2 || 'Pendente'}\n📱 *Stories/Redes:* ${r.stories || 'Pendente'}\n💻 *Telão/Holyrics:* ${r.telao || 'Pendente'}\n🎨 *Design Culto:* ${r.desculto || 'Pendente'}\n🎨 *Design Eventos:* ${r.desevento || 'Pendente'}\n\n⚠️ *Chegar com 45 minutos de antecedência para o checklist.*`;
             
             document.getElementById('group-message-text').value = msg;
             document.getElementById('modal-group-msg').classList.remove('hidden');
@@ -798,7 +967,7 @@
         // ICS Calendar File Generator
         function downloadICS(title, dateStr) {
             const startDate = new Date(dateStr);
-            const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000)); // +2 hours
+            const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
 
             const formatDate = (date) => date.toISOString().replace(/-|:|\.\d+/g, '');
 
@@ -841,7 +1010,7 @@ END:VCALENDAR`;
                 try {
                     appData = JSON.parse(e.target.result);
                     saveData();
-                    alert("Dados e backup restaurados com sucesso!");
+                    alert("Dados restaurados com sucesso!");
                 } catch(err) {
                     alert("Erro ao importar o arquivo. Certifique-se de ser um arquivo JSON válido.");
                 }
