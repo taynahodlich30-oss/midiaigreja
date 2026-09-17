@@ -3,433 +3,931 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Mídia Hub - CEP Pirapozinho</title>
-
-    <!-- Tailwind CSS & Lucide Icons -->
+    <title>Portal Mídia Hub - Comunidade Evangélica de Pirapozinho</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        dark: { bg: '#090d16', card: '#111827', border: '#1f2937' }
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                        },
+                        darkslate: {
+                            950: '#070a10',
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f2937',
+                            600: '#374151'
+                        }
                     }
                 }
             }
         }
     </script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- FontAwesome fallback for high availability icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2canvas for Story Card Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
-        body { background-color: #090d16; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #090d16; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #070a10; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fde68a 0%, #eab308 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col md:flex-row text-slate-100">
+<body class="bg-darkslate-950 text-gray-100 min-h-screen flex flex-col antialiased">
 
-    <!-- TELA DE LOGIN COM SENHA -->
-    <div id="login-screen" class="fixed inset-0 bg-[#090d16] z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 max-w-sm w-full space-y-6 text-center shadow-2xl">
-            <div class="space-y-2">
-                <div class="w-20 h-20 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-2xl overflow-hidden">
-                    <img src="https://i.ibb.co/LdQyYy3/midia-logo.jpg" alt="Mídia Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerText='MÍDIA'">
-                </div>
-                <h2 class="text-xl font-bold text-slate-100">Portal da Mídia</h2>
-                <p class="text-xs text-slate-400">Comunidade Evangélica de Pirapozinho</p>
+    <!-- LOGIN OVERLAY -->
+    <div id="loginScreen" class="fixed inset-0 bg-darkslate-950 z-50 flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-amber-500/20 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-6">
+            <div class="w-20 h-20 mx-auto rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-lg shadow-amber-500/10 bg-darkslate-900 p-1">
+                <img src="https://i.ibb.co/LdQyYy3/midia-logo.jpg" alt="Logo Mídia Hub CEP" class="w-full h-full object-cover rounded-xl" onerror="this.src='https://placehold.co/100x100/111827/eab308?text=MIDIA+CEP'">
             </div>
-
+            <div>
+                <h1 class="text-2xl font-extrabold text-white tracking-tight">Portal Mídia Hub</h1>
+                <p class="text-xs text-amber-400 font-medium mt-1">Comunidade Evangélica de Pirapozinho</p>
+                <p class="text-xs text-gray-400 mt-2">Área Restrita do Ministério de Comunicação</p>
+            </div>
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <input type="password" id="login-pass" required placeholder="Digite a senha de acesso" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-center text-white focus:outline-none focus:border-blue-500">
-                    <p id="login-error" class="text-xs text-red-400 hidden mt-2">Senha incorreta! Tente novamente.</p>
+                    <input type="password" id="loginPassword" placeholder="Digite a senha do portal..." required class="w-full px-4 py-3 rounded-xl bg-darkslate-900 border border-gray-700 text-sm text-white focus:border-amber-400 focus:outline-none text-center tracking-widest">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20">
-                    Entrar no Portal
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-darkslate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2">
+                    <i data-lucide="key-round" class="w-4 h-4"></i>
+                    <span>Entrar no Portal</span>
                 </button>
             </form>
+            <p id="loginError" class="text-xs text-red-400 hidden">Senha incorreta! Tente novamente.</p>
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL DO APP -->
-    <div id="app-content" class="hidden min-h-screen w-full flex flex-col md:flex-row">
-        <!-- SIDEBAR -->
-        <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0">
+    <!-- MAIN APP WRAPPER -->
+    <div id="appMain" class="hidden min-h-screen flex flex-col md:flex-row">
+
+        <aside class="w-full md:w-64 bg-darkslate-800 border-r border-gray-800 flex-shrink-0 flex flex-col justify-between sticky top-0 z-30 md:h-screen">
             <div>
-                <div class="flex items-center gap-3 px-2 py-3 border-b border-slate-800 mb-4">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold flex items-center justify-center text-xs overflow-hidden">
-                        <img src="https://i.ibb.co/LdQyYy3/midia-logo.jpg" alt="Mídia" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentNode.innerText='MÍDIA'">
+                <!-- Brand Header -->
+                <div class="p-5 border-b border-gray-800 flex items-center space-x-3">
+                    <div class="w-11 h-11 rounded-2xl overflow-hidden border border-amber-500/30 bg-darkslate-900 flex-shrink-0 shadow-md">
+                        <img src="https://i.ibb.co/LdQyYy3/midia-logo.jpg" alt="Mídia CEP" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/50x50/111827/eab308?text=CEP'">
                     </div>
                     <div>
-                        <h1 class="font-bold text-base leading-tight">Mídia Hub</h1>
-                        <p class="text-[11px] text-slate-400">CEP Pirapozinho</p>
+                        <div class="flex items-center space-x-1.5">
+                            <h1 class="text-base font-extrabold text-white tracking-tight">MÍDIA HUB</h1>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">CEP</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 truncate">Pirapozinho - SP</p>
                     </div>
                 </div>
 
-                <!-- DIRECIONAMENTO ESPIRITUAL -->
-                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-4 space-y-1.5 text-xs">
-                    <div class="flex items-center gap-2 font-bold text-amber-400">
-                        <i data-lucide="flame" class="w-4 h-4"></i>
-                        <span>Direcionamento Espiritual</span>
-                    </div>
-                    <p class="text-[11px] text-amber-200/80"><strong>Oração:</strong> 2 domingos no mês.<br><strong>Jejum:</strong> Todas as segundas-feiras.</p>
-                </div>
-
-                <!-- NAV -->
-                <nav class="space-y-1 text-xs">
-                    <button onclick="switchTab('roster')" id="nav-roster" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all bg-blue-600 text-white">
-                        <i data-lucide="calendar" class="w-4 h-4"></i> Escalas & WhatsApp
+                <!-- Navigation List -->
+                <nav class="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)]">
+                    <button onclick="switchTab('credentials')" id="tab-credentials" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-amber-400 bg-amber-500/10 border border-amber-500/20">
+                        <i data-lucide="key" class="w-4 h-4"></i>
+                        <span>Contas & Links</span>
                     </button>
-                    <button onclick="switchTab('hub')" id="nav-hub" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                        <i data-lucide="key" class="w-4 h-4"></i> Drives & Senhas
+                    <button onclick="switchTab('schedule')" id="tab-schedule" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <span>Escalas</span>
                     </button>
-                    <button onclick="switchTab('briefing')" id="nav-briefing" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                        <i data-lucide="camera" class="w-4 h-4"></i> Checklist Foto/Vídeo
+                    <button onclick="switchTab('trade')" id="tab-trade" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                        <span>Troca de Escala</span>
                     </button>
-                    <button onclick="switchTab('inventory')" id="nav-inventory" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                        <i data-lucide="box" class="w-4 h-4"></i> Equipamentos
+                    <button onclick="switchTab('storycard')" id="tab-storycard" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="instagram" class="w-4 h-4"></i>
+                        <span>Card Stories</span>
                     </button>
-                    <button onclick="switchTab('calculator')" id="nav-calculator" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                        <i data-lucide="hard-drive" class="w-4 h-4"></i> Calc. Cartão SD
+                    <button onclick="switchTab('events')" id="tab-events" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                        <span>Calendário de Eventos</span>
                     </button>
-                    <button onclick="switchTab('kanban')" id="nav-kanban" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                        <i data-lucide="image" class="w-4 h-4"></i> Pedidos de Artes
+                    <button onclick="switchTab('briefing')" id="tab-briefing" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                        <span>Checklist & Drive</span>
                     </button>
-                    <button onclick="switchTab('team')" id="nav-team" class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                        <i data-lucide="users" class="w-4 h-4"></i> Equipe da Mídia
+                    <button onclick="switchTab('inventory')" id="tab-inventory" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                        <span>Equipamentos & SD</span>
+                    </button>
+                    <button onclick="switchTab('kanban')" id="tab-kanban" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                        <span>Pedir Artes (Kanban)</span>
+                    </button>
+                    <button onclick="switchTab('team')" id="tab-team" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>Voluntários (CRUD)</span>
+                    </button>
+                    <button onclick="switchTab('highlights')" id="tab-highlights" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>Mural de Bastidores</span>
+                    </button>
+                    <button onclick="switchTab('guidelines')" id="tab-guidelines" class="w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        <span>Código de Conduta</span>
                     </button>
                 </nav>
             </div>
 
-            <div class="mt-6 pt-3 border-t border-slate-800 space-y-2">
-                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-600/20 rounded-lg transition-all">
-                    <i data-lucide="lock" class="w-3.5 h-3.5"></i> Bloquear / Sair
+            <!-- Footer Status -->
+            <div class="p-4 border-t border-gray-800 space-y-3">
+                <div class="flex items-center space-x-2 text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-semibold">Firebase Ao Vivo</span>
+                </div>
+                <button onclick="logout()" class="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-xl text-xs font-semibold border border-red-500/20 transition flex items-center justify-center space-x-2">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    <span>Sair</span>
                 </button>
             </div>
         </aside>
 
-        <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
-        <main class="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-grow flex flex-col min-h-screen overflow-x-hidden">
 
-            <!-- ABA ESCALAS -->
-            <section id="tab-roster" class="space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <!-- Top Header Bar -->
+            <header class="bg-darkslate-800/90 border-b border-gray-800 sticky top-0 z-20 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <h2 id="currentTabTitle" class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="key" class="w-5 h-5 text-amber-400"></i>
+                        <span>Contas, Senhas e Pastas</span>
+                    </h2>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="openNoticeModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold transition shadow-md flex items-center space-x-2">
+                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                        <span>Aviso Geral no Zap</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Spiritual Direction Banner -->
+            <div class="bg-gradient-to-r from-amber-950/70 via-darkslate-800 to-amber-950/70 border-b border-amber-500/20 px-6 py-2.5">
+                <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-amber-200/90 gap-2">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
+                        <span class="font-bold text-white">DIRECIONAMENTO ESPIRITUAL:</span>
+                        <span>Jejum toda <strong>Segunda-Feira</strong> • Oração: <strong>2 Domingos no mês às 18:00h</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENTS CONTAINER -->
+            <main class="flex-grow p-6 max-w-7xl w-full mx-auto space-y-6">
+
+                <!-- SECTION 1: CREDENTIALS & LINKS -->
+                <section id="section-credentials" class="space-y-6">
                     <div>
-                        <h2 class="text-2xl font-bold">Escala do Ministério</h2>
-                        <p class="text-slate-400 text-sm">Monte a escala escolhendo qualquer membro para qualquer função.</p>
+                        <h3 class="text-xl font-bold text-white">Credenciais do Ministério</h3>
+                        <p class="text-xs text-gray-400">Acesse ferramentas e drives institucionais da igreja com um clique.</p>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="openRosterModal()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">
-                            <i data-lucide="plus" class="w-4 h-4"></i> Nova Escala
-                        </button>
-                        <button onclick="openGroupMessageModal()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl text-xs">
-                            <i data-lucide="share-2" class="w-4 h-4"></i> Mensagem p/ Grupo
-                        </button>
-                    </div>
-                </div>
 
-                <div id="roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            </section>
-
-            <!-- ABA HUB (ACESSOS E DRIVES) -->
-            <section id="tab-hub" class="hidden space-y-6">
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                    <h2 class="text-2xl font-bold">Acessos, Drives & Logins</h2>
-                    <p class="text-slate-400 text-sm">Links diretos das pastas e credenciais de acesso rápido.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Google Drive Folders -->
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                        <h3 class="font-bold text-lg flex items-center gap-2 text-blue-400">
-                            <i data-lucide="folder" class="w-5 h-5"></i> Pastas do Google Drive
-                        </h3>
-                        <div class="space-y-3">
-                            <a href="https://drive.google.com/drive/folders/1upFTpblFoasGospjpzlRgITVyYYPZmPi" target="_blank" class="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all">
-                                <div class="flex items-center gap-3">
-                                    <i data-lucide="image" class="w-5 h-5 text-amber-400"></i>
-                                    <div>
-                                        <h4 class="font-bold text-sm">Drive de FOTOS</h4>
-                                        <p class="text-xs text-slate-400">Imagens dos cultos e eventos</p>
-                                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Canva Card -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center font-bold">
+                                    <i data-lucide="palette" class="w-5 h-5"></i>
                                 </div>
-                                <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
-                            </a>
-                            <a href="https://drive.google.com/drive/folders/1IDH3kCFPbSlYmtHXXCU4kKNunwx3m1go" target="_blank" class="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all">
-                                <div class="flex items-center gap-3">
-                                    <i data-lucide="video" class="w-5 h-5 text-red-400"></i>
-                                    <div>
-                                        <h4 class="font-bold text-sm">Drive de VÍDEOS</h4>
-                                        <p class="text-xs text-slate-400">Arquivos brutos e edições</p>
-                                    </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">Canva Oficial</h4>
+                                    <p class="text-[10px] text-gray-400">Artes de Feed, Stories e Telão</p>
                                 </div>
-                                <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Credenciais -->
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                        <h3 class="font-bold text-lg flex items-center gap-2 text-purple-400">
-                            <i data-lucide="key" class="w-5 h-5"></i> Credenciais & Logins
-                        </h3>
-                        <div class="space-y-3">
-                            <div class="p-3 bg-slate-800/60 border border-slate-700/50 rounded-xl space-y-2">
+                            </div>
+                            <div class="space-y-2 bg-darkslate-900 p-3 rounded-xl border border-gray-800 text-xs">
                                 <div class="flex justify-between items-center">
-                                    <span class="font-bold text-sm text-sky-400">Canva PRO</span>
-                                    <button onclick="copyToClipboard('cepirapozinho1@gmail.com / Cepirapozinho1')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar
+                                    <span class="text-gray-400">E-mail:</span>
+                                    <button onclick="copyToClipboard('cepirapozinho1@gmail.com', 'E-mail do Canva')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                        cepirapozinho1@gmail.com <i data-lucide="copy" class="w-3 h-3"></i>
                                     </button>
                                 </div>
-                                <p class="text-xs text-slate-300"><strong>Login:</strong> cepirapozinho1@gmail.com</p>
-                                <p class="text-xs text-slate-300"><strong>Senha:</strong> Cepirapozinho1</p>
-                            </div>
-                            <div class="p-3 bg-slate-800/60 border border-slate-700/50 rounded-xl space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="font-bold text-sm text-green-400">CapCut / Google Drive</span>
-                                    <button onclick="copyToClipboard('cepirapozinho1@gmail.com / comunidadeevangelica / Jeremias2911')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar
+                                <div class="flex justify-between items-center pt-1 border-t border-gray-800">
+                                    <span class="text-gray-400">Senha:</span>
+                                    <button onclick="copyToClipboard('Cepirapozinho1', 'Senha do Canva')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                        Cepirapozinho1 <i data-lucide="copy" class="w-3 h-3"></i>
                                     </button>
                                 </div>
-                                <p class="text-xs text-slate-300"><strong>Login:</strong> cepirapozinho1@gmail.com</p>
-                                <p class="text-xs text-slate-300"><strong>Senha 1:</strong> comunidadeevangelica</p>
-                                <p class="text-xs text-slate-300"><strong>Senha 2:</strong> Jeremias2911</p>
+                            </div>
+                            <a href="https://www.canva.com" target="_blank" class="w-full py-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 border border-cyan-500/30 transition">
+                                <span>Abrir Canva</span>
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+
+                        <!-- Google Drive & CapCut Card -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+                                    <i data-lucide="hard-drive" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">Google Drive / CapCut</h4>
+                                    <p class="text-[10px] text-gray-400">Armazenamento Institucional</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 bg-darkslate-900 p-3 rounded-xl border border-gray-800 text-xs">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">E-mail:</span>
+                                    <button onclick="copyToClipboard('cepirapozinho1@gmail.com', 'E-mail do Drive')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                        cepirapozinho1@gmail.com <i data-lucide="copy" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 border-t border-gray-800">
+                                    <span class="text-gray-400">Senha Alt 1:</span>
+                                    <button onclick="copyToClipboard('comunidadeevangelica', 'Senha Alt 1')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                        comunidadeevangelica <i data-lucide="copy" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 border-t border-gray-800">
+                                    <span class="text-gray-400">Senha Alt 2:</span>
+                                    <button onclick="copyToClipboard('Jeremias2911', 'Senha Alt 2')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                        Jeremias2911 <i data-lucide="copy" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <a href="https://drive.google.com" target="_blank" class="w-full py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 border border-emerald-500/30 transition">
+                                <span>Acessar Google Drive</span>
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+
+                        <!-- Direct Folders Card -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
+                                    <i data-lucide="folder-open" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">Pastas do Drive</h4>
+                                    <p class="text-[10px] text-gray-400">Upload de Arquivos Brutos</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-xs">
+                                <a href="https://drive.google.com" target="_blank" class="p-3 bg-darkslate-900 hover:bg-darkslate-700/50 rounded-xl border border-gray-800 flex items-center justify-between transition group">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="camera" class="w-4 h-4 text-amber-400"></i>
+                                        <span class="font-medium text-gray-200">Pasta de Fotos de Cultos</span>
+                                    </div>
+                                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500 group-hover:text-amber-400"></i>
+                                </a>
+                                <a href="https://drive.google.com" target="_blank" class="p-3 bg-darkslate-900 hover:bg-darkslate-700/50 rounded-xl border border-gray-800 flex items-center justify-between transition group">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="video" class="w-4 h-4 text-amber-400"></i>
+                                        <span class="font-medium text-gray-200">Pasta de Takes para Reels</span>
+                                    </div>
+                                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500 group-hover:text-amber-400"></i>
+                                </a>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- ABA BRIEFING -->
-            <section id="tab-briefing" class="hidden space-y-6">
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                    <h2 class="text-2xl font-bold">Checklist de Cobertura (Fotos & Vídeos)</h2>
-                    <p class="text-slate-400 text-sm">Garanta os registros obrigatórios da noite.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
-                        <h3 class="font-bold text-amber-400 border-b border-slate-800 pb-2">Fotos Obrigatórias</h3>
-                        <div id="briefing-photos" class="space-y-2"></div>
-                    </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
-                        <h3 class="font-bold text-red-400 border-b border-slate-800 pb-2">Vídeos & Takes (Reels)</h3>
-                        <div id="briefing-videos" class="space-y-2"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ABA INVENTÁRIO -->
-            <section id="tab-inventory" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                    <div>
-                        <h2 class="text-2xl font-bold">Inventário de Equipamentos</h2>
-                        <p class="text-slate-400 text-sm">Controle das câmeras, lentes, cabos e itens em manutenção.</p>
-                    </div>
-                    <button onclick="openInventoryModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-medium">+ Adicionar Item</button>
-                </div>
-                <div id="inventory-container" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-            </section>
-
-            <!-- ABA CALCULADORA SD -->
-            <section id="tab-calculator" class="hidden space-y-6">
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 max-w-xl">
-                    <div>
-                        <h2 class="text-2xl font-bold">Calculadora de Cartão SD</h2>
-                        <p class="text-slate-400 text-sm">Estime quantas horas de gravação restam no cartão.</p>
-                    </div>
-                    <div class="space-y-3 text-xs">
+                <!-- SECTION 2: SCHEDULES (ESCALAS) -->
+                <section id="section-schedule" class="space-y-6 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <label class="block text-slate-400 mb-1">Capacidade do Cartão (GB)</label>
-                            <select id="sd-size" onchange="calculateSD()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                                <option value="32">32 GB</option>
-                                <option value="64" selected>64 GB</option>
-                                <option value="128">128 GB</option>
-                                <option value="256">256 GB</option>
-                            </select>
+                            <h3 class="text-xl font-bold text-white">Escalas de Servidores</h3>
+                            <p class="text-xs text-gray-400">Sincronizado via Firebase Realtime Database com notificação WhatsApp individual.</p>
                         </div>
+                        <button onclick="openNewScheduleModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Criar Nova Escala</span>
+                        </button>
+                    </div>
+
+                    <div id="scheduleContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- SECTION 3: REPLACEMENT REQUEST (TROCA DE ESCALA) -->
+                <section id="section-trade" class="space-y-6 hidden">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Solicitação de Substituição / Troca de Escala</h3>
+                        <p class="text-xs text-gray-400">Não vai conseguir servir no seu dia? Gere a mensagem formatada para pedir substituição no grupo.</p>
+                    </div>
+
+                    <div class="max-w-2xl bg-darkslate-800 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <form onsubmit="generateTradeMessage(event)" class="space-y-4 text-xs">
+                            <div>
+                                <label class="block text-gray-400 mb-1">Selecione o Voluntário que precisa de troca:</label>
+                                <select id="tradeVolunteerSelect" required class="w-full px-3.5 py-2.5 rounded-xl bg-darkslate-900 border border-gray-700 text-white">
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 mb-1">Selecione a Escala / Culto:</label>
+                                <select id="tradeScheduleSelect" required class="w-full px-3.5 py-2.5 rounded-xl bg-darkslate-900 border border-gray-700 text-white">
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 mb-1">Função que desempenharia:</label>
+                                <select id="tradeRoleSelect" required class="w-full px-3.5 py-2.5 rounded-xl bg-darkslate-900 border border-gray-700 text-white">
+                                    <option value="Mesa de Som">Mesa de Som</option>
+                                    <option value="Transmissão/Projeção">Transmissão/Projeção</option>
+                                    <option value="Câmera">Câmera</option>
+                                    <option value="Fotografia">Fotografia</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 mb-1">Motivo (Opcional):</label>
+                                <input type="text" id="tradeReason" placeholder="Ex: Viagem de trabalho / Imprevisto de saúde" class="w-full px-3.5 py-2.5 rounded-xl bg-darkslate-900 border border-gray-700 text-white">
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-darkslate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2">
+                                <i data-lucide="message-square-plus" class="w-4 h-4"></i>
+                                <span>Gerar Mensagem de Troca</span>
+                            </button>
+                        </form>
+
+                        <div id="tradeOutputBox" class="hidden space-y-3 pt-4 border-t border-gray-700">
+                            <label class="block text-xs font-bold text-amber-400">Mensagem Formatada para o WhatsApp:</label>
+                            <textarea id="tradeTextArea" rows="6" readonly class="w-full p-3 rounded-xl bg-darkslate-900 border border-gray-700 font-mono text-xs text-amber-200"></textarea>
+                            <button onclick="copyTradeText()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                                <span>Copiar para WhatsApp</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 4: STORY CARD GENERATOR -->
+                <section id="section-storycard" class="space-y-6 hidden">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Gerador de Card 9:16 para Stories</h3>
+                        <p class="text-xs text-gray-400">Crie e baixe artes oficiais da escala prontas para o Instagram.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                        <!-- Controls -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-6 space-y-4">
+                            <h4 class="font-bold text-sm text-amber-400">Configuração do Card</h4>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Selecione a Escala:</label>
+                                <select id="storyScheduleSelect" onchange="updateStoryCardPreview()" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-700 bg-darkslate-900 text-xs text-white">
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Subtítulo do Card:</label>
+                                <input type="text" id="storySubhead" value="Comunidade Evangélica de Pirapozinho" oninput="updateStoryCardPreview()" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-700 bg-darkslate-900 text-xs text-white">
+                            </div>
+                            <button onclick="downloadStoryCard()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 text-darkslate-950 font-extrabold rounded-xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Baixar Card (PNG Alta Resolução)</span>
+                            </button>
+                        </div>
+
+                        <!-- Live Preview Canvas 9:16 -->
+                        <div class="flex justify-center">
+                            <div id="storyCardRender" class="w-[320px] h-[568px] bg-gradient-to-b from-darkslate-900 via-darkslate-800 to-amber-950/90 rounded-3xl p-6 border-4 border-amber-500/40 shadow-2xl flex flex-col justify-between text-center relative overflow-hidden">
+                                <div class="w-14 h-14 rounded-2xl overflow-hidden border border-amber-500/50 mx-auto shadow-md">
+                                    <img src="https://i.ibb.co/LdQyYy3/midia-logo.jpg" alt="Logo" class="w-full h-full object-cover">
+                                </div>
+                                <div class="space-y-1 z-10">
+                                    <h4 id="storyCardTitle" class="text-base font-black tracking-wider text-white uppercase">CULTO DE CELEBRAÇÃO</h4>
+                                    <p id="storyCardSubhead" class="text-[9px] text-amber-300 font-semibold uppercase tracking-widest">COMUNIDADE EVANGÉLICA DE PIRAPOZINHO</p>
+                                    <div class="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-[10px] text-amber-200 font-bold" id="storyCardDateTime">
+                                        DOMINGO • 19:00H
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2.5 z-10 my-auto py-3 bg-darkslate-950/80 backdrop-blur-md rounded-2xl border border-amber-500/20 p-4" id="storyCardAssignments">
+                                    <!-- Populated by JS -->
+                                </div>
+
+                                <div class="z-10 pb-1 border-t border-amber-500/30 pt-2">
+                                    <p class="text-[9px] text-amber-200/80 uppercase font-bold tracking-widest">MINISTÉRIO DE MÍDIA & COMUNICAÇÃO</p>
+                                    <p class="text-[9px] text-gray-400">@cepirapozinho</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 5: EDITABLE EVENTS CALENDAR -->
+                <section id="section-events" class="space-y-6 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <label class="block text-slate-400 mb-1">Qualidade de Gravação</label>
-                            <select id="sd-quality" onchange="calculateSD()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                                <option value="1080p60">FULL HD (1080p 60fps) ~ 50 Mbps</option>
-                                <option value="4k30">4K (2160p 30fps) ~ 100 Mbps</option>
-                            </select>
+                            <h3 class="text-xl font-bold text-white">Calendário de Eventos & Conferências</h3>
+                            <p class="text-xs text-gray-400">Cadastre congressos, vigílias e cultos especiais da Comunidade Evangélica.</p>
                         </div>
-                        <div class="p-4 bg-blue-600/10 border border-blue-500/20 rounded-xl text-center space-y-1 mt-4">
-                            <span class="text-xs text-blue-400 uppercase font-bold">Tempo Estimado Restante</span>
-                            <h3 id="sd-result" class="text-2xl font-bold text-white">~ 2h 45min</h3>
+                        <button onclick="openNewEventModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center space-x-2">
+                            <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                            <span>Adicionar Novo Evento</span>
+                        </button>
+                    </div>
+
+                    <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- SECTION 6: BRIEFING, CHECKLIST & GOOGLE DRIVE UPLOAD -->
+                <section id="section-briefing" class="space-y-6 hidden">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Checklist Técnico & Upload pro Drive</h3>
+                        <p class="text-xs text-gray-400">Garanta a execução perfeita do culto e acesse os links de upload imediato.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Checklist Técnico -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                            <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                                <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+                                Checklist Técnico Pré-Culto
+                            </h4>
+                            <div id="technicalChecklistContainer" class="space-y-2 text-xs">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Briefing Foto & Vídeo -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                            <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                                <i data-lucide="camera" class="w-4 h-4 text-amber-400"></i>
+                                Briefing Obrigatório de Cobertura
+                            </h4>
+                            <div id="briefingCoverageContainer" class="space-y-2 text-xs">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- ABA KANBAN DE ARTES -->
-            <section id="tab-kanban" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                    <!-- Direct Google Drive Upload Buttons -->
+                    <div class="bg-darkslate-800 border border-amber-500/30 rounded-2xl p-6 space-y-3">
+                        <h4 class="font-bold text-sm text-amber-400 flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                            Upload Direto de Arquivos do Culto
+                        </h4>
+                        <p class="text-xs text-gray-400">Selecione o tipo de mídia para abrir a pasta correspondente no Google Drive:</p>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="https://drive.google.com" target="_blank" class="px-4 py-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-semibold flex items-center space-x-2 transition">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                                <span>Enviar Fotos Brutas (RAW/JPG)</span>
+                            </a>
+                            <a href="https://drive.google.com" target="_blank" class="px-4 py-2.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center space-x-2 transition">
+                                <i data-lucide="video" class="w-4 h-4"></i>
+                                <span>Enviar Vídeos & Reels Brutos</span>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 7: INVENTORY & SD CALCULATOR -->
+                <section id="section-inventory" class="space-y-6 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Inventário de Equipamentos & Calculadora SD</h3>
+                            <p class="text-xs text-gray-400">Controle o estado de funcionamento dos equipamentos e autonomia de memória.</p>
+                        </div>
+                        <button onclick="openNewEquipmentModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-950 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Cadastrar Equipamento</span>
+                        </button>
+                    </div>
+
+                    <!-- SD Calculator -->
+                    <div class="bg-gradient-to-r from-darkslate-800 via-amber-950/40 to-darkslate-800 border border-amber-500/30 rounded-2xl p-6 shadow-xl space-y-4">
+                        <h4 class="font-bold text-sm text-amber-300 flex items-center gap-2">
+                            <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                            Calculadora de Autonomia do Cartão SD
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Capacidade (GB):</label>
+                                <select id="sdCapacity" onchange="calculateSDTime()" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                                    <option value="32">32 GB</option>
+                                    <option value="64" selected>64 GB</option>
+                                    <option value="128">128 GB</option>
+                                    <option value="256">256 GB</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Qualidade de Gravação:</label>
+                                <select id="sdResolution" onchange="calculateSDTime()" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                                    <option value="fhd30">Full HD (1080p) - 30fps</option>
+                                    <option value="fhd60">Full HD (1080p) - 60fps</option>
+                                    <option value="4k30">4K Ultra HD - 30fps</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <div class="p-2.5 rounded-xl bg-darkslate-900 border border-amber-500/40 text-center">
+                                    <span class="text-[10px] text-gray-400 block">Autonomia Estimada:</span>
+                                    <span id="sdCalculatedTime" class="text-sm font-extrabold text-amber-300">~ 2h 40min de vídeo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="equipmentGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- SECTION 8: KANBAN FOR DESIGN REQUESTS -->
+                <section id="section-kanban" class="space-y-6 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Kanban de Pedidos de Artes e Mídias</h3>
+                            <p class="text-xs text-gray-400">Solicite novos designs para o Ministério de Mídia.</p>
+                        </div>
+                        <button onclick="openNewArtModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-950 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Novo Pedido de Arte</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Todo -->
+                        <div class="bg-darkslate-800/60 rounded-2xl p-4 border border-gray-800 flex flex-col h-full space-y-3">
+                            <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+                                <span class="font-bold text-xs text-amber-400 flex items-center gap-1.5">
+                                    <i data-lucide="circle-dot" class="w-3.5 h-3.5"></i> A Fazer
+                                </span>
+                                <span id="count-todo" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">0</span>
+                            </div>
+                            <div id="kanban-todo" class="space-y-3 flex-grow min-h-[200px]"></div>
+                        </div>
+
+                        <!-- Doing -->
+                        <div class="bg-darkslate-800/60 rounded-2xl p-4 border border-gray-800 flex flex-col h-full space-y-3">
+                            <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+                                <span class="font-bold text-xs text-cyan-400 flex items-center gap-1.5">
+                                    <i data-lucide="loader" class="w-3.5 h-3.5"></i> Em Produção
+                                </span>
+                                <span id="count-doing" class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">0</span>
+                            </div>
+                            <div id="kanban-doing" class="space-y-3 flex-grow min-h-[200px]"></div>
+                        </div>
+
+                        <!-- Done -->
+                        <div class="bg-darkslate-800/60 rounded-2xl p-4 border border-gray-800 flex flex-col h-full space-y-3">
+                            <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+                                <span class="font-bold text-xs text-emerald-400 flex items-center gap-1.5">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Pronto / Aprovado
+                                </span>
+                                <span id="count-done" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">0</span>
+                            </div>
+                            <div id="kanban-done" class="space-y-3 flex-grow min-h-[200px]"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 9: VOLUNTEERS CRUD TEAM -->
+                <section id="section-team" class="space-y-6 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Voluntários e Integrantes</h3>
+                            <p class="text-xs text-gray-400">Todos os membros habilitados para seleção nas escalas e funções do ministério.</p>
+                        </div>
+                        <button onclick="openVolunteerModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-950 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i>
+                            <span>Adicionar Voluntário</span>
+                        </button>
+                    </div>
+
+                    <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- SECTION 10: MURAL DE BASTIDORES & HIGHLIGHTS -->
+                <section id="section-highlights" class="space-y-6 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Mural de Destaques & Bastidores</h3>
+                            <p class="text-xs text-gray-400">Galeria de fotos da equipe trabalhando nos cultos e eventos.</p>
+                        </div>
+                        <button onclick="openHighlightModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-950 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i>
+                            <span>Nova Foto no Mural</span>
+                        </button>
+                    </div>
+
+                    <div id="highlightsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- SECTION 11: GUIDELINES & CODE OF CONDUCT -->
+                <section id="section-guidelines" class="space-y-6 hidden">
                     <div>
-                        <h2 class="text-2xl font-bold">Solicitação de Artes</h2>
-                        <p class="text-slate-400 text-sm">Acompanhe e envie demandas aos designers.</p>
+                        <h3 class="text-xl font-bold text-white">Boas Práticas & Código de Conduta</h3>
+                        <p class="text-xs text-gray-400">Direcionamento oficial de postura, vestimenta e procedimentos de emergência.</p>
                     </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                        <span class="font-bold text-amber-400 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Pendentes</span>
-                        <div id="column-pending" class="space-y-3"></div>
-                    </div>
-                    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                        <span class="font-bold text-blue-400 flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4"></i> Em Produção</span>
-                        <div id="column-doing" class="space-y-3"></div>
-                    </div>
-                    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                        <span class="font-bold text-green-400 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> Concluídos</span>
-                        <div id="column-done" class="space-y-3"></div>
-                    </div>
-                </div>
-            </section>
 
-            <!-- ABA EQUIPE -->
-            <section id="tab-team" class="hidden space-y-6">
-                <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                    <div>
-                        <h2 class="text-2xl font-bold">Equipe do Ministério da Mídia</h2>
-                        <p class="text-slate-400 text-sm">Todos os membros abaixo estão disponíveis para qualquer função na escala.</p>
-                    </div>
-                    <button onclick="openTeamModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-medium">+ Adicionar Membro</button>
-                </div>
-                <div id="team-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            </section>
+                    <div class="space-y-4 max-w-4xl">
+                        <!-- Accordion 1: Vestimenta -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+                            <button onclick="toggleAccordion('acc-dress')" class="w-full p-4 text-left font-bold text-sm text-amber-400 flex items-center justify-between bg-darkslate-800/80 hover:bg-darkslate-700/50 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="shirt" class="w-4 h-4"></i>
+                                    1. Vestimenta Oficial (Dress Code)
+                                </span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                            </button>
+                            <div id="acc-dress" class="p-4 pt-2 text-xs text-gray-300 space-y-2 border-t border-gray-800/60 hidden">
+                                <p>• <strong>Camisa Oficial da Mídia ou Roupa Preta/Escura:</strong> Mantenha discrição no altar e nas galerias durante a transmissão.</p>
+                                <p>• <strong>Calça Jeans Escura ou Calça Social Preta:</strong> Evite roupas rasgadas ou excessivamente esportivas.</p>
+                                <p>• <strong>Calçados Confortáveis e Silenciosos:</strong> Tênis escuro para movimentação silenciosa no templo.</p>
+                            </div>
+                        </div>
 
-        </main>
+                        <!-- Accordion 2: Postura Espiritual -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+                            <button onclick="toggleAccordion('acc-posture')" class="w-full p-4 text-left font-bold text-sm text-amber-400 flex items-center justify-between bg-darkslate-800/80 hover:bg-darkslate-700/50 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="heart-handshake" class="w-4 h-4"></i>
+                                    2. Postura e Conduta Espiritual
+                                </span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                            </button>
+                            <div id="acc-posture" class="p-4 pt-2 text-xs text-gray-300 space-y-2 border-t border-gray-800/60 hidden">
+                                <p>• Chegue com no mínimo <strong>30 minutos de antecedência</strong> do horário do culto para testes e oração.</p>
+                                <p>• Mantenha foco total na ministração, evitando uso de redes sociais pessoais durante o serviço na mesa ou câmera.</p>
+                                <p>• Respeite os pastores e a equipe de louvor com comunicação discreta pelos fones/intercom.</p>
+                            </div>
+                        </div>
+
+                        <!-- Accordion 3: Procedimento de Emergência -->
+                        <div class="bg-darkslate-800 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+                            <button onclick="toggleAccordion('acc-emergency')" class="w-full p-4 text-left font-bold text-sm text-amber-400 flex items-center justify-between bg-darkslate-800/80 hover:bg-darkslate-700/50 transition">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                    3. Procedimentos em Caso de Falha Técnica
+                                </span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                            </button>
+                            <div id="acc-emergency" class="p-4 pt-2 text-xs text-gray-300 space-y-2 border-t border-gray-800/60 hidden">
+                                <p>• <strong>Queda de Sinal/Internet na Transmissão:</strong> Comute o OBS para a tela de espera com louvor ambiente e reinicie o encoder.</p>
+                                <p>• <strong>Microfone do Pastor Falhando:</strong> Substitua imediatamente pelo microfone sem fio de reserva na maleta do som.</p>
+                                <p>• <strong>Falta de Energia / Nobreak:</strong> Mantenha a calma, aguarde o gerador/reconexão e reinicie o ProPresenter.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
     </div>
 
-    <!-- MODAL: NOVA ESCALA -->
-    <div id="modal-roster" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Montar Escala</h3>
-                <button onclick="closeRosterModal()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- MODALS SECTION -->
+
+    <!-- Notice Modal -->
+    <div id="noticeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h4 class="font-bold text-base text-white flex items-center gap-2">
+                    <i data-lucide="message-square" class="w-5 h-5 text-emerald-400"></i>
+                    Aviso Geral de Escala no WhatsApp
+                </h4>
+                <button onclick="closeNoticeModal()" class="text-gray-400 hover:text-white">&times;</button>
             </div>
-            <form id="form-roster" onsubmit="saveRoster(event)" class="space-y-3 text-sm">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Selecione a Escala:</label>
+                <select id="noticeScheduleSelect" onchange="updateNoticeText()" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white"></select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Mensagem Gerada:</label>
+                <textarea id="noticeTextArea" rows="8" readonly class="w-full p-3 rounded-xl bg-darkslate-900 border border-gray-700 font-mono text-xs text-amber-200"></textarea>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="copyNoticeText()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span>Copiar Aviso</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Volunteer Modal -->
+    <div id="volunteerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h4 class="font-bold text-base text-white" id="volunteerModalTitle">Novo Voluntário</h4>
+                <button onclick="closeVolunteerModal()" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <form id="volunteerForm" onsubmit="saveVolunteer(event)" class="space-y-3">
+                <input type="hidden" id="volId">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Culto / Evento</label>
-                    <input type="text" id="roster-title" required placeholder="Ex: Culto da Família" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <label class="block text-xs text-gray-400 mb-1">Nome Completo</label>
+                    <input type="text" id="volName" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Data e Horário</label>
-                    <input type="datetime-local" id="roster-date" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <label class="block text-xs text-gray-400 mb-1">WhatsApp (DDD + Número)</label>
+                    <input type="text" id="volPhone" placeholder="5518991234567" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Câmera 1</label>
-                        <select id="roster-cam1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Câmera 2</label>
-                        <select id="roster-cam2" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Stories / Redes</label>
-                        <select id="roster-stories" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Telão / Holyrics</label>
-                        <select id="roster-telao" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Funções Habilitadas</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Mesa de Som" class="rounded text-amber-500"> <span>Mesa de Som</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Transmissão/Projeção" class="rounded text-amber-500"> <span>Projeção/Telão</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Câmera" class="rounded text-amber-500"> <span>Câmera</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Fotografia" class="rounded text-amber-500"> <span>Fotografia</span></label>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Designer Culto</label>
-                        <select id="roster-desculto" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Designer Eventos</label>
-                        <select id="roster-desevento" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeRosterModal()" class="px-4 py-2 bg-slate-800 text-xs rounded-xl">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Escala</button>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeVolunteerModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-950 font-bold rounded-xl text-xs hover:bg-amber-400">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: NOVO MEMBRO -->
-    <div id="modal-team" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Adicionar Membro</h3>
-                <button onclick="closeTeamModal()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- New Schedule Modal -->
+    <div id="scheduleModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h4 class="font-bold text-base text-white">Nova Escala</h4>
+                <button onclick="closeScheduleModal()" class="text-gray-400 hover:text-white">&times;</button>
             </div>
-            <form id="form-team" onsubmit="saveTeamMember(event)" class="space-y-3 text-sm">
+            <form id="scheduleForm" onsubmit="saveNewSchedule(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Voluntário</label>
-                    <input type="text" id="member-name" required placeholder="Ex: Lucas Gabriel" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <label class="block text-xs text-gray-400 mb-1">Título do Culto / Evento</label>
+                    <input type="text" id="schTitle" required placeholder="Ex: Culto de Celebração" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
                 </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">WhatsApp (com DDD)</label>
-                    <input type="text" id="member-phone" required placeholder="Ex: 18991234567" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Data</label>
+                        <input type="date" id="schDate" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Horário</label>
+                        <input type="time" id="schTime" value="19:00" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                    </div>
                 </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeTeamModal()" class="px-4 py-2 bg-slate-800 text-xs rounded-xl">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Membro</button>
+                <div class="border-t border-gray-700 pt-3 space-y-2">
+                    <p class="text-xs font-bold text-amber-400">Atribuir Integrantes (Todos disponíveis):</p>
+                    <div><label class="block text-[11px] text-gray-400">Mesa de Som:</label><select id="assignSound" class="w-full px-2 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select></div>
+                    <div><label class="block text-[11px] text-gray-400">Projeção / Telão:</label><select id="assignProj" class="w-full px-2 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select></div>
+                    <div><label class="block text-[11px] text-gray-400">Câmera:</label><select id="assignCam" class="w-full px-2 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select></div>
+                    <div><label class="block text-[11px] text-gray-400">Fotografia:</label><select id="assignPhoto" class="w-full px-2 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select></div>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeScheduleModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-950 font-bold rounded-xl text-xs">Criar Escala</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: INVENTÁRIO -->
-    <div id="modal-inventory" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Novo Equipamento</h3>
-                <button onclick="closeInventoryModal()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- Event Modal -->
+    <div id="eventModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h4 class="font-bold text-base text-white">Evento no Calendário</h4>
+                <button onclick="closeEventModal()" class="text-gray-400 hover:text-white">&times;</button>
             </div>
-            <form id="form-inventory" onsubmit="saveInventory(event)" class="space-y-3 text-sm">
+            <form onsubmit="saveChurchEvent(event)" class="space-y-3">
+                <input type="hidden" id="evtId">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Item</label>
-                    <input type="text" id="inv-name" required placeholder="Ex: Câmera Sony A6400" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <label class="block text-xs text-gray-400 mb-1">Título do Evento</label>
+                    <input type="text" id="evtTitle" required placeholder="Ex: Conferência de Jovens" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Data</label>
+                        <input type="date" id="evtDate" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Categoria / Tag</label>
+                        <select id="evtTag" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                            <option value="Conferência">Conferência</option>
+                            <option value="Culto Especial">Culto Especial</option>
+                            <option value="Vigília">Vigília</option>
+                            <option value="Treinamento">Treinamento</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Status</label>
-                    <select id="inv-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                        <option value="ok">Funcionando Perfeitamente</option>
-                        <option value="alert">Atenção / Manutenção</option>
-                        <option value="out">Emprestado / Fora</option>
+                    <label class="block text-xs text-gray-400 mb-1">Descrição</label>
+                    <textarea id="evtDesc" rows="3" placeholder="Detalhes da programação..." class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white"></textarea>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeEventModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-950 font-bold rounded-xl text-xs">Salvar Evento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Highlight Photo Modal -->
+    <div id="highlightModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h4 class="font-bold text-base text-white">Nova Foto no Mural</h4>
+                <button onclick="closeHighlightModal()" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <form onsubmit="saveHighlightPhoto(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Legenda / Descrição</label>
+                    <input type="text" id="hlCaption" required placeholder="Ex: Equipe de som no culto de domingo" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">URL da Imagem</label>
+                    <input type="url" id="hlUrl" required placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Data da Foto</label>
+                    <input type="date" id="hlDate" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeHighlightModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-950 font-bold rounded-xl text-xs">Publicar Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Equipment Modal -->
+    <div id="equipmentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h4 class="font-bold text-base text-white">Novo Equipamento</h4>
+                <button onclick="closeEquipmentModal()" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <form onsubmit="saveEquipment(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nome / Modelo</label>
+                    <input type="text" id="eqName" required placeholder="Ex: Câmera Sony Alpha 6400" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Status</label>
+                    <select id="eqStatus" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                        <option value="OK">100% Funcional</option>
+                        <option value="Maintenance">Manutenção</option>
+                        <option value="Broken">Inoperante</option>
                     </select>
                 </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeInventoryModal()" class="px-4 py-2 bg-slate-800 text-xs rounded-xl">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Item</button>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeEquipmentModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-950 font-bold rounded-xl text-xs">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: MENSAGEM DO GRUPO -->
-    <div id="modal-group-msg" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Aviso para o Grupo da Mídia</h3>
-                <button onclick="closeGroupMessageModal()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- Art Modal -->
+    <div id="artModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h4 class="font-bold text-base text-white">Novo Pedido de Arte</h4>
+                <button onclick="closeArtModal()" class="text-gray-400 hover:text-white">&times;</button>
             </div>
-            <textarea id="group-message-text" rows="10" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-green-400 custom-scrollbar"></textarea>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                <button onclick="copyGroupMessage()" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl text-xs font-medium">Copiar Texto</button>
-            </div>
+            <form onsubmit="saveArtRequest(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Título do Banner/Design</label>
+                    <input type="text" id="artTitle" required placeholder="Ex: Banner Encontro de Jovens" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Formato</label>
+                    <select id="artFormat" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                        <option value="Feed (1080x1350)">Feed (1080x1350)</option>
+                        <option value="Stories (1080x1920)">Stories (1080x1920)</option>
+                        <option value="Telão (1920x1080)">Telão (1920x1080)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Designer Atribuído</label>
+                    <select id="artAssignee" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white"></select>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeArtModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-950 font-bold rounded-xl text-xs">Criar Pedido</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- FIREBASE SDK & LÓGICA DO APP -->
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-darkslate-800 text-white text-xs px-4 py-3 rounded-2xl shadow-2xl transition opacity-0 pointer-events-none z-50 flex items-center space-x-2 border border-amber-500/30">
+        <i data-lucide="check-circle" class="w-4 h-4 text-amber-400"></i>
+        <span id="toastMsg">Notificação</span>
+    </div>
+
+    <!-- FIREBASE MODULE & APPLICATION LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // CREDENCIAIS FIREBASE DO SEU PROJETO
+        // Provided Firebase Realtime Database Config
         const firebaseConfig = {
             apiKey: "AIzaSyCqvB5B9sH8zGo1VDupgahDQyGKK9MLMao",
             authDomain: "midiacep-596a3.firebaseapp.com",
@@ -437,376 +935,731 @@
             storageBucket: "midiacep-596a3.firebasestorage.app",
             messagingSenderId: "918179980040",
             appId: "1:918179980040:web:a4890816b72badc1bcc2bd",
-            measurementId: "G-FWNRHW94M4"
+            measurementId: "G-FWNRHW94M4",
+            databaseURL: "https://midiacep-596a3-default-rtdb.firebaseio.com"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // ESTRUTURA DE DADOS GLOBAL
-        window.appData = {
-            team: [
-                { id: 1, name: "Lais (Líder)", phone: "18997144842" },
-                { id: 2, name: "Bruna", phone: "18998182229" },
-                { id: 3, name: "João", phone: "18996485335" },
-                { id: 4, name: "Pedro Rocha", phone: "18998202566" },
-                { id: 5, name: "Tayná", phone: "18996943888" },
-                { id: 6, name: "Emily", phone: "18996600865" },
-                { id: 7, name: "Pedro Ramos", phone: "18997747636" }
+        // Pre-loaded Volunteers
+        const DEFAULT_TEAM = [
+            { id: '1', name: 'Lais (Líder)', phone: '5518991234567', roles: ['Fotografia', 'Transmissão/Projeção', 'Mesa de Som', 'Câmera'] },
+            { id: '2', name: 'Bruna', phone: '5518991234568', roles: ['Fotografia', 'Câmera', 'Mesa de Som', 'Transmissão/Projeção'] },
+            { id: '3', name: 'João', phone: '5518991234569', roles: ['Mesa de Som', 'Transmissão/Projeção', 'Câmera', 'Fotografia'] },
+            { id: '4', name: 'Pedro Rocha', phone: '5518991234570', roles: ['Câmera', 'Mesa de Som', 'Transmissão/Projeção', 'Fotografia'] },
+            { id: '5', name: 'Tayná', phone: '5518991234571', roles: ['Transmissão/Projeção', 'Fotografia', 'Câmera', 'Mesa de Som'] },
+            { id: '6', name: 'Emily', phone: '5518991234572', roles: ['Fotografia', 'Câmera', 'Transmissão/Projeção', 'Mesa de Som'] },
+            { id: '7', name: 'Pedro Ramos', phone: '5518991234573', roles: ['Mesa de Som', 'Câmera', 'Transmissão/Projeção', 'Fotografia'] }
+        ];
+
+        window.appState = {
+            team: DEFAULT_TEAM,
+            schedules: [],
+            events: [
+                { id: 'evt-1', title: 'Conferência Santidade e Poder', date: '2026-10-12', tag: 'Conferência', desc: 'Evento geral com convidados especiais de louvor e palavra.' }
             ],
-            roster: [],
-            tasks: [],
-            inventory: [
-                { id: 1, name: "Câmera Principal", status: "ok" },
-                { id: 2, name: "Cartão SD Extreme 64GB", status: "ok" },
-                { id: 3, name: "Cabo HDMI de Transmissão", status: "alert" }
+            highlights: [
+                { id: 'hl-1', caption: 'Servindo no Culto de Domingo', url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=60', date: '2026-09-01' }
             ],
-            briefing: {
-                photos: [
-                    { text: "Momento do Louvor (Visão geral e close do ministro)", done: false },
-                    { text: "Pastor / Pregador durante a pregação", done: false },
-                    { text: "Igreja orando e participando", done: false },
-                    { text: "Dízimos e Ofertas", done: false },
-                    { text: "Bastidores da Mídia", done: false }
-                ],
-                videos: [
-                    { text: "Take do Louvor para Reels (15s)", done: false },
-                    { text: "Frase marcante da pregação", done: false },
-                    { text: "Recepção / Acolhimento", done: false }
-                ]
-            }
+            kanban: [],
+            checklistTech: [
+                { text: 'Ligar Mesa de Som e ajustar microfones dos pastores', checked: true },
+                { text: 'Conferir pilhas sem fio e reserva na maleta', checked: true },
+                { text: 'Testar software de projeção (Holyrics/ProPresenter)', checked: false },
+                { text: 'Formatar cartões SD das câmeras', checked: false }
+            ],
+            briefingCoverage: [
+                { text: 'Foto Geral do Templo Cheio (Ângulo Aberto)', checked: false },
+                { text: 'Expressão de Louvor da Igreja', checked: false },
+                { text: 'Palavra do Pastor no Altar', checked: false }
+            ],
+            equipments: [
+                { id: 'eq-1', name: 'Câmera Principal Sony', status: 'OK' },
+                { id: 'eq-2', name: 'Mesa de Som Digital', status: 'OK' }
+            ]
         };
 
-        // SALVAR NO FIREBASE
-        window.saveData = function() {
-            set(ref(db, 'midia_hub_data'), window.appData);
-        };
-
-        // LER DO FIREBASE EM TEMPO REAL
-        onValue(ref(db, 'midia_hub_data'), (snapshot) => {
+        const portalRef = ref(db, 'midia_hub_data');
+        onValue(portalRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                window.appData = data;
-                renderAll();
+                window.appState.team = data.team || DEFAULT_TEAM;
+                window.appState.schedules = data.schedules || [];
+                window.appState.events = data.events || window.appState.events;
+                window.appState.highlights = data.highlights || window.appState.highlights;
+                window.appState.kanban = data.kanban || [];
+                window.appState.checklistTech = data.checklistTech || window.appState.checklistTech;
+                window.appState.briefingCoverage = data.briefingCoverage || window.appState.briefingCoverage;
+                window.appState.equipments = data.equipments || window.appState.equipments;
+            } else {
+                window.syncToFirebase();
             }
+            window.renderAllViews();
         });
 
-        // AUTENTICAÇÃO COM SENHA
-        window.handleLogin = function(e) {
+        window.syncToFirebase = function() {
+            set(portalRef, {
+                team: window.appState.team,
+                schedules: window.appState.schedules,
+                events: window.appState.events,
+                highlights: window.appState.highlights,
+                kanban: window.appState.kanban,
+                checklistTech: window.appState.checklistTech,
+                briefingCoverage: window.appState.briefingCoverage,
+                equipments: window.appState.equipments
+            });
+        };
+    </script>
+
+    <script>
+        function handleLogin(e) {
             e.preventDefault();
-            const pass = document.getElementById('login-pass').value;
+            const pass = document.getElementById('loginPassword').value;
             if (pass === 'midiacep') {
-                localStorage.setItem('midia_logged_in', 'true');
-                showApp();
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appMain').classList.remove('hidden');
+                lucide.createIcons();
             } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        };
-
-        window.logout = function() {
-            localStorage.removeItem('midia_logged_in');
-            location.reload();
-        };
-
-        function checkAuth() {
-            if (localStorage.getItem('midia_logged_in') === 'true') {
-                showApp();
+                document.getElementById('loginError').classList.remove('hidden');
             }
         }
 
-        function showApp() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
-            renderAll();
+        function logout() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appMain').classList.add('hidden');
+            document.getElementById('loginPassword').value = '';
         }
 
-        // CONTROLADOR DE ABAS
-        window.switchTab = function(tabId) {
-            ['roster', 'hub', 'briefing', 'inventory', 'calculator', 'kanban', 'team'].forEach(t => {
-                const el = document.getElementById(`tab-${t}`);
-                const nav = document.getElementById(`nav-${t}`);
-                if(el) el.classList.add('hidden');
-                if(nav) nav.className = "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+        function copyToClipboard(text, desc) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast(`${desc} copiado!`);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            t.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000);
+        }
+
+        function switchTab(tab) {
+            const tabs = ['credentials', 'schedule', 'trade', 'storycard', 'events', 'briefing', 'inventory', 'kanban', 'team', 'highlights', 'guidelines'];
+            const tabTitles = {
+                credentials: { title: 'Contas, Senhas e Pastas', icon: 'key' },
+                schedule: { title: 'Escalas de Servidores', icon: 'calendar' },
+                trade: { title: 'Troca de Escala / Substituição', icon: 'arrow-left-right' },
+                storycard: { title: 'Gerador de Card para Stories', icon: 'instagram' },
+                events: { title: 'Calendário de Eventos da Igreja', icon: 'calendar-days' },
+                briefing: { title: 'Checklist & Drive de Cobertura', icon: 'clipboard-check' },
+                inventory: { title: 'Equipamentos e Memória SD', icon: 'hard-drive' },
+                kanban: { title: 'Pedir Artes (Kanban)', icon: 'layout-grid' },
+                team: { title: 'Voluntários (CRUD)', icon: 'users' },
+                highlights: { title: 'Mural de Destaques & Bastidores', icon: 'sparkles' },
+                guidelines: { title: 'Boas Práticas e Código de Conduta', icon: 'book-open' }
+            };
+
+            tabs.forEach(t => {
+                const sec = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (sec) sec.classList.add('hidden');
+                if (btn) {
+                    btn.className = "w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-gray-400 hover:text-white hover:bg-darkslate-700/50";
+                }
             });
-            const activeTab = document.getElementById(`tab-${tabId}`);
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if(activeTab) activeTab.classList.remove('hidden');
-            if(activeNav) activeNav.className = "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all bg-blue-600 text-white";
-        };
 
-        function renderAll() {
-            populateTeamSelects();
-            renderRoster();
-            renderInventory();
-            renderBriefing();
-            renderKanban();
+            const activeSec = document.getElementById(`section-${tab}`);
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            if (activeSec) activeSec.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.className = "w-full px-3 py-2.5 rounded-xl font-medium text-xs flex items-center space-x-2.5 transition text-amber-400 bg-amber-500/10 border border-amber-500/20";
+            }
+
+            const headerInfo = tabTitles[tab];
+            if (headerInfo) {
+                document.getElementById('currentTabTitle').innerHTML = `
+                    <i data-lucide="${headerInfo.icon}" class="w-5 h-5 text-amber-400"></i>
+                    <span>${headerInfo.title}</span>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function toggleAccordion(id) {
+            const acc = document.getElementById(id);
+            if (acc) acc.classList.toggle('hidden');
+        }
+
+        // Render Functions
+        function renderAllViews() {
             renderTeam();
-            calculateSD();
-            if(window.lucide) window.lucide.createIcons();
+            renderSchedules();
+            renderEvents();
+            renderHighlights();
+            renderChecklists();
+            renderInventory();
+            renderKanban();
+            updateTradeSelects();
+            updateStoryCardPreview();
+            lucide.createIcons();
         }
 
-        // PREENCHE TODOS OS SELECTS COM TODOS OS MEMBROS
-        function populateTeamSelects() {
-            const selects = document.querySelectorAll('.team-select');
-            selects.forEach(sel => {
-                const current = sel.value;
-                sel.innerHTML = '<option value="">-- Selecionar Voluntário --</option>' +
-                    (window.appData.team || []).map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-                sel.value = current;
+        function renderTeam() {
+            const grid = document.getElementById('teamGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            window.appState.team.forEach(member => {
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between hover:border-amber-500/30 transition";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 text-darkslate-950 font-extrabold flex items-center justify-center text-xs">
+                                    ${member.name.split(' ').map(n=>n[0]).join('')}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">${member.name}</h4>
+                                    <p class="text-[10px] text-gray-400">${member.phone}</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button onclick="editVolunteer('${member.id}')" class="text-gray-400 hover:text-amber-400 p-1"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="deleteVolunteer('${member.id}')" class="text-gray-400 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            ${member.roles.map(r => `<span class="px-2 py-0.5 rounded-md bg-darkslate-900 text-amber-200 text-[10px] border border-amber-500/20">${r}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800">
+                        <a href="https://wa.me/${member.phone}" target="_blank" class="w-full py-1.5 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 border border-emerald-500/20 transition">
+                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                            <span>WhatsApp</span>
+                        </a>
+                    </div>
+                `;
+                grid.appendChild(card);
             });
         }
 
-        // RENDER ESCALAS
-        function renderRoster() {
-            const container = document.getElementById('roster-container');
-            if(!window.appData.roster || window.appData.roster.length === 0) {
-                container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800">Nenhuma escala cadastrada. Clique em "+ Nova Escala".</div>`;
+        function renderSchedules() {
+            const container = document.getElementById('scheduleContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (window.appState.schedules.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500 text-xs">Nenhuma escala salva. Clique em "Criar Nova Escala".</div>`;
                 return;
             }
 
-            container.innerHTML = window.appData.roster.map(r => {
-                const d = new Date(r.date);
-                const dateStr = d.toLocaleDateString('pt-BR');
-                const timeStr = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            window.appState.schedules.forEach(sch => {
+                const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                
+                const assignmentsHTML = sch.assignments.map(asgn => {
+                    const member = window.appState.team.find(m => m.id === asgn.volunteerId);
+                    const memberName = member ? member.name : 'Pendente';
+                    const customMsg = member ? `Olá ${member.name}! Shalom! Você está escalado(a) na Mídia CEP!\n📌 *Culto:* ${sch.title}\n📅 *Data:* ${formattedDate} às ${sch.time}\n⚡ *Função:* ${asgn.role}` : '';
+                    const waLink = member ? `https://wa.me/${member.phone}?text=${encodeURIComponent(customMsg)}` : '#';
 
-                const assignments = [
-                    { role: "Câmera 1", name: r.cam1 },
-                    { role: "Câmera 2", name: r.cam2 },
-                    { role: "Stories", name: r.stories },
-                    { role: "Telão", name: r.telao },
-                    { role: "Des. Culto", name: r.desculto },
-                    { role: "Des. Eventos", name: r.desevento }
-                ].filter(a => a.name);
-
-                return `
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                        <div class="flex justify-between items-start border-b border-slate-800 pb-3">
+                    return `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-darkslate-900 border border-gray-800 text-xs">
                             <div>
-                                <h3 class="font-bold text-slate-100">${r.title}</h3>
-                                <p class="text-xs text-blue-400 mt-0.5">${dateStr} às ${timeStr}</p>
+                                <p class="text-[10px] text-amber-400 font-semibold uppercase">${asgn.role}</p>
+                                <p class="font-bold text-white">${memberName}</p>
                             </div>
-                            <button onclick="deleteRoster(${r.id})" class="text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            ${member ? `<a href="${waLink}" target="_blank" class="px-2 py-1 bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-[10px] font-semibold flex items-center gap-1"><i data-lucide="send" class="w-3 h-3"></i> Notificar</a>` : ''}
                         </div>
-                        <div class="space-y-1 text-xs">
-                            ${assignments.map(a => `<div class="flex justify-between"><span class="text-slate-400">${a.role}:</span> <span class="font-medium">${a.name}</span></div>`).join('')}
+                    `;
+                }).join('');
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-gray-800 pb-3">
+                        <div>
+                            <h4 class="font-bold text-base text-white">${sch.title}</h4>
+                            <p class="text-xs text-amber-300 font-semibold mt-0.5">${formattedDate} • ${sch.time}h</p>
                         </div>
-                        <div class="pt-3 border-t border-slate-800 space-y-1.5">
-                            <p class="text-[10px] text-slate-500 font-semibold uppercase">Avisar no WhatsApp:</p>
-                            <div class="flex flex-wrap gap-1">
-                                ${assignments.map(a => {
-                                    const member = window.appData.team.find(m => m.name === a.name);
-                                    if(!member) return '';
-                                    return `
-                                        <button onclick="sendRosterWhatsApp('${member.phone}', '${a.name}', '${a.role}', '${r.title}', '${r.date}')" class="flex items-center gap-1 text-[11px] px-2 py-1 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-lg">
-                                            <i data-lucide="message-circle" class="w-3 h-3"></i> ${a.name.split(' ')[0]}
-                                        </button>
-                                    `;
-                                }).join('')}
-                            </div>
+                        <button onclick="deleteSchedule('${sch.id}')" class="text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="space-y-2">${assignmentsHTML}</div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Update selects
+            const selectStory = document.getElementById('storyScheduleSelect');
+            const selectNotice = document.getElementById('noticeScheduleSelect');
+            if (selectStory && selectNotice) {
+                selectStory.innerHTML = '';
+                selectNotice.innerHTML = '';
+                window.appState.schedules.forEach(s => {
+                    selectStory.innerHTML += `<option value="${s.id}">${s.title} (${s.date})</option>`;
+                    selectNotice.innerHTML += `<option value="${s.id}">${s.title} (${s.date})</option>`;
+                });
+            }
+        }
+
+        function updateTradeSelects() {
+            const volSel = document.getElementById('tradeVolunteerSelect');
+            const schSel = document.getElementById('tradeScheduleSelect');
+            if (!volSel || !schSel) return;
+
+            volSel.innerHTML = '';
+            schSel.innerHTML = '';
+
+            window.appState.team.forEach(m => {
+                volSel.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+            });
+
+            window.appState.schedules.forEach(s => {
+                schSel.innerHTML += `<option value="${s.id}">${s.title} (${s.date})</option>`;
+            });
+        }
+
+        function generateTradeMessage(e) {
+            e.preventDefault();
+            const volId = document.getElementById('tradeVolunteerSelect').value;
+            const schId = document.getElementById('tradeScheduleSelect').value;
+            const role = document.getElementById('tradeRoleSelect').value;
+            const reason = document.getElementById('tradeReason').value;
+
+            const vol = window.appState.team.find(m => m.id === volId);
+            const sch = window.appState.schedules.find(s => s.id === schId);
+
+            if (!vol || !sch) return;
+
+            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+
+            let msg = `⚠️ *PEDIDO DE SUBSTITUIÇÃO DE ESCALA*\n\n`;
+            msg += `👤 *Voluntário:* ${vol.name}\n`;
+            msg += `📌 *Culto:* ${sch.title}\n`;
+            msg += `📅 *Data:* ${formattedDate} às ${sch.time}h\n`;
+            msg += `⚡ *Função:* ${role}\n`;
+            if (reason) msg += `📝 *Motivo:* ${reason}\n`;
+            msg += `\nAlguém disponível para assumir ou trocar a escala? Por favor, responda aqui no grupo! 🙏`;
+
+            document.getElementById('tradeTextArea').value = msg;
+            document.getElementById('tradeOutputBox').classList.remove('hidden');
+        }
+
+        function copyTradeText() {
+            copyToClipboard(document.getElementById('tradeTextArea').value, 'Mensagem de troca');
+        }
+
+        function renderEvents() {
+            const grid = document.getElementById('eventsGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            window.appState.events.forEach(evt => {
+                const formattedDate = new Date(evt.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-3 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[10px] border border-amber-500/30">${evt.tag}</span>
+                            <button onclick="deleteChurchEvent('${evt.id}')" class="text-gray-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
+                        <h4 class="font-bold text-base text-white mt-2">${evt.title}</h4>
+                        <p class="text-xs text-amber-300 font-medium mt-1 flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> ${formattedDate}</p>
+                        <p class="text-xs text-gray-400 mt-2">${evt.desc}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openNewEventModal() { document.getElementById('eventModal').classList.remove('hidden'); }
+        function closeEventModal() { document.getElementById('eventModal').classList.add('hidden'); }
+
+        function saveChurchEvent(e) {
+            e.preventDefault();
+            const title = document.getElementById('evtTitle').value;
+            const date = document.getElementById('evtDate').value;
+            const tag = document.getElementById('evtTag').value;
+            const desc = document.getElementById('evtDesc').value;
+
+            window.appState.events.unshift({ id: 'evt-' + Date.now(), title, date, tag, desc });
+            window.syncToFirebase();
+            closeEventModal();
+            showToast("Evento cadastrado no calendário!");
+        }
+
+        function deleteChurchEvent(id) {
+            window.appState.events = window.appState.events.filter(e => e.id !== id);
+            window.syncToFirebase();
+        }
+
+        function renderHighlights() {
+            const grid = document.getElementById('highlightsGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            window.appState.highlights.forEach(hl => {
+                const formattedDate = new Date(hl.date + 'T00:00:00').toLocaleDateString('pt-BR');
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="h-48 w-full bg-darkslate-900 overflow-hidden relative">
+                            <img src="${hl.url}" alt="${hl.caption}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x300/111827/eab308?text=BASTIDORES+MIDA'">
+                            <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/70 text-[10px] text-amber-300 font-mono">${formattedDate}</span>
+                        </div>
+                        <div class="p-4">
+                            <p class="font-bold text-xs text-white">${hl.caption}</p>
+                        </div>
+                    </div>
+                    <div class="p-4 pt-0 flex justify-end">
+                        <button onclick="deleteHighlightPhoto('${hl.id}')" class="text-gray-500 hover:text-red-400 text-xs flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <span>Remover</span>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openHighlightModal() { document.getElementById('highlightModal').classList.remove('hidden'); }
+        function closeHighlightModal() { document.getElementById('highlightModal').classList.add('hidden'); }
+
+        function saveHighlightPhoto(e) {
+            e.preventDefault();
+            const caption = document.getElementById('hlCaption').value;
+            const url = document.getElementById('hlUrl').value;
+            const date = document.getElementById('hlDate').value;
+
+            window.appState.highlights.unshift({ id: 'hl-' + Date.now(), caption, url, date });
+            window.syncToFirebase();
+            closeHighlightModal();
+            showToast("Foto adicionada ao mural!");
+        }
+
+        function deleteHighlightPhoto(id) {
+            window.appState.highlights = window.appState.highlights.filter(h => h.id !== id);
+            window.syncToFirebase();
+        }
+
+        // Checklists, Inventory & Kanban Renderers
+        function renderChecklists() {
+            const techC = document.getElementById('technicalChecklistContainer');
+            const covC = document.getElementById('briefingCoverageContainer');
+
+            if (techC) {
+                techC.innerHTML = window.appState.checklistTech.map((item, idx) => `
+                    <div class="flex items-center space-x-3 p-2.5 rounded-xl bg-darkslate-900 border border-gray-800">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleTechCheck(${idx})" class="w-4 h-4 rounded text-amber-500 bg-darkslate-800 border-gray-700">
+                        <span class="${item.checked ? 'line-through text-gray-500' : 'text-gray-200'}">${item.text}</span>
+                    </div>
+                `).join('');
+            }
+
+            if (covC) {
+                covC.innerHTML = window.appState.briefingCoverage.map((item, idx) => `
+                    <div class="flex items-center space-x-3 p-2.5 rounded-xl bg-darkslate-900 border border-gray-800">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCovCheck(${idx})" class="w-4 h-4 rounded text-amber-500 bg-darkslate-800 border-gray-700">
+                        <span class="${item.checked ? 'line-through text-gray-500' : 'text-gray-200'}">${item.text}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleTechCheck(i) {
+            window.appState.checklistTech[i].checked = !window.appState.checklistTech[i].checked;
+            window.syncToFirebase();
+        }
+
+        function toggleCovCheck(i) {
+            window.appState.briefingCoverage[i].checked = !window.appState.briefingCoverage[i].checked;
+            window.syncToFirebase();
+        }
+
+        function renderInventory() {
+            const grid = document.getElementById('equipmentGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            window.appState.equipments.forEach(eq => {
+                let badge = '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Funcional</span>';
+                if (eq.status === 'Maintenance') badge = '<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">Manutenção</span>';
+                if (eq.status === 'Broken') badge = '<span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[10px] font-bold">Inoperante</span>';
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl p-4 shadow-xl flex items-center justify-between";
+                card.innerHTML = `
+                    <div>
+                        <h4 class="font-bold text-xs text-white">${eq.name}</h4>
+                        <div class="mt-1">${badge}</div>
+                    </div>
+                    <button onclick="deleteEquipment('${eq.id}')" class="text-gray-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function calculateSDTime() {
+            const gb = parseInt(document.getElementById('sdCapacity').value);
+            const res = document.getElementById('sdResolution').value;
+            let mult = 4;
+            if (res === 'fhd60') mult = 2.5;
+            if (res === '4k30') mult = 1.2;
+            const total = Math.floor(gb * mult);
+            document.getElementById('sdCalculatedTime').innerText = `~ ${Math.floor(total/60)}h ${total%60}min de vídeo`;
+        }
+
+        function renderKanban() {
+            const cols = { todo: document.getElementById('kanban-todo'), doing: document.getElementById('kanban-doing'), done: document.getElementById('kanban-done') };
+            if (!cols.todo) return;
+
+            const counts = { todo: 0, doing: 0, done: 0 };
+            Object.values(cols).forEach(c => c.innerHTML = '');
+
+            window.appState.kanban.forEach(item => {
+                counts[item.status]++;
+                const assignee = window.appState.team.find(m => m.id === item.assigneeId);
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-900 p-3.5 rounded-xl border border-gray-800 space-y-2 shadow-lg";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-xs text-white">${item.title}</h4>
+                        <button onclick="deleteArtRequest('${item.id}')" class="text-gray-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                    <p class="text-[10px] text-gray-400">Formato: <strong class="text-amber-300">${item.format}</strong></p>
+                    <div class="flex items-center justify-between pt-1 border-t border-gray-800">
+                        <span class="text-[10px] text-amber-400 font-semibold">${assignee ? assignee.name : 'Sem Designer'}</span>
+                        <select onchange="updateKanbanStatus('${item.id}', this.value)" class="text-[10px] bg-darkslate-800 border border-gray-700 rounded p-0.5 text-white">
+                            <option value="todo" ${item.status === 'todo' ? 'selected' : ''}>A Fazer</option>
+                            <option value="doing" ${item.status === 'doing' ? 'selected' : ''}>Produzindo</option>
+                            <option value="done" ${item.status === 'done' ? 'selected' : ''}>Pronto</option>
+                        </select>
+                    </div>
+                `;
+                cols[item.status].appendChild(card);
+            });
+
+            document.getElementById('count-todo').innerText = counts.todo;
+            document.getElementById('count-doing').innerText = counts.doing;
+            document.getElementById('count-done').innerText = counts.done;
+        }
+
+        function updateKanbanStatus(id, status) {
+            const item = window.appState.kanban.find(k => k.id === id);
+            if (item) {
+                item.status = status;
+                window.syncToFirebase();
+            }
+        }
+
+        function updateStoryCardPreview() {
+            const select = document.getElementById('storyScheduleSelect');
+            if (!select || !select.value) return;
+
+            const sch = window.appState.schedules.find(s => s.id === select.value);
+            if (!sch) return;
+
+            document.getElementById('storyCardTitle').innerText = sch.title;
+            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).toUpperCase();
+            document.getElementById('storyCardDateTime').innerText = `${formattedDate} • ${sch.time}H`;
+            document.getElementById('storyCardSubhead').innerText = document.getElementById('storySubhead').value;
+
+            const container = document.getElementById('storyCardAssignments');
+            container.innerHTML = sch.assignments.map(a => {
+                const member = window.appState.team.find(m => m.id === a.volunteerId);
+                return `
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-amber-400 font-extrabold uppercase text-[10px]">${a.role}</span>
+                        <span class="text-white font-bold">${member ? member.name : 'Pendente'}</span>
                     </div>
                 `;
             }).join('');
         }
 
-        window.sendRosterWhatsApp = function(phone, name, role, title, dateStr) {
-            const d = new Date(dateStr);
-            const dateFormatted = d.toLocaleDateString('pt-BR');
-            const timeFormatted = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-
-            const message = `Olá ${name}, paz do Senhor! %0A%0APassando para avisar que você está escalado(a) na Mídia:%0A📍 *${title}*%0A⏰ Data: *${dateFormatted}* às *${timeFormatted}*%0A🎯 Sua função: *${role}*%0A%0A_Por favor, confirme respondendo este aviso!_`;
-            window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
-        };
-
-        window.openRosterModal = function() { populateTeamSelects(); document.getElementById('modal-roster').classList.remove('hidden'); document.getElementById('modal-roster').classList.add('flex'); };
-        window.closeRosterModal = function() { document.getElementById('modal-roster').classList.add('hidden'); document.getElementById('modal-roster').classList.remove('flex'); };
-
-        window.saveRoster = function(e) {
-            e.preventDefault();
-            if(!window.appData.roster) window.appData.roster = [];
-            window.appData.roster.push({
-                id: Date.now(),
-                title: document.getElementById('roster-title').value,
-                date: document.getElementById('roster-date').value,
-                cam1: document.getElementById('roster-cam1').value,
-                cam2: document.getElementById('roster-cam2').value,
-                stories: document.getElementById('roster-stories').value,
-                telao: document.getElementById('roster-telao').value,
-                desculto: document.getElementById('roster-desculto').value,
-                desevento: document.getElementById('roster-desevento').value
+        function downloadStoryCard() {
+            const card = document.getElementById('storyCardRender');
+            html2canvas(card, { scale: 3 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `escala-story-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
             });
-            window.saveData();
-            closeRosterModal();
-            document.getElementById('form-roster').reset();
-        };
-
-        window.deleteRoster = function(id) {
-            window.appData.roster = window.appData.roster.filter(r => r.id !== id);
-            window.saveData();
-        };
-
-        // GESTÃO DE EQUIPE (MEMBROS)
-        window.openTeamModal = function() { document.getElementById('modal-team').classList.remove('hidden'); document.getElementById('modal-team').classList.add('flex'); };
-        window.closeTeamModal = function() { document.getElementById('modal-team').classList.add('hidden'); document.getElementById('modal-team').classList.remove('flex'); };
-
-        window.saveTeamMember = function(e) {
-            e.preventDefault();
-            if(!window.appData.team) window.appData.team = [];
-            window.appData.team.push({
-                id: Date.now(),
-                name: document.getElementById('member-name').value,
-                phone: document.getElementById('member-phone').value.replace(/\D/g,'')
-            });
-            window.saveData();
-            closeTeamModal();
-            document.getElementById('form-team').reset();
-        };
-
-        window.deleteTeamMember = function(id) {
-            window.appData.team = window.appData.team.filter(m => m.id !== id);
-            window.saveData();
-        };
-
-        function renderTeam() {
-            const container = document.getElementById('team-container');
-            if(!container) return;
-            container.innerHTML = (window.appData.team || []).map(m => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex justify-between items-center text-xs">
-                    <div>
-                        <h3 class="font-bold text-sm text-slate-100">${m.name}</h3>
-                        <p class="text-blue-400 mt-0.5">${m.phone}</p>
-                    </div>
-                    <button onclick="deleteTeamMember(${m.id})" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
-            `).join('');
         }
 
-        // INVENTÁRIO
-        function renderInventory() {
-            const container = document.getElementById('inventory-container');
-            const statusMap = {
-                ok: { label: 'Perfeito Estado', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
-                alert: { label: 'Atenção / Manutenção', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-                out: { label: 'Emprestado / Fora', color: 'bg-red-500/10 text-red-400 border-red-500/20' }
+        // Modals management
+        function openVolunteerModal() {
+            document.getElementById('volunteerModalTitle').innerText = 'Novo Voluntário';
+            document.getElementById('volId').value = '';
+            document.getElementById('volName').value = '';
+            document.getElementById('volPhone').value = '';
+            document.querySelectorAll('input[name="role"]').forEach(c => c.checked = false);
+            document.getElementById('volunteerModal').classList.remove('hidden');
+        }
+
+        function editVolunteer(id) {
+            const member = window.appState.team.find(m => m.id === id);
+            if (!member) return;
+            document.getElementById('volunteerModalTitle').innerText = 'Editar Voluntário';
+            document.getElementById('volId').value = member.id;
+            document.getElementById('volName').value = member.name;
+            document.getElementById('volPhone').value = member.phone;
+            document.querySelectorAll('input[name="role"]').forEach(c => c.checked = member.roles.includes(c.value));
+            document.getElementById('volunteerModal').classList.remove('hidden');
+        }
+
+        function closeVolunteerModal() { document.getElementById('volunteerModal').classList.add('hidden'); }
+
+        function saveVolunteer(e) {
+            e.preventDefault();
+            const id = document.getElementById('volId').value;
+            const name = document.getElementById('volName').value;
+            const phone = document.getElementById('volPhone').value;
+            const roles = Array.from(document.querySelectorAll('input[name="role"]:checked')).map(c => c.value);
+
+            if (id) {
+                const member = window.appState.team.find(m => m.id === id);
+                if (member) { member.name = name; member.phone = phone; member.roles = roles; }
+            } else {
+                window.appState.team.push({ id: Date.now().toString(), name, phone, roles });
+            }
+            window.syncToFirebase();
+            closeVolunteerModal();
+        }
+
+        function deleteVolunteer(id) {
+            window.appState.team = window.appState.team.filter(m => m.id !== id);
+            window.syncToFirebase();
+        }
+
+        function openNewScheduleModal() {
+            const populateSelect = (selectId) => {
+                const sel = document.getElementById(selectId);
+                sel.innerHTML = '<option value="">Selecione...</option>';
+                window.appState.team.forEach(m => {
+                    sel.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+                });
             };
-
-            container.innerHTML = (window.appData.inventory || []).map(item => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex justify-between items-center">
-                    <div>
-                        <h4 class="font-bold text-sm text-slate-100">${item.name}</h4>
-                        <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded border ${statusMap[item.status].color}">
-                            ${statusMap[item.status].label}
-                        </span>
-                    </div>
-                    <button onclick="deleteInventory(${item.id})" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
-            `).join('');
+            populateSelect('assignSound');
+            populateSelect('assignProj');
+            populateSelect('assignCam');
+            populateSelect('assignPhoto');
+            document.getElementById('scheduleModal').classList.remove('hidden');
         }
 
-        window.openInventoryModal = function() { document.getElementById('modal-inventory').classList.remove('hidden'); document.getElementById('modal-inventory').classList.add('flex'); };
-        window.closeInventoryModal = function() { document.getElementById('modal-inventory').classList.add('hidden'); document.getElementById('modal-inventory').classList.remove('flex'); };
+        function closeScheduleModal() { document.getElementById('scheduleModal').classList.add('hidden'); }
 
-        window.saveInventory = function(e) {
+        function saveNewSchedule(e) {
             e.preventDefault();
-            if(!window.appData.inventory) window.appData.inventory = [];
-            window.appData.inventory.push({
-                id: Date.now(),
-                name: document.getElementById('inv-name').value,
-                status: document.getElementById('inv-status').value
-            });
-            window.saveData();
-            closeInventoryModal();
-            document.getElementById('form-inventory').reset();
-        };
+            const title = document.getElementById('schTitle').value;
+            const date = document.getElementById('schDate').value;
+            const time = document.getElementById('schTime').value;
 
-        window.deleteInventory = function(id) {
-            window.appData.inventory = window.appData.inventory.filter(i => i.id !== id);
-            window.saveData();
-        };
+            const assignments = [
+                { role: 'Mesa de Som', volunteerId: document.getElementById('assignSound').value },
+                { role: 'Transmissão/Projeção', volunteerId: document.getElementById('assignProj').value },
+                { role: 'Câmera', volunteerId: document.getElementById('assignCam').value },
+                { role: 'Fotografia', volunteerId: document.getElementById('assignPhoto').value }
+            ];
 
-        // CALCULADORA SD
-        window.calculateSD = function() {
-            const size = parseInt(document.getElementById('sd-size').value);
-            const quality = document.getElementById('sd-quality').value;
-            let mbps = quality === '4k30' ? 100 : 50;
-
-            let totalSeconds = (size * 8000) / mbps;
-            let hours = Math.floor(totalSeconds / 3600);
-            let minutes = Math.floor((totalSeconds % 3600) / 60);
-
-            document.getElementById('sd-result').innerText = `~ ${hours}h ${minutes}min`;
-        };
-
-        // BRIEFING
-        function renderBriefing() {
-            if(!window.appData.briefing) return;
-            document.getElementById('briefing-photos').innerHTML = window.appData.briefing.photos.map((item, idx) => `
-                <label class="flex items-center gap-3 p-2.5 bg-slate-800/40 rounded-xl cursor-pointer text-xs">
-                    <input type="checkbox" ${item.done?'checked':''} onchange="toggleBriefing('photos', ${idx})" class="w-4 h-4 rounded">
-                    <span class="${item.done?'line-through text-slate-500':'text-slate-200'}">${item.text}</span>
-                </label>
-            `).join('');
-
-            document.getElementById('briefing-videos').innerHTML = window.appData.briefing.videos.map((item, idx) => `
-                <label class="flex items-center gap-3 p-2.5 bg-slate-800/40 rounded-xl cursor-pointer text-xs">
-                    <input type="checkbox" ${item.done?'checked':''} onchange="toggleBriefing('videos', ${idx})" class="w-4 h-4 rounded">
-                    <span class="${item.done?'line-through text-slate-500':'text-slate-200'}">${item.text}</span>
-                </label>
-            `).join('');
+            window.appState.schedules.unshift({ id: 'sch-' + Date.now(), title, date, time, assignments });
+            window.syncToFirebase();
+            closeScheduleModal();
+            showToast("Nova escala criada!");
         }
 
-        window.toggleBriefing = function(cat, idx) {
-            window.appData.briefing[cat][idx].done = !window.appData.briefing[cat][idx].done;
-            window.saveData();
-        };
+        function deleteSchedule(id) {
+            window.appState.schedules = window.appState.schedules.filter(s => s.id !== id);
+            window.syncToFirebase();
+        }
 
-        // UTILS
-        window.copyToClipboard = function(text) {
-            navigator.clipboard.writeText(text);
-            alert("Credenciais copiadas!");
-        };
+        function openNewArtModal() {
+            const select = document.getElementById('artAssignee');
+            select.innerHTML = '<option value="">Sem designer atribuído</option>';
+            window.appState.team.forEach(m => { select.innerHTML += `<option value="${m.id}">${m.name}</option>`; });
+            document.getElementById('artModal').classList.remove('hidden');
+        }
 
-        window.openGroupMessageModal = function() {
-            if(!window.appData.roster || window.appData.roster.length === 0) {
-                alert("Nenhuma escala cadastrada!");
+        function closeArtModal() { document.getElementById('artModal').classList.add('hidden'); }
+
+        function saveArtRequest(e) {
+            e.preventDefault();
+            const title = document.getElementById('artTitle').value;
+            const format = document.getElementById('artFormat').value;
+            const assigneeId = document.getElementById('artAssignee').value;
+
+            window.appState.kanban.push({ id: 'art-' + Date.now(), title, format, assigneeId, status: 'todo' });
+            window.syncToFirebase();
+            closeArtModal();
+        }
+
+        function deleteArtRequest(id) {
+            window.appState.kanban = window.appState.kanban.filter(k => k.id !== id);
+            window.syncToFirebase();
+        }
+
+        function openNewEquipmentModal() { document.getElementById('equipmentModal').classList.remove('hidden'); }
+        function closeEquipmentModal() { document.getElementById('equipmentModal').classList.add('hidden'); }
+
+        function saveEquipment(e) {
+            e.preventDefault();
+            const name = document.getElementById('eqName').value;
+            const status = document.getElementById('eqStatus').value;
+            window.appState.equipments.push({ id: 'eq-' + Date.now(), name, status });
+            window.syncToFirebase();
+            closeEquipmentModal();
+        }
+
+        function deleteEquipment(id) {
+            window.appState.equipments = window.appState.equipments.filter(e => e.id !== id);
+            window.syncToFirebase();
+        }
+
+        function openNoticeModal() {
+            document.getElementById('noticeModal').classList.remove('hidden');
+            updateNoticeText();
+        }
+
+        function closeNoticeModal() { document.getElementById('noticeModal').classList.add('hidden'); }
+
+        function updateNoticeText() {
+            const schId = document.getElementById('noticeScheduleSelect').value;
+            const sch = window.appState.schedules.find(s => s.id === schId);
+            const textArea = document.getElementById('noticeTextArea');
+
+            if (!sch) {
+                textArea.value = "Nenhuma escala cadastrada.";
                 return;
             }
-            const r = window.appData.roster[0];
-            const d = new Date(r.date);
-            const msg = `🚨 *ESCALA DE MÍDIA - ${r.title.toUpperCase()}* 🚨\n📅 Data: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}\n\n🎥 *Câmera 1:* ${r.cam1 || 'Pendente'}\n🎥 *Câmera 2:* ${r.cam2 || 'Pendente'}\n📱 *Stories/Redes:* ${r.stories || 'Pendente'}\n💻 *Telão/Holyrics:* ${r.telao || 'Pendente'}\n🎨 *Design Culto:* ${r.desculto || 'Pendente'}\n🎨 *Design Eventos:* ${r.desevento || 'Pendente'}\n\n⚠️ *Lembrete: Chegar com 45min de antecedência.*`;
 
-            document.getElementById('group-message-text').value = msg;
-            document.getElementById('modal-group-msg').classList.remove('hidden');
-            document.getElementById('modal-group-msg').classList.add('flex');
-        };
+            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
 
-        window.closeGroupMessageModal = function() { document.getElementById('modal-group-msg').classList.add('hidden'); document.getElementById('modal-group-msg').classList.remove('flex'); };
+            let text = `📢 *ESCALA DE MÍDIA - ${sch.title.toUpperCase()}*\n`;
+            text += `📅 *Data:* ${formattedDate}\n`;
+            text += `⏰ *Horário:* ${sch.time}h\n\n`;
+            text += `*ESCALADOS:*\n`;
 
-        window.copyGroupMessage = function() {
-            const txt = document.getElementById('group-message-text');
-            txt.select();
-            document.execCommand('copy');
-            alert("Texto copiado para o WhatsApp!");
-        };
-
-        function renderKanban() {
-            const cols = { pending: [], doing: [], done: [] };
-            (window.appData.tasks || []).forEach(t => { if(cols[t.status]) cols[t.status].push(t); });
-
-            ['pending', 'doing', 'done'].forEach(status => {
-                const colEl = document.getElementById(`column-${status}`);
-                if(colEl) {
-                    colEl.innerHTML = cols[status].map(t => `
-                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
-                            <h4 class="font-bold text-slate-100">${t.title}</h4>
-                            <p class="text-slate-400">${t.desc || ''}</p>
-                        </div>
-                    `).join('') || '<div class="p-4 text-center text-xs text-slate-600">Sem solicitações</div>';
-                }
+            sch.assignments.forEach(a => {
+                const member = window.appState.team.find(m => m.id === a.volunteerId);
+                text += `• *${a.role}:* ${member ? member.name : 'Pendente'}\n`;
             });
+
+            text += `\n📌 *Por favor, confirmem presença!*🏼`;
+            textArea.value = text;
         }
 
-        checkAuth();
+        function copyNoticeText() {
+            copyToClipboard(document.getElementById('noticeTextArea').value, 'Aviso geral');
+        }
     </script>
 </body>
 </html>
