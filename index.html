@@ -3,228 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Mídia Hub - Gestão Integrada</title>
-
-    <!-- Tailwind CSS & Lucide Icons -->
+    <title>Portal Mídia Hub - Comunidade Evangélica de Pirapozinho</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        dark: { bg: '#090d16', card: '#111827', border: '#1f2937' }
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                        },
+                        cream: {
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                        },
+                        darkslate: {
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f2937',
+                            600: '#374151'
+                        }
                     }
                 }
             }
         }
     </script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2canvas for Story Card Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
-        body { background-color: #090d16; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #090d16; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fde68a 0%, #eab308 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border {
+            border-image: linear-gradient(to right, #eab308, #ca8a04) 1;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col md:flex-row text-slate-100">
+<body class="bg-darkslate-900 text-gray-100 min-h-screen flex flex-col antialiased">
 
-    <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0">
-        <div>
-            <div class="flex items-center gap-3 px-2 py-3 border-b border-slate-800 mb-4">
-                <img src="https://i.ibb.co/LdQyYy3/midia-logo.jpg" alt="Logo Mídia" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
-                <div>
-                    <h1 class="font-bold text-base leading-tight">Mídia Hub</h1>
-                    <p class="text-[11px] text-slate-400">Comunidade Evangelica</p>
+    <!-- Top Header -->
+    <header class="bg-darkslate-800 border-b border-gray-800 sticky top-0 z-30 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo & Portal Title -->
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-600 to-amber-700 flex items-center justify-center text-darkslate-900 font-extrabold shadow-lg shadow-amber-500/20">
+                        <i class="fa-solid fa-camera-retro text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h1 class="text-lg font-bold tracking-tight text-white">MÍDIA HUB</h1>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">CEP</span>
+                        </div>
+                        <p class="text-xs text-amber-200/70">Comunidade Evangélica de Pirapozinho</p>
+                    </div>
+                </div>
+
+                <!-- Status & Quick Broadcast Button -->
+                <div class="flex items-center space-x-3">
+                    <div id="firebaseStatus" class="hidden sm:flex items-center space-x-2 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-medium">Firebase Ao Vivo</span>
+                    </div>
+                    <button onclick="openNoticeModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs sm:text-sm font-semibold transition shadow-lg shadow-emerald-900/30 flex items-center space-x-2">
+                        <i class="fa-brands fa-whatsapp text-base"></i>
+                        <span class="hidden sm:inline">Aviso pro Grupo</span>
+                    </button>
                 </div>
             </div>
-
-            <!-- PAINEL DE CREDENCIAIS / JEJUM -->
-            <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-4 space-y-2 text-xs">
-                <div class="flex items-center gap-2 font-bold text-amber-400">
-                    <i data-lucide="flame" class="w-4 h-4"></i>
-                    <span>Direcionamento Espiritual</span>
-                </div>
-                <p class="text-[11px] text-amber-200/80"><strong>Oração:</strong> 2 domingos no mês.<br><strong>Jejum:</strong> Todas as segundas-feiras.</p>
-            </div>
-
-            <nav class="space-y-1 text-xs">
-                <button onclick="switchTab('roster')" id="nav-roster" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white">
-                    <i data-lucide="calendar" class="w-4 h-4"></i> Escalas & Whats
-                </button>
-                <button onclick="switchTab('hub')" id="nav-hub" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="key" class="w-4 h-4"></i> Senhas & Drives
-                </button>
-                <button onclick="switchTab('briefing')" id="nav-briefing" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="camera" class="w-4 h-4"></i> Cobertura / Foto&Vídeo
-                </button>
-                <button onclick="switchTab('inventory')" id="nav-inventory" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="box" class="w-4 h-4"></i> Equipamentos
-                </button>
-                <button onclick="switchTab('calculator')" id="nav-calculator" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="hard-drive" class="w-4 h-4"></i> Calc. Cartão SD
-                </button>
-                <button onclick="switchTab('kanban')" id="nav-kanban" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="image" class="w-4 h-4"></i> Pedidos de Artes
-                </button>
-                <button onclick="switchTab('team')" id="nav-team" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="users" class="w-4 h-4"></i> Equipe da Mídia
-                </button>
-                <button onclick="switchTab('gallery')" id="nav-gallery" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="folder-heart" class="w-4 h-4"></i> Galeria por Mês
-                </button>
-                <button onclick="switchTab('references')" id="nav-references" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="sparkles" class="w-4 h-4"></i> Referências / Ideias
-                </button>
-            </nav>
         </div>
+    </header>
 
-        <div class="mt-6 pt-3 border-t border-slate-800 space-y-2">
-            <button onclick="exportData()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg">
-                <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Backup
+    <!-- Spiritual Direction Banner -->
+    <div class="bg-gradient-to-r from-amber-950/80 via-darkslate-800 to-amber-950/80 border-b border-amber-500/20 px-4 py-2.5">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-amber-200/90 gap-2">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-hands-praying text-amber-400 text-sm"></i>
+                <span class="font-bold text-white">DIRECIONAMENTO ESPIRITUAL:</span>
+                <span>Jejum do Ministério toda <strong>Segunda-Feira</strong></span>
+            </div>
+            <div class="flex items-center space-x-2 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">
+                <i class="fa-solid fa-church text-amber-400"></i>
+                <span>Oração da Mídia: <strong>2 Domingos no mês às 18:00h</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-darkslate-800/90 border-b border-gray-800 backdrop-blur-md sticky top-20 z-20 overflow-x-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-2 sm:space-x-6">
+            <button onclick="switchTab('credentials')" id="tab-credentials" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-amber-400 text-amber-300">
+                <i class="fa-solid fa-key"></i>
+                <span>Contas & Links</span>
+            </button>
+            <button onclick="switchTab('schedule')" id="tab-schedule" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-400 hover:text-white">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Escalas</span>
+            </button>
+            <button onclick="switchTab('storycard')" id="tab-storycard" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-400 hover:text-white">
+                <i class="fa-solid fa-hashtag"></i>
+                <span>Gerar Card Stories</span>
+            </button>
+            <button onclick="switchTab('briefing')" id="tab-briefing" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-400 hover:text-white">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Checklist & Briefing</span>
+            </button>
+            <button onclick="switchTab('inventory')" id="tab-inventory" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-400 hover:text-white">
+                <i class="fa-solid fa-box-archive"></i>
+                <span>Equipamentos & SD</span>
+            </button>
+            <button onclick="switchTab('kanban')" id="tab-kanban" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-400 hover:text-white">
+                <i class="fa-solid fa-palette"></i>
+                <span>Pedir Artes (Kanban)</span>
+            </button>
+            <button onclick="switchTab('team')" id="tab-team" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-400 hover:text-white">
+                <i class="fa-solid fa-users"></i>
+                <span>Voluntários</span>
+            </button>
+            <button onclick="switchTab('gallery')" id="tab-gallery" class="py-3.5 px-3 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap border-transparent text-gray-400 hover:text-white">
+                <i class="fa-solid fa-photo-film"></i>
+                <span>Galeria & Ideias</span>
             </button>
         </div>
-    </aside>
+    </nav>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- ABA ESCALAS -->
-        <section id="tab-roster" class="space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <!-- SECTION 1: CREDENTIALS & QUICK LINKS -->
+        <section id="section-credentials" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Montar Escala de Mídia</h2>
-                    <p class="text-slate-400 text-sm">Selecione manualmente a equipe e envie o aviso no WhatsApp.</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="openRosterModal()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Escala Manual
-                    </button>
-                    <button onclick="openGroupMessageModal()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl text-xs">
-                        <i data-lucide="share-2" class="w-4 h-4"></i> Copiar p/ Grupo Wpp
-                    </button>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                        Acessos, Senhas e Pastas Oficiais
+                    </h2>
+                    <p class="text-xs text-gray-400">Clique para copiar o usuário/senha ou acessar diretamente os drives e ferramentas.</p>
                 </div>
             </div>
 
-            <div id="roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        </section>
-
-        <!-- ABA HUB DE SENHAS E DRIVES -->
-        <section id="tab-hub" class="hidden space-y-6">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <h2 class="text-2xl font-bold">Acessos, Drives & Logins</h2>
-                <p class="text-slate-400 text-sm">Links diretos e credenciais da equipe com cópia em 1 clique.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Google Drives -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <h3 class="font-bold text-lg flex items-center gap-2 text-blue-400">
-                        <i data-lucide="folder" class="w-5 h-5"></i> Folders Google Drive
-                    </h3>
-                    <div class="space-y-3">
-                        <a href="https://drive.google.com/drive/folders/1upFTpblFoasGospjpzlRgITVyYYPZmPi" target="_blank" class="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all">
-                            <div class="flex items-center gap-3">
-                                <i data-lucide="image" class="w-5 h-5 text-amber-400"></i>
-                                <div>
-                                    <h4 class="font-bold text-sm">Drive de FOTOS</h4>
-                                    <p class="text-xs text-slate-400">Imagens em alta qualidade dos cultos</p>
-                                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Canva Card -->
+                <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold">
+                                <i class="fa-solid fa-palette text-lg"></i>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
+                            <div>
+                                <h3 class="font-bold text-sm text-white">Canva da Igreja</h3>
+                                <p class="text-[10px] text-gray-400">Artes do Feed, Stories e Telão</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 bg-darkslate-900/80 p-3 rounded-xl border border-gray-800 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">E-mail:</span>
+                            <button onclick="copyToClipboard('cepirapozinho1@gmail.com', 'E-mail do Canva')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                cepirapozinho1@gmail.com <i class="fa-regular fa-copy text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-center pt-1 border-t border-gray-800">
+                            <span class="text-gray-400">Senha:</span>
+                            <button onclick="copyToClipboard('Cepirapozinho1', 'Senha do Canva')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                Cepirapozinho1 <i class="fa-regular fa-copy text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <a href="https://www.canva.com" target="_blank" class="w-full py-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 border border-cyan-500/30 transition">
+                        <span>Abrir Canva</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+
+                <!-- Google Drive & CapCut Card -->
+                <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-green-600 flex items-center justify-center text-white font-bold">
+                                <i class="fa-brands fa-google-drive text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-white">Google Drive / CapCut</h3>
+                                <p class="text-[10px] text-gray-400">Conta Institucional de Mídia</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 bg-darkslate-900/80 p-3 rounded-xl border border-gray-800 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">E-mail:</span>
+                            <button onclick="copyToClipboard('cepirapozinho1@gmail.com', 'E-mail do Drive')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                cepirapozinho1@gmail.com <i class="fa-regular fa-copy text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-center pt-1 border-t border-gray-800">
+                            <span class="text-gray-400">Senha Alt 1:</span>
+                            <button onclick="copyToClipboard('comunidadeevangelica', 'Senha 1')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                comunidadeevangelica <i class="fa-regular fa-copy text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-center pt-1 border-t border-gray-800">
+                            <span class="text-gray-400">Senha Alt 2:</span>
+                            <button onclick="copyToClipboard('Jeremias2911', 'Senha 2')" class="text-amber-300 font-mono hover:underline flex items-center gap-1">
+                                Jeremias2911 <i class="fa-regular fa-copy text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <a href="https://drive.google.com" target="_blank" class="w-full py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 border border-emerald-500/30 transition">
+                        <span>Acessar Google Drive</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+
+                <!-- Folders Quick Direct Links -->
+                <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-600 flex items-center justify-center text-darkslate-900 font-bold">
+                            <i class="fa-solid fa-folder-open text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-white">Pastas Diretas do Drive</h3>
+                            <p class="text-[10px] text-gray-400">Envio rápido de Fotos e Vídeos</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <a href="https://drive.google.com" target="_blank" class="p-3 bg-darkslate-900/80 hover:bg-darkslate-700/50 rounded-xl border border-gray-800 flex items-center justify-between text-xs transition group">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-camera text-amber-400"></i>
+                                <span class="font-medium text-gray-200">Pasta de Fotos Brutas (Cultos)</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-500 group-hover:text-amber-400 transition text-[10px]"></i>
                         </a>
-                        <a href="https://drive.google.com/drive/folders/1IDH3kCFPbSlYmtHXXCU4kKNunwx3m1go" target="_blank" class="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all">
-                            <div class="flex items-center gap-3">
-                                <i data-lucide="video" class="w-5 h-5 text-red-400"></i>
-                                <div>
-                                    <h4 class="font-bold text-sm">Drive de VÍDEOS</h4>
-                                    <p class="text-xs text-slate-400">Brutos e edições finalizadas</p>
-                                </div>
+                        <a href="https://drive.google.com" target="_blank" class="p-3 bg-darkslate-900/80 hover:bg-darkslate-700/50 rounded-xl border border-gray-800 flex items-center justify-between text-xs transition group">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-video text-amber-400"></i>
+                                <span class="font-medium text-gray-200">Pasta de Vídeos / Takes Reels</span>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
+                            <i class="fa-solid fa-chevron-right text-gray-500 group-hover:text-amber-400 transition text-[10px]"></i>
                         </a>
                     </div>
                 </div>
-
-                <!-- Credenciais das Ferramentas -->
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-                    <h3 class="font-bold text-lg flex items-center gap-2 text-purple-400">
-                        <i data-lucide="key" class="w-5 h-5"></i> Logins & Senhas
-                    </h3>
-                    <div class="space-y-3">
-                        <!-- CANVA -->
-                        <div class="p-3 bg-slate-800/60 border border-slate-700/50 rounded-xl space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-sm text-sky-400">Canva PRO</span>
-                                <button onclick="copyToClipboard('cepirapozinho1@gmail.com / Cepirapozinho1')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar
-                                </button>
-                            </div>
-                            <p class="text-xs text-slate-300"><strong>Login:</strong> cepirapozinho1@gmail.com</p>
-                            <p class="text-xs text-slate-300"><strong>Senha:</strong> Cepirapozinho1</p>
-                        </div>
-                        <!-- CAPCUT / DRIVE -->
-                        <div class="p-3 bg-slate-800/60 border border-slate-700/50 rounded-xl space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-sm text-green-400">CapCut / Google Drive</span>
-                                <button onclick="copyToClipboard('cepirapozinho1@gmail.com / comunidadeevangelica / Jeremias2911')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar
-                                </button>
-                            </div>
-                            <p class="text-xs text-slate-300"><strong>Login:</strong> cepirapozinho1@gmail.com</p>
-                            <p class="text-xs text-slate-300"><strong>Senha 1:</strong> comunidadeevangelica</p>
-                            <p class="text-xs text-slate-300"><strong>Senha 2:</strong> Jeremias2911</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
 
-        <!-- ABA BRIEFING DE COBERTURA -->
-        <section id="tab-briefing" class="hidden space-y-6">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <h2 class="text-2xl font-bold">Checklist de Cobertura (Fotos & Vídeos)</h2>
-                <p class="text-slate-400 text-sm">Lista de registros indispensáveis durante a reunião para o fotógrafo e videomaker.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-amber-400 border-b border-slate-800 pb-2">Registros Obrigatórios (Fotos)</h3>
-                    <div id="briefing-photos" class="space-y-2"></div>
-                </div>
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-red-400 border-b border-slate-800 pb-2">Capturas de Vídeo (Reels / Takes)</h3>
-                    <div id="briefing-videos" class="space-y-2"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ABA INVENTÁRIO DE EQUIPAMENTOS -->
-        <section id="tab-inventory" class="hidden space-y-6">
-            <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <!-- SECTION 2: SCHEDULES (ESCALAS) -->
+        <section id="section-schedule" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Inventário de Equipamentos</h2>
-                    <p class="text-slate-400 text-sm">Controle de câmeras, cabos, placas e itens em manutenção.</p>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-amber-400"></i>
+                        Escalas dos Cultos e Eventos
+                    </h2>
+                    <p class="text-xs text-gray-400">Sincronizado via Firebase Realtime Database. Notifique cada voluntário via WhatsApp.</p>
                 </div>
-                <button onclick="openInventoryModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-medium">+ Adicionar Item</button>
+                <div class="flex items-center space-x-2">
+                    <button onclick="openNewScheduleModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-900 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Criar Nova Escala</span>
+                    </button>
+                </div>
             </div>
 
-            <div id="inventory-container" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            <!-- Schedules Container -->
+            <div id="scheduleContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- JS populated via Realtime Firebase -->
+            </div>
         </section>
 
-        <!-- ABA CALCULADORA SD CARD -->
-        <section id="tab-calculator" class="hidden space-y-6">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 max-w-xl">
+        <!-- SECTION 3: STORY CARD GENERATOR -->
+        <section id="section-storycard" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Calculadora de Cartão SD</h2>
-                    <p class="text-slate-400 text-sm">Estime o tempo limite de gravação do culto.</p>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-hashtag text-amber-400"></i>
+                        Gerador de Card da Escala para Stories
+                    </h2>
+                    <p class="text-xs text-gray-400">Gere uma imagem com visual premium 9:16 pronta para publicar no Instagram da igreja.</p>
                 </div>
-                <div class="space-y-3 text-xs">
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <!-- Controls -->
+                <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-6 space-y-4">
+                    <h3 class="font-bold text-sm text-amber-400">Selecione e Personalize a Escala</h3>
                     <div>
-                        <label class="block text-slate-400 mb-1">Capacidade do Cartão (GB)</label>
-                        <select id="sd-size" onchange="calculateSD()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <label class="block text-xs text-gray-400 mb-1">Escolha a Escala:</label>
+                        <select id="storyScheduleSelect" onchange="updateStoryCardPreview()" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-700 bg-darkslate-900 text-xs text-white focus:border-amber-400 focus:outline-none">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Subtítulo / Mensagem Especial:</label>
+                        <input type="text" id="storySubhead" value="Comunidade Evangélica de Pirapozinho" oninput="updateStoryCardPreview()" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-700 bg-darkslate-900 text-xs text-white">
+                    </div>
+                    <button onclick="downloadStoryCard()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 text-darkslate-900 font-extrabold rounded-xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Baixar Card em Alta Resolução (PNG)</span>
+                    </button>
+                </div>
+
+                <!-- Live Preview Canvas 9:16 -->
+                <div class="flex justify-center">
+                    <div id="storyCardRender" class="w-[320px] h-[568px] bg-gradient-to-b from-darkslate-900 via-darkslate-800 to-amber-950/90 rounded-3xl p-6 border-4 border-amber-500/40 shadow-2xl flex flex-col justify-between text-center relative overflow-hidden">
+                        <!-- Card Watermark Background Pattern -->
+                        <div class="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
+                            <i class="fa-solid fa-camera-retro text-[180px] text-white"></i>
+                        </div>
+
+                        <!-- Header -->
+                        <div class="space-y-2 z-10 pt-2">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-darkslate-900 font-extrabold mx-auto flex items-center justify-center text-xl shadow-lg">
+                                <i class="fa-solid fa-cross"></i>
+                            </div>
+                            <h3 id="storyCardTitle" class="text-lg font-black tracking-wider text-white uppercase">CULTO DE CELEBRAÇÃO</h3>
+                            <p id="storyCardSubhead" class="text-[10px] text-amber-300 font-medium uppercase tracking-widest">COMUNIDADE EVANGÉLICA DE PIRAPOZINHO</p>
+                            <div class="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-[11px] text-amber-200 font-bold" id="storyCardDateTime">
+                                DOMINGO • 19:00H
+                            </div>
+                        </div>
+
+                        <!-- Assignments List -->
+                        <div class="space-y-3 z-10 my-auto py-4 bg-darkslate-900/60 backdrop-blur-md rounded-2xl border border-amber-500/20 p-4" id="storyCardAssignments">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="z-10 pb-2 border-t border-amber-500/30 pt-3">
+                            <p class="text-[10px] text-amber-200/80 uppercase font-bold tracking-widest">MINISTÉRIO DE MÍDIA & COMUNICAÇÃO</p>
+                            <p class="text-[9px] text-gray-400">@cepirapozinho</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: BRIEFING & CHECKLIST PRE-CULTO -->
+        <section id="section-briefing" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-amber-400"></i>
+                        Briefing de Cobertura & Checklist Pré-Culto
+                    </h2>
+                    <p class="text-xs text-gray-400">Marque o que já foi verificado e os takes/fotos obrigatórias do culto.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Checklist Técnico -->
+                <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-amber-400"></i>
+                        Checklist Técnico Pré-Culto
+                    </h3>
+                    <div id="technicalChecklistContainer" class="space-y-2 text-xs">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Briefing de Foto & Vídeo -->
+                <div class="bg-darkslate-800 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <i class="fa-solid fa-camera text-amber-400"></i>
+                        Briefing Obrigatório de Cobertura
+                    </h3>
+                    <div id="briefingCoverageContainer" class="space-y-2 text-xs">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: INVENTORY & SD CALCULATOR -->
+        <section id="section-inventory" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-box-archive text-amber-400"></i>
+                        Inventário de Equipamentos & Calculadora de Cartão SD
+                    </h2>
+                    <p class="text-xs text-gray-400">Monitore as câmeras, lentes, cabos e estime o tempo de gravação disponível.</p>
+                </div>
+                <button onclick="openNewEquipmentModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-900 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Cadastrar Equipamento</span>
+                </button>
+            </div>
+
+            <!-- SD Card Calculator -->
+            <div class="bg-gradient-to-r from-darkslate-800 via-amber-950/40 to-darkslate-800 border border-amber-500/30 rounded-2xl p-6 shadow-xl space-y-4">
+                <h3 class="font-bold text-sm text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-sd-card"></i>
+                    Calculadora de Autonomia do Cartão SD
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Capacidade do Cartão (GB):</label>
+                        <select id="sdCapacity" onchange="calculateSDTime()" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
                             <option value="32">32 GB</option>
                             <option value="64" selected>64 GB</option>
                             <option value="128">128 GB</option>
@@ -232,548 +424,1002 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Qualidade de Gravação</label>
-                        <select id="sd-quality" onchange="calculateSD()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                            <option value="1080p60">FULL HD (1080p 60fps) ~ 50 Mbps</option>
-                            <option value="4k30">4K (2160p 30fps) ~ 100 Mbps</option>
+                        <label class="block text-xs text-gray-400 mb-1">Resolução / Qualidade:</label>
+                        <select id="sdResolution" onchange="calculateSDTime()" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                            <option value="fhd30">Full HD (1080p) - 30fps</option>
+                            <option value="fhd60">Full HD (1080p) - 60fps</option>
+                            <option value="4k30">4K Ultra HD - 30fps</option>
                         </select>
                     </div>
-                    <div class="p-4 bg-blue-600/10 border border-blue-500/20 rounded-xl text-center space-y-1 mt-4">
-                        <span class="text-xs text-blue-400 uppercase font-bold">Tempo Estimado de Gravação</span>
-                        <h3 id="sd-result" class="text-2xl font-bold text-white">~ 2h 45min</h3>
+                    <div class="flex flex-col justify-end">
+                        <div class="p-2.5 rounded-xl bg-darkslate-900 border border-amber-500/40 text-center">
+                            <span class="text-[10px] text-gray-400 block">Tempo Estimado Restante:</span>
+                            <span id="sdCalculatedTime" class="text-sm font-extrabold text-amber-300">~ 2h 40min de vídeo</span>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Equipment Inventory Grid -->
+            <div id="equipmentGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- JS Populated -->
+            </div>
         </section>
 
-        <!-- ABA KANBAN DE ARTES -->
-        <section id="tab-kanban" class="hidden space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <!-- SECTION 6: KANBAN FOR ART REQUESTS -->
+        <section id="section-kanban" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Solicitações de Artes</h2>
-                    <p class="text-slate-400 text-sm">Crie a demanda e avise o designer direto no WhatsApp.</p>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-amber-400"></i>
+                        Kanban de Pedidos de Artes e Design
+                    </h2>
+                    <p class="text-xs text-gray-400">Solicite artes e avise o designer diretamente no WhatsApp ao criar o pedido.</p>
                 </div>
-                <button onclick="openTaskModal()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">
-                    <i data-lucide="plus" class="w-4 h-4"></i> Novo Pedido de Arte
+                <button onclick="openNewArtModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-900 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Novo Pedido de Arte</span>
                 </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                        <span class="font-bold text-amber-400 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Pendentes</span>
-                        <span id="count-pending" class="text-xs bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                <!-- Todo Column -->
+                <div class="bg-darkslate-800/60 rounded-2xl p-4 border border-gray-800 flex flex-col h-full space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+                        <span class="font-bold text-xs text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-spinner"></i> A Fazer
+                        </span>
+                        <span id="count-todo" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">0</span>
                     </div>
-                    <div id="column-pending" class="space-y-3 min-h-[200px]"></div>
+                    <div id="kanban-todo" class="space-y-3 flex-grow min-h-[250px]"></div>
                 </div>
 
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                        <span class="font-bold text-blue-400 flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4"></i> Em Produção</span>
-                        <span id="count-doing" class="text-xs bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                <!-- In Progress Column -->
+                <div class="bg-darkslate-800/60 rounded-2xl p-4 border border-gray-800 flex flex-col h-full space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+                        <span class="font-bold text-xs text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-paintbrush"></i> Em Produção
+                        </span>
+                        <span id="count-doing" class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">0</span>
                     </div>
-                    <div id="column-doing" class="space-y-3 min-h-[200px]"></div>
+                    <div id="kanban-doing" class="space-y-3 flex-grow min-h-[250px]"></div>
                 </div>
 
-                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                        <span class="font-bold text-green-400 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> Concluídos</span>
-                        <span id="count-done" class="text-xs bg-slate-800 px-2 py-0.5 rounded-full">0</span>
+                <!-- Done Column -->
+                <div class="bg-darkslate-800/60 rounded-2xl p-4 border border-gray-800 flex flex-col h-full space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+                        <span class="font-bold text-xs text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i> Pronto / Aprovado
+                        </span>
+                        <span id="count-done" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">0</span>
                     </div>
-                    <div id="column-done" class="space-y-3 min-h-[200px]"></div>
+                    <div id="kanban-done" class="space-y-3 flex-grow min-h-[250px]"></div>
                 </div>
             </div>
         </section>
 
-        <!-- ABA EQUIPE -->
-        <section id="tab-team" class="hidden space-y-6">
-            <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <!-- SECTION 7: VOLUNTEERS (EQUIPE) -->
+        <section id="section-team" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Membros da Mídia</h2>
-                    <p class="text-slate-400 text-sm">Contatos e voluntários do ministério.</p>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users text-amber-400"></i>
+                        Integrantes do Ministério de Mídia
+                    </h2>
+                    <p class="text-xs text-gray-400">Lista completa com contatos do WhatsApp e funções habilitadas.</p>
                 </div>
-                <button onclick="openMemberModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-medium">Novo Voluntário</button>
+                <button onclick="openVolunteerModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-900 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Adicionar Voluntário</span>
+                </button>
             </div>
-            <div id="team-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+            <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- JS Populated -->
+            </div>
         </section>
 
-        <!-- ABA GALERIA -->
-        <section id="tab-gallery" class="hidden space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+        <!-- SECTION 8: GALLERY & DESIGN REFERENCES -->
+        <section id="section-gallery" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">Galeria de Artes & Fotos</h2>
-                    <p class="text-slate-400 text-sm">Histórico de fotos e artes separadas por Mês/Ano.</p>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-photo-film text-amber-400"></i>
+                        Galeria de Fotos & Moodboard de Inspirações
+                    </h2>
+                    <p class="text-xs text-gray-400">Referências visuais e registros históricos da igreja.</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <select id="gallery-month-filter" onchange="renderGallery()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <option value="all">Todos os Meses</option>
-                        <option value="01">Janeiro</option><option value="02">Fevereiro</option>
-                        <option value="03">Março</option><option value="04">Abril</option>
-                        <option value="05">Maio</option><option value="06">Junho</option>
-                        <option value="07">Julho</option><option value="08">Agosto</option>
-                        <option value="09">Setembro</option><option value="10">Outubro</option>
-                        <option value="11">Novembro</option><option value="12">Dezembro</option>
-                    </select>
-                    <button onclick="openGalleryModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-medium">Subir Nova Arte</button>
-                </div>
+                <button onclick="openReferenceModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-darkslate-900 font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                    <i class="fa-solid fa-bookmark"></i>
+                    <span>Nova Referência</span>
+                </button>
             </div>
-            <div id="gallery-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-        </section>
 
-        <!-- ABA REFERÊNCIAS -->
-        <section id="tab-references" class="hidden space-y-6">
-            <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div>
-                    <h2 class="text-2xl font-bold">Referências & Ideias de Design</h2>
-                    <p class="text-slate-400 text-sm">Guarde inspirações do Pinterest, Canva ou Instagram.</p>
-                </div>
-                <button onclick="openRefModal()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-medium">Nova Referência</button>
+            <div id="referencesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- JS Populated -->
             </div>
-            <div id="ref-container" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         </section>
 
     </main>
 
-    <!-- MODAL: NOVA ESCALA -->
-    <div id="modal-roster" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Montar Escala do Culto</h3>
-                <button onclick="closeRosterModal()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- MODAL: WhatsApp Group Notice -->
+    <div id="noticeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-emerald-400 text-xl"></i>
+                    Gerar Aviso de Escala pro Grupo
+                </h3>
+                <button onclick="closeNoticeModal()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
             </div>
-            <form id="form-roster" onsubmit="saveRoster(event)" class="space-y-3 text-sm">
+            
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Selecione a Escala:</label>
+                <select id="noticeScheduleSelect" onchange="updateNoticeText()" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Mensagem Formatada:</label>
+                <textarea id="noticeTextArea" rows="9" readonly class="w-full p-3 rounded-xl bg-darkslate-900 border border-gray-700 font-mono text-xs text-amber-200/90 focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="copyNoticeText()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition flex items-center space-x-2">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>Copiar Texto Formatado</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Add / Edit Volunteer -->
+    <div id="volunteerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="font-bold text-base text-white" id="volunteerModalTitle">Novo Voluntário</h3>
+                <button onclick="closeVolunteerModal()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+
+            <form id="volunteerForm" onsubmit="saveVolunteer(event)" class="space-y-3">
+                <input type="hidden" id="volId">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Culto / Evento</label>
-                    <input type="text" id="roster-title" required placeholder="Ex: Culto da Família" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <label class="block text-xs text-gray-400 mb-1">Nome Completo</label>
+                    <input type="text" id="volName" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Data e Horário</label>
-                    <input type="datetime-local" id="roster-date" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <label class="block text-xs text-gray-400 mb-1">WhatsApp (DDD + Número)</label>
+                    <input type="text" id="volPhone" placeholder="5518991234567" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Câmera 1</label>
-                        <select id="roster-cam1" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Câmera 2</label>
-                        <select id="roster-cam2" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Stories / Redes</label>
-                        <select id="roster-stories" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Telão / Holyrics</label>
-                        <select id="roster-telao" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Funções Habilitadas</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Mesa de Som" class="rounded text-amber-500"> <span>Mesa de Som</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Transmissão/Projeção" class="rounded text-amber-500"> <span>Projeção/Telão</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Câmera" class="rounded text-amber-500"> <span>Câmera</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="role" value="Fotografia" class="rounded text-amber-500"> <span>Fotografia</span></label>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Designer Culto</label>
-                        <select id="roster-desculto" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Designer Eventos</label>
-                        <select id="roster-desevento" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white team-select"></select>
-                    </div>
-                </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeRosterModal()" class="px-4 py-2 bg-slate-800 text-xs">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-xl text-xs">Salvar Escala</button>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeVolunteerModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-900 font-bold rounded-xl text-xs hover:bg-amber-400">Salvar Voluntário</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: EQUIPAMENTOS -->
-    <div id="modal-inventory" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Novo Equipamento</h3>
-                <button onclick="closeInventoryModal()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- MODAL: New Schedule -->
+    <div id="scheduleModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="font-bold text-base text-white">Nova Escala de Culto</h3>
+                <button onclick="closeScheduleModal()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
             </div>
-            <form id="form-inventory" onsubmit="saveInventory(event)" class="space-y-3 text-sm">
+
+            <form id="scheduleForm" onsubmit="saveNewSchedule(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Item</label>
-                    <input type="text" id="inv-name" required placeholder="Ex: Câmera Sony A6400" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <label class="block text-xs text-gray-400 mb-1">Título do Culto / Evento</label>
+                    <input type="text" id="schTitle" required placeholder="Ex: Culto de Celebração" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Data</label>
+                        <input type="date" id="schDate" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Horário</label>
+                        <input type="time" id="schTime" value="19:00" required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-700 pt-3 space-y-2">
+                    <p class="text-xs font-bold text-amber-400">Atribuir Voluntários:</p>
+                    <div>
+                        <label class="block text-[11px] text-gray-400">Mesa de Som:</label>
+                        <select id="assignSound" class="w-full px-2.5 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-gray-400">Transmissão / Projeção:</label>
+                        <select id="assignProj" class="w-full px-2.5 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-gray-400">Câmera:</label>
+                        <select id="assignCam" class="w-full px-2.5 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-gray-400">Fotografia:</label>
+                        <select id="assignPhoto" class="w-full px-2.5 py-1.5 rounded-lg bg-darkslate-900 border border-gray-700 text-xs text-white"></select>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeScheduleModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-900 font-bold rounded-xl text-xs hover:bg-amber-400">Criar Escala</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: New Kanban Art Request -->
+    <div id="artModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="font-bold text-base text-white">Novo Pedido de Arte</h3>
+                <button onclick="closeArtModal()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+
+            <form id="artForm" onsubmit="saveArtRequest(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Título / Evento</label>
+                    <input type="text" id="artTitle" required placeholder="Ex: Banner Encontro de Jovens" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Status</label>
-                    <select id="inv-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                        <option value="ok">Funcionando Perfeitamente</option>
-                        <option value="alert">Necessita Manutenção / Atenção</option>
-                        <option value="out">Emprestado / Fora da Igreja</option>
+                    <label class="block text-xs text-gray-400 mb-1">Formato</label>
+                    <select id="artFormat" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                        <option value="Feed (1080x1350)">Feed (1080x1350)</option>
+                        <option value="Stories/Reels (1080x1920)">Stories/Reels (1080x1920)</option>
+                        <option value="Telão (1920x1080)">Telão (1920x1080)</option>
+                        <option value="Thumb YouTube">Thumb YouTube</option>
                     </select>
                 </div>
-                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                    <button type="button" onclick="closeInventoryModal()" class="px-4 py-2 bg-slate-800 text-xs">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-xl text-xs">Salvar Equipamento</button>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Designer Responsável</label>
+                    <select id="artAssignee" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white"></select>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeArtModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-900 font-bold rounded-xl text-xs hover:bg-amber-400">Criar & Avisar Designer</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: GERAR MENSAGEM DO GRUPO -->
-    <div id="modal-group-msg" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-lg">Aviso para o Grupo da Mídia</h3>
-                <button onclick="closeGroupMessageModal()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- MODAL: Equipment Registration -->
+    <div id="equipmentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="font-bold text-base text-white">Cadastrar Equipamento</h3>
+                <button onclick="closeEquipmentModal()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
             </div>
-            <textarea id="group-message-text" rows="10" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-green-400 custom-scrollbar"></textarea>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                <button onclick="copyGroupMessage()" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl text-xs font-medium">Copiar Texto</button>
-            </div>
+
+            <form id="equipmentForm" onsubmit="saveEquipment(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Nome do Equipamento / Modelo</label>
+                    <input type="text" id="eqName" required placeholder="Ex: Câmera Canon T7i / Lente 50mm" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Status de Funcionamento</label>
+                    <select id="eqStatus" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                        <option value="OK">100% Funcional / Em Uso</option>
+                        <option value="Maintenance">Necessita Manutenção / Revisão</option>
+                        <option value="Broken">Danificado / Inoperante</option>
+                    </select>
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeEquipmentModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-900 font-bold rounded-xl text-xs hover:bg-amber-400">Salvar Equipamento</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- SCRIPT DA APLICAÇÃO -->
-    <script>
-        let appData = {
-            team: [
-                { id: 1, name: "Lais (Líder)", phone: "18997144842", role: "Stories / Câmera" },
-                { id: 2, name: "Bruna", phone: "18998182229", role: "Stories / Arte Eventos" },
-                { id: 3, name: "João", phone: "18996485335", role: "Câmera" },
-                { id: 4, name: "Pedro Rocha", phone: "18998202566", role: "Stories / Câmera" },
-                { id: 5, name: "Tayná", phone: "18996943888", role: "Stories / Arte Telão" },
-                { id: 6, name: "Emily", phone: "18996600865", role: "Stories" },
-                { id: 7, name: "Pedro Ramos", phone: "18997747636", role: "Stories / Câmera" }
-            ],
-            roster: [],
-            tasks: [],
-            gallery: [],
-            references: [],
-            inventory: [
-                { id: 1, name: "Câmera Principal", status: "ok" },
-                { id: 2, name: "Cartão SD 64GB Extreme", status: "ok" },
-                { id: 3, name: "Cabo HDMI Transmissão", status: "alert" }
-            ],
-            briefing: {
-                photos: [
-                    { text: "Momento do Louvor (Visão geral e close do ministro)", done: false },
-                    { text: "Pastor / Pregador durante a mensagem", done: false },
-                    { text: "Igreja orando e participando", done: false },
-                    { text: "Momento do dízimo e oferta", done: false },
-                    { text: "Bastidores da equipe de mídia", done: false }
-                ],
-                videos: [
-                    { text: "Take vertical do louvor (15 segundos)", done: false },
-                    { text: "Frase marcante da pregação para Reels", done: false },
-                    { text: "Avisos e recepção dos visitantes", done: false }
-                ]
-            }
+    <!-- MODAL: Add Reference Item -->
+    <div id="referenceModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkslate-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <h3 class="font-bold text-base text-white">Nova Referência Visual</h3>
+                <button onclick="closeReferenceModal()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+
+            <form id="refForm" onsubmit="saveReferenceItem(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Título do Estilo</label>
+                    <input type="text" id="refTitle" required placeholder="Ex: Banner Neon Typo" class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">URL da Imagem</label>
+                    <input type="text" id="refImageUrl" placeholder="https://..." required class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Link de Referência (Pinterest / Behance)</label>
+                    <input type="url" id="refLink" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-darkslate-900 border border-gray-700 text-xs text-white">
+                </div>
+
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeReferenceModal()" class="px-3 py-2 border border-gray-700 rounded-xl text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-darkslate-900 font-bold rounded-xl text-xs hover:bg-amber-400">Salvar Referência</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-darkslate-800 text-white text-xs px-4 py-3 rounded-2xl shadow-2xl transition opacity-0 pointer-events-none z-50 flex items-center space-x-2 border border-amber-500/30">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-amber-400"></i>
+        <span id="toastMsg">Notificação</span>
+    </div>
+
+    <!-- Firebase Realtime SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Firebase Configuration Provided
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqvB5B9sH8zGo1VDupgahDQyGKK9MLMao",
+            authDomain: "midiacep-596a3.firebaseapp.com",
+            projectId: "midiacep-596a3",
+            storageBucket: "midiacep-596a3.firebasestorage.app",
+            messagingSenderId: "918179980040",
+            appId: "1:918179980040:web:a4890816b72badc1bcc2bd",
+            measurementId: "G-FWNRHW94M4",
+            databaseURL: "https://midiacep-596a3-default-rtdb.firebaseio.com"
         };
 
-        function loadData() {
-            const saved = localStorage.getItem('midia_hub_data_v3');
-            if (saved) {
-                try { appData = JSON.parse(saved); } catch(e){}
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Global State Objects
+        window.appState = {
+            team: [],
+            schedules: [],
+            kanban: [],
+            checklistTech: [
+                { text: 'Ligar Mesa de Som e ajustar ganhos do Pr.', checked: true },
+                { text: 'Conferir pilhas sem fio e reserva na maleta', checked: true },
+                { text: 'Testar software ProPresenter/Holyrics com a projeção', checked: false },
+                { text: 'Formatar e checar cartões de memória da câmera/foto', checked: false },
+                { text: 'Conferir transmissão ao vivo no OBS', checked: false }
+            ],
+            briefingCoverage: [
+                { text: 'Foto Geral do Templo Cheio (Ângulo Aberto)', checked: false },
+                { text: 'Fotos de Expressão de Louvor e Adoração da Igreja', checked: false },
+                { text: 'Take/Foto da Palavra do Pastor no Altar', checked: false },
+                { text: 'Takes de Reels / Shorts de 15s na Vertical', checked: false },
+                { text: 'Fotos de Bastidores / Mídia trabalhando', checked: false }
+            ],
+            equipments: [
+                { id: 'eq-1', name: 'Câmera Principal (Canon/Sony)', status: 'OK' },
+                { id: 'eq-2', name: 'Lente 50mm f/1.8 (Retratos)', status: 'OK' },
+                { id: 'eq-3', name: 'Mesa de Som Digital', status: 'OK' },
+                { id: 'eq-4', name: 'Projetor Central / Datashow', status: 'Maintenance' }
+            ],
+            references: [
+                { id: 'ref-1', title: 'Worship Gradient Minimal', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=60', link: 'https://pinterest.com' }
+            ]
+        };
+
+        // Default Team Pre-loaded
+        const DEFAULT_TEAM = [
+            { id: '1', name: 'Lais (Líder)', phone: '5518991234567', roles: ['Fotografia', 'Transmissão/Projeção'] },
+            { id: '2', name: 'Bruna', phone: '5518991234568', roles: ['Fotografia', 'Câmera'] },
+            { id: '3', name: 'João', phone: '5518991234569', roles: ['Mesa de Som', 'Transmissão/Projeção'] },
+            { id: '4', name: 'Pedro Rocha', phone: '5518991234570', roles: ['Câmera', 'Mesa de Som'] },
+            { id: '5', name: 'Tayná', phone: '5518991234571', roles: ['Transmissão/Projeção', 'Fotografia'] },
+            { id: '6', name: 'Emily', phone: '5518991234572', roles: ['Fotografia', 'Câmera'] },
+            { id: '7', name: 'Pedro Ramos', phone: '5518991234573', roles: ['Mesa de Som', 'Câmera'] }
+        ];
+
+        // Listen for Realtime Database Updates
+        const portalRef = ref(db, 'midia_hub_data');
+        onValue(portalRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                window.appState.team = data.team || DEFAULT_TEAM;
+                window.appState.schedules = data.schedules || [];
+                window.appState.kanban = data.kanban || [];
+                window.appState.checklistTech = data.checklistTech || window.appState.checklistTech;
+                window.appState.briefingCoverage = data.briefingCoverage || window.appState.briefingCoverage;
+                window.appState.equipments = data.equipments || window.appState.equipments;
+                window.appState.references = data.references || window.appState.references;
+            } else {
+                // Initial Seed
+                window.appState.team = DEFAULT_TEAM;
+                window.syncToFirebase();
             }
-            renderAll();
-        }
+            window.renderAllViews();
+        });
 
-        function saveData() {
-            localStorage.setItem('midia_hub_data_v3', JSON.stringify(appData));
-            renderAll();
-        }
-
-        function switchTab(tabId) {
-            ['roster', 'hub', 'briefing', 'inventory', 'calculator', 'kanban', 'team', 'gallery', 'references'].forEach(t => {
-                const el = document.getElementById(`tab-${t}`);
-                const nav = document.getElementById(`nav-${t}`);
-                if(el) el.classList.add('hidden');
-                if(nav) nav.className = "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+        // Sync Function to Push Local State to Firebase
+        window.syncToFirebase = function() {
+            set(portalRef, {
+                team: window.appState.team,
+                schedules: window.appState.schedules,
+                kanban: window.appState.kanban,
+                checklistTech: window.appState.checklistTech,
+                briefingCoverage: window.appState.briefingCoverage,
+                equipments: window.appState.equipments,
+                references: window.appState.references
             });
-            const activeTab = document.getElementById(`tab-${tabId}`);
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if(activeTab) activeTab.classList.remove('hidden');
-            if(activeNav) activeNav.className = "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white";
+        };
+    </script>
+
+    <script>
+        // Copy to Clipboard Utility
+        function copyToClipboard(text, description) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast(`${description} copiado para a área de transferência!`);
         }
 
-        function renderAll() {
-            populateTeamSelects();
-            renderRoster();
-            renderInventory();
-            renderBriefing();
-            renderKanban();
+        // Toast Notification System
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Tab Navigation
+        function switchTab(tab) {
+            ['credentials', 'schedule', 'storycard', 'briefing', 'inventory', 'kanban', 'team', 'gallery'].forEach(t => {
+                const sec = document.getElementById(`section-${t}`);
+                const tb = document.getElementById(`tab-${t}`);
+                if (sec) sec.classList.add('hidden');
+                if (tb) {
+                    tb.classList.remove('border-amber-400', 'text-amber-300');
+                    tb.classList.add('border-transparent', 'text-gray-400');
+                }
+            });
+
+            const targetSec = document.getElementById(`section-${tab}`);
+            const targetTb = document.getElementById(`tab-${tab}`);
+            if (targetSec) targetSec.classList.remove('hidden');
+            if (targetTb) {
+                targetTb.classList.add('border-amber-400', 'text-amber-300');
+                targetTb.classList.remove('border-transparent', 'text-gray-400');
+            }
+        }
+
+        // Render All UI Components
+        function renderAllViews() {
             renderTeam();
-            renderGallery();
+            renderSchedules();
+            renderChecklists();
+            renderInventory();
+            renderKanban();
             renderReferences();
-            calculateSD();
-            lucide.createIcons();
+            updateStoryCardPreview();
         }
 
-        function populateTeamSelects() {
-            const selects = document.querySelectorAll('.team-select');
-            selects.forEach(sel => {
-                const current = sel.value;
-                sel.innerHTML = '<option value="">-- Selecionar --</option>' +
-                    appData.team.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-                sel.value = current;
+        // Render Volunteers Team
+        function renderTeam() {
+            const grid = document.getElementById('teamGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            window.appState.team.forEach(member => {
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between hover:border-amber-500/30 transition";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 text-darkslate-900 font-extrabold flex items-center justify-center text-xs">
+                                    ${member.name.split(' ').map(n=>n[0]).join('')}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-white">${member.name}</h3>
+                                    <p class="text-[10px] text-gray-400">${member.phone}</p>
+                                </div>
+                            </div>
+                            <button onclick="editVolunteer('${member.id}')" class="text-gray-500 hover:text-amber-400 p-1">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            ${member.roles.map(r => `<span class="px-2 py-0.5 rounded-md bg-darkslate-900 text-amber-200/80 text-[10px] border border-amber-500/20 font-medium">${r}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800">
+                        <a href="https://wa.me/${member.phone}" target="_blank" class="w-full py-1.5 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 border border-emerald-500/20 transition">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>Chamar no WhatsApp</span>
+                        </a>
+                    </div>
+                `;
+                grid.appendChild(card);
             });
         }
 
-        // --- ESCALAS ---
-        function renderRoster() {
-            const container = document.getElementById('roster-container');
-            if(appData.roster.length === 0) {
-                container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800">Nenhuma escala cadastrada. Clique em "Nova Escala Manual".</div>`;
+        // Render Schedules Section
+        function renderSchedules() {
+            const container = document.getElementById('scheduleContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (window.appState.schedules.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500 text-xs">Nenhuma escala cadastrada no momento. Clique em "Criar Nova Escala".</div>`;
                 return;
             }
 
-            container.innerHTML = appData.roster.map(r => {
-                const d = new Date(r.date);
-                const dateStr = d.toLocaleDateString('pt-BR');
-                const timeStr = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            window.appState.schedules.forEach((sch, schIdx) => {
+                const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
 
-                const assignments = [
-                    { role: "Câmera 1", name: r.cam1 },
-                    { role: "Câmera 2", name: r.cam2 },
-                    { role: "Stories", name: r.stories },
-                    { role: "Telão", name: r.telao },
-                    { role: "Des. Culto", name: r.desculto },
-                    { role: "Des. Eventos", name: r.desevento }
-                ].filter(a => a.name);
+                let assignmentsHTML = sch.assignments.map((asgn, index) => {
+                    const member = window.appState.team.find(m => m.id === asgn.volunteerId);
+                    const memberName = member ? member.name : 'Pendente';
+                    
+                    const customMsg = member ? `Olá ${member.name}! Shalom! Passando para avisar que você está escalado(a) no Ministério de Mídia! 📸\n\n📌 *Culto:* ${sch.title}\n📅 *Data:* ${formattedDate} às ${sch.time}\n⚡ *Sua Função:* ${asgn.role}\n\nPor favor, confirme sua presença nesta mensagem!` : '';
+                    const waLink = member ? `https://wa.me/${member.phone}?text=${encodeURIComponent(customMsg)}` : '#';
 
-                return `
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                        <div class="flex justify-between items-start border-b border-slate-800 pb-3">
+                    return `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-darkslate-900/80 border border-gray-800 text-xs">
                             <div>
-                                <h3 class="font-bold text-slate-100">${r.title}</h3>
-                                <p class="text-xs text-blue-400 mt-0.5">${dateStr} às ${timeStr}</p>
+                                <p class="text-[10px] text-amber-400 font-semibold uppercase">${asgn.role}</p>
+                                <p class="font-bold text-white">${memberName}</p>
                             </div>
-                            <button onclick="deleteRoster(${r.id})" class="text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                        <div class="space-y-1 text-xs">
-                            ${assignments.map(a => `<div class="flex justify-between"><span class="text-slate-400">${a.role}:</span> <span class="font-medium">${a.name}</span></div>`).join('')}
-                        </div>
-                        <div class="pt-3 border-t border-slate-800 space-y-1.5">
-                            <p class="text-[10px] text-slate-500 font-semibold uppercase">Avisar Voluntários no Wpp:</p>
-                            <div class="flex flex-wrap gap-1">
-                                ${assignments.map(a => {
-                                    const member = appData.team.find(m => m.name === a.name);
-                                    if(!member) return '';
-                                    return `
-                                        <button onclick="sendRosterWhatsApp('${member.phone}', '${a.name}', '${a.role}', '${r.title}', '${r.date}')" class="flex items-center gap-1 text-[11px] px-2 py-1 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-lg">
-                                            <i data-lucide="message-circle" class="w-3 h-3"></i> ${a.name.split(' ')[0]}
-                                        </button>
-                                    `;
-                                }).join('')}
+                            <div>
+                                ${member ? `
+                                    <a href="${waLink}" target="_blank" class="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-xl transition text-[11px] font-semibold flex items-center space-x-1">
+                                        <i class="fa-brands fa-whatsapp"></i>
+                                        <span>Notificar</span>
+                                    </a>
+                                ` : ''}
                             </div>
                         </div>
+                    `;
+                }).join('');
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 hover:border-amber-500/30 transition";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-gray-800 pb-3">
+                        <div>
+                            <h3 class="font-bold text-base text-white">${sch.title}</h3>
+                            <p class="text-xs text-amber-300 flex items-center gap-2 mt-0.5">
+                                <span><i class="fa-regular fa-calendar"></i> ${formattedDate}</span>
+                                <span>•</span>
+                                <span><i class="fa-regular fa-clock"></i> ${sch.time}</span>
+                            </p>
+                        </div>
+                        <button onclick="deleteSchedule('${sch.id}')" class="text-gray-500 hover:text-red-400 p-1">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        ${assignmentsHTML}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Update Select Options for Story Card & Notice
+            const selectStory = document.getElementById('storyScheduleSelect');
+            const selectNotice = document.getElementById('noticeScheduleSelect');
+            if (selectStory && selectNotice) {
+                selectStory.innerHTML = '';
+                selectNotice.innerHTML = '';
+                window.appState.schedules.forEach(s => {
+                    selectStory.innerHTML += `<option value="${s.id}">${s.title} (${s.date})</option>`;
+                    selectNotice.innerHTML += `<option value="${s.id}">${s.title} (${s.date})</option>`;
+                });
+            }
+        }
+
+        // Render Checklists
+        function renderChecklists() {
+            const techContainer = document.getElementById('technicalChecklistContainer');
+            const covContainer = document.getElementById('briefingCoverageContainer');
+
+            if (techContainer) {
+                techContainer.innerHTML = window.appState.checklistTech.map((item, idx) => `
+                    <div class="flex items-center space-x-3 p-3 rounded-xl bg-darkslate-900 border border-gray-800">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleTechCheck(${idx})" class="w-4 h-4 rounded text-amber-500 bg-darkslate-800 border-gray-700">
+                        <span class="${item.checked ? 'line-through text-gray-500' : 'text-gray-200'}">${item.text}</span>
+                    </div>
+                `).join('');
+            }
+
+            if (covContainer) {
+                covContainer.innerHTML = window.appState.briefingCoverage.map((item, idx) => `
+                    <div class="flex items-center space-x-3 p-3 rounded-xl bg-darkslate-900 border border-gray-800">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCovCheck(${idx})" class="w-4 h-4 rounded text-amber-500 bg-darkslate-800 border-gray-700">
+                        <span class="${item.checked ? 'line-through text-gray-500' : 'text-gray-200'}">${item.text}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleTechCheck(idx) {
+            window.appState.checklistTech[idx].checked = !window.appState.checklistTech[idx].checked;
+            window.syncToFirebase();
+        }
+
+        function toggleCovCheck(idx) {
+            window.appState.briefingCoverage[idx].checked = !window.appState.briefingCoverage[idx].checked;
+            window.syncToFirebase();
+        }
+
+        // Render Equipment Inventory
+        function renderInventory() {
+            const grid = document.getElementById('equipmentGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            window.appState.equipments.forEach(eq => {
+                let statusBadge = '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">100% OK</span>';
+                if (eq.status === 'Maintenance') statusBadge = '<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">Manutenção</span>';
+                if (eq.status === 'Broken') statusBadge = '<span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[10px] font-bold">Inoperante</span>';
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl p-4 shadow-xl flex items-center justify-between";
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-xs text-white">${eq.name}</h4>
+                        <div>${statusBadge}</div>
+                    </div>
+                    <button onclick="deleteEquipment('${eq.id}')" class="text-gray-500 hover:text-red-400 p-1">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // SD Card Calculator Logic
+        function calculateSDTime() {
+            const gb = parseInt(document.getElementById('sdCapacity').value);
+            const res = document.getElementById('sdResolution').value;
+
+            let minsPerGB = 4; // default Full HD
+            if (res === 'fhd60') minsPerGB = 2.5;
+            if (res === '4k30') minsPerGB = 1.2;
+
+            const totalMins = Math.floor(gb * minsPerGB);
+            const hrs = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+
+            document.getElementById('sdCalculatedTime').innerText = `~ ${hrs}h ${mins}min de gravação`;
+        }
+
+        // Story Card Preview Sync
+        function updateStoryCardPreview() {
+            const select = document.getElementById('storyScheduleSelect');
+            if (!select || !select.value) return;
+
+            const sch = window.appState.schedules.find(s => s.id === select.value);
+            if (!sch) return;
+
+            document.getElementById('storyCardTitle').innerText = sch.title;
+            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).toUpperCase();
+            document.getElementById('storyCardDateTime').innerText = `${formattedDate} • ${sch.time}H`;
+            document.getElementById('storyCardSubhead').innerText = document.getElementById('storySubhead').value;
+
+            const container = document.getElementById('storyCardAssignments');
+            container.innerHTML = sch.assignments.map(a => {
+                const member = window.appState.team.find(m => m.id === a.volunteerId);
+                return `
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-amber-400 font-extrabold uppercase text-[10px]">${a.role}</span>
+                        <span class="text-white font-bold">${member ? member.name : 'Pendente'}</span>
                     </div>
                 `;
             }).join('');
         }
 
-        function sendRosterWhatsApp(phone, name, role, title, dateStr) {
-            const d = new Date(dateStr);
-            const today = new Date();
-            const isToday = d.toDateString() === today.toDateString();
-            const dateFormatted = d.toLocaleDateString('pt-BR');
-            const timeFormatted = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-
-            const timeText = isToday ? `*HOJE* às ${timeFormatted}` : `dia *${dateFormatted}* às *${timeFormatted}*`;
-            const message = `Olá ${name}, paz do Senhor! %0A%0APassando para avisar que você está escalado(a) na Mídia:%0A📍 *${title}*%0A⏰ Data: ${timeText}%0A🎯 Sua função: *${role}*%0A%0A_Por favor, confirme sua presença respondendo aqui no WhatsApp!_`;
-
-            window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
-        }
-
-        function openRosterModal() { document.getElementById('modal-roster').classList.remove('hidden'); document.getElementById('modal-roster').classList.add('flex'); }
-        function closeRosterModal() { document.getElementById('modal-roster').classList.add('hidden'); document.getElementById('modal-roster').classList.remove('flex'); }
-
-        function saveRoster(e) {
-            e.preventDefault();
-            appData.roster.push({
-                id: Date.now(),
-                title: document.getElementById('roster-title').value,
-                date: document.getElementById('roster-date').value,
-                cam1: document.getElementById('roster-cam1').value,
-                cam2: document.getElementById('roster-cam2').value,
-                stories: document.getElementById('roster-stories').value,
-                telao: document.getElementById('roster-telao').value,
-                desculto: document.getElementById('roster-desculto').value,
-                desevento: document.getElementById('roster-desevento').value
+        function downloadStoryCard() {
+            const card = document.getElementById('storyCardRender');
+            html2canvas(card, { scale: 3 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `escala-story-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
             });
-            saveData();
-            closeRosterModal();
-            document.getElementById('form-roster').reset();
         }
 
-        function deleteRoster(id) {
-            appData.roster = appData.roster.filter(r => r.id !== id);
-            saveData();
-        }
+        // Render Kanban
+        function renderKanban() {
+            const cols = { todo: document.getElementById('kanban-todo'), doing: document.getElementById('kanban-doing'), done: document.getElementById('kanban-done') };
+            if (!cols.todo) return;
 
-        // --- INVENTÁRIO ---
-        function renderInventory() {
-            const container = document.getElementById('inventory-container');
-            const statusMap = {
-                ok: { label: 'Em perfeito estado', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
-                alert: { label: 'Atenção / Reparo', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-                out: { label: 'Emprestado', color: 'bg-red-500/10 text-red-400 border-red-500/20' }
-            };
+            const counts = { todo: 0, doing: 0, done: 0 };
+            Object.values(cols).forEach(c => c.innerHTML = '');
 
-            container.innerHTML = appData.inventory.map(item => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex justify-between items-center">
-                    <div>
-                        <h4 class="font-bold text-sm text-slate-100">${item.name}</h4>
-                        <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded border ${statusMap[item.status].color}">
-                            ${statusMap[item.status].label}
-                        </span>
+            window.appState.kanban.forEach(item => {
+                counts[item.status]++;
+                const assignee = window.appState.team.find(m => m.id === item.assigneeId);
+
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-900 p-3.5 rounded-xl border border-gray-800 space-y-2 shadow-lg";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-xs text-white">${item.title}</h4>
+                        <button onclick="deleteArtRequest('${item.id}')" class="text-gray-500 hover:text-red-400 text-[10px]">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
-                    <button onclick="deleteInventory(${item.id})" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
-            `).join('');
-        }
-
-        function openInventoryModal() { document.getElementById('modal-inventory').classList.remove('hidden'); document.getElementById('modal-inventory').classList.add('flex'); }
-        function closeInventoryModal() { document.getElementById('modal-inventory').classList.add('hidden'); document.getElementById('modal-inventory').classList.remove('flex'); }
-
-        function saveInventory(e) {
-            e.preventDefault();
-            appData.inventory.push({
-                id: Date.now(),
-                name: document.getElementById('inv-name').value,
-                status: document.getElementById('inv-status').value
+                    <p class="text-[10px] text-gray-400">Formato: <strong class="text-amber-300">${item.format}</strong></p>
+                    <div class="flex items-center justify-between pt-1 border-t border-gray-800">
+                        <span class="text-[10px] text-amber-400 font-semibold">${assignee ? assignee.name : 'Sem Designer'}</span>
+                        <select onchange="updateKanbanStatus('${item.id}', this.value)" class="text-[10px] bg-darkslate-800 border border-gray-700 rounded p-0.5 text-white">
+                            <option value="todo" ${item.status === 'todo' ? 'selected' : ''}>A Fazer</option>
+                            <option value="doing" ${item.status === 'doing' ? 'selected' : ''}>Produzindo</option>
+                            <option value="done" ${item.status === 'done' ? 'selected' : ''}>Concluído</option>
+                        </select>
+                    </div>
+                `;
+                cols[item.status].appendChild(card);
             });
-            saveData();
-            closeInventoryModal();
-            document.getElementById('form-inventory').reset();
+
+            document.getElementById('count-todo').innerText = counts.todo;
+            document.getElementById('count-doing').innerText = counts.doing;
+            document.getElementById('count-done').innerText = counts.done;
         }
 
-        function deleteInventory(id) {
-            appData.inventory = appData.inventory.filter(i => i.id !== id);
-            saveData();
+        function updateKanbanStatus(id, status) {
+            const item = window.appState.kanban.find(k => k.id === id);
+            if (item) {
+                item.status = status;
+                window.syncToFirebase();
+            }
         }
 
-        // --- CALCULADORA SD ---
-        function calculateSD() {
-            const size = parseInt(document.getElementById('sd-size').value);
-            const quality = document.getElementById('sd-quality').value;
-            let mbps = quality === '4k30' ? 100 : 50;
-
-            let totalSeconds = (size * 8000) / mbps;
-            let hours = Math.floor(totalSeconds / 3600);
-            let minutes = Math.floor((totalSeconds % 3600) / 60);
-
-            document.getElementById('sd-result').innerText = `~ ${hours}h ${minutes}min`;
+        function deleteArtRequest(id) {
+            window.appState.kanban = window.appState.kanban.filter(k => k.id !== id);
+            window.syncToFirebase();
         }
 
-        // --- BRIEFING ---
-        function renderBriefing() {
-            document.getElementById('briefing-photos').innerHTML = appData.briefing.photos.map((item, idx) => `
-                <label class="flex items-center gap-3 p-2.5 bg-slate-800/40 rounded-xl cursor-pointer text-xs">
-                    <input type="checkbox" ${item.done?'checked':''} onchange="toggleBriefing('photos', ${idx})" class="w-4 h-4 rounded">
-                    <span class="${item.done?'line-through text-slate-500':'text-slate-200'}">${item.text}</span>
-                </label>
-            `).join('');
+        // Render References
+        function renderReferences() {
+            const grid = document.getElementById('referencesGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
 
-            document.getElementById('briefing-videos').innerHTML = appData.briefing.videos.map((item, idx) => `
-                <label class="flex items-center gap-3 p-2.5 bg-slate-800/40 rounded-xl cursor-pointer text-xs">
-                    <input type="checkbox" ${item.done?'checked':''} onchange="toggleBriefing('videos', ${idx})" class="w-4 h-4 rounded">
-                    <span class="${item.done?'line-through text-slate-500':'text-slate-200'}">${item.text}</span>
-                </label>
-            `).join('');
+            window.appState.references.forEach(ref => {
+                const card = document.createElement('div');
+                card.className = "bg-darkslate-800 border border-gray-800 rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="h-36 w-full bg-darkslate-900 overflow-hidden">
+                            <img src="${ref.imageUrl}" alt="${ref.title}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-bold text-xs text-white">${ref.title}</h4>
+                        </div>
+                    </div>
+                    <div class="p-3 pt-0 flex justify-between items-center">
+                        <a href="${ref.link}" target="_blank" class="text-[10px] text-amber-400 hover:underline">Abrir Link</a>
+                        <button onclick="deleteReference('${ref.id}')" class="text-gray-500 hover:text-red-400 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
-        function toggleBriefing(cat, idx) {
-            appData.briefing[cat][idx].done = !appData.briefing[cat][idx].done;
-            saveData();
+        // Modal Openers / Closers / Savers
+        function openVolunteerModal() {
+            document.getElementById('volunteerModalTitle').innerText = 'Novo Voluntário';
+            document.getElementById('volId').value = '';
+            document.getElementById('volName').value = '';
+            document.getElementById('volPhone').value = '';
+            document.querySelectorAll('input[name="role"]').forEach(c => c.checked = false);
+            document.getElementById('volunteerModal').classList.remove('hidden');
         }
 
-        // --- UTILITÁRIOS ---
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text);
-            alert("Credenciais copiadas com sucesso!");
+        function editVolunteer(id) {
+            const member = window.appState.team.find(m => m.id === id);
+            if (!member) return;
+            document.getElementById('volunteerModalTitle').innerText = 'Editar Voluntário';
+            document.getElementById('volId').value = member.id;
+            document.getElementById('volName').value = member.name;
+            document.getElementById('volPhone').value = member.phone;
+            document.querySelectorAll('input[name="role"]').forEach(c => c.checked = member.roles.includes(c.value));
+            document.getElementById('volunteerModal').classList.remove('hidden');
         }
 
-        function openGroupMessageModal() {
-            if(appData.roster.length === 0) {
-                alert("Nenhuma escala cadastrada!");
+        function closeVolunteerModal() { document.getElementById('volunteerModal').classList.add('hidden'); }
+
+        function saveVolunteer(e) {
+            e.preventDefault();
+            const id = document.getElementById('volId').value;
+            const name = document.getElementById('volName').value;
+            const phone = document.getElementById('volPhone').value;
+            const roles = Array.from(document.querySelectorAll('input[name="role"]:checked')).map(c => c.value);
+
+            if (id) {
+                const member = window.appState.team.find(m => m.id === id);
+                if (member) { member.name = name; member.phone = phone; member.roles = roles; }
+            } else {
+                window.appState.team.push({ id: Date.now().toString(), name, phone, roles });
+            }
+            window.syncToFirebase();
+            closeVolunteerModal();
+        }
+
+        function openNewScheduleModal() {
+            const populateSelect = (selectId, role) => {
+                const sel = document.getElementById(selectId);
+                sel.innerHTML = '<option value="">Selecione...</option>';
+                window.appState.team.filter(m => m.roles.includes(role)).forEach(m => {
+                    sel.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+                });
+            };
+            populateSelect('assignSound', 'Mesa de Som');
+            populateSelect('assignProj', 'Transmissão/Projeção');
+            populateSelect('assignCam', 'Câmera');
+            populateSelect('assignPhoto', 'Fotografia');
+
+            document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        function closeScheduleModal() { document.getElementById('scheduleModal').classList.add('hidden'); }
+
+        function saveNewSchedule(e) {
+            e.preventDefault();
+            const title = document.getElementById('schTitle').value;
+            const date = document.getElementById('schDate').value;
+            const time = document.getElementById('schTime').value;
+
+            const assignments = [
+                { role: 'Mesa de Som', volunteerId: document.getElementById('assignSound').value },
+                { role: 'Transmissão/Projeção', volunteerId: document.getElementById('assignProj').value },
+                { role: 'Câmera', volunteerId: document.getElementById('assignCam').value },
+                { role: 'Fotografia', volunteerId: document.getElementById('assignPhoto').value }
+            ];
+
+            window.appState.schedules.unshift({
+                id: 'sch-' + Date.now(),
+                title,
+                date,
+                time,
+                assignments
+            });
+
+            window.syncToFirebase();
+            closeScheduleModal();
+            showToast("Nova escala salva com sucesso!");
+        }
+
+        function deleteSchedule(id) {
+            window.appState.schedules = window.appState.schedules.filter(s => s.id !== id);
+            window.syncToFirebase();
+        }
+
+        function openNewArtModal() {
+            const select = document.getElementById('artAssignee');
+            select.innerHTML = '<option value="">Sem designer atribuído</option>';
+            window.appState.team.forEach(m => {
+                select.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+            });
+            document.getElementById('artModal').classList.remove('hidden');
+        }
+
+        function closeArtModal() { document.getElementById('artModal').classList.add('hidden'); }
+
+        function saveArtRequest(e) {
+            e.preventDefault();
+            const title = document.getElementById('artTitle').value;
+            const format = document.getElementById('artFormat').value;
+            const assigneeId = document.getElementById('artAssignee').value;
+
+            window.appState.kanban.push({
+                id: 'art-' + Date.now(),
+                title,
+                format,
+                assigneeId,
+                status: 'todo'
+            });
+
+            // Send notification to designer WhatsApp if assigned
+            const designer = window.appState.team.find(m => m.id === assigneeId);
+            if (designer) {
+                const msg = `Olá ${designer.name}! Novo pedido de arte criado no Portal da Mídia:\n\n📌 *Arte:* ${title}\n📐 *Formato:* ${format}`;
+                window.open(`https://wa.me/${designer.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+            }
+
+            window.syncToFirebase();
+            closeArtModal();
+        }
+
+        function openNewEquipmentModal() { document.getElementById('equipmentModal').classList.remove('hidden'); }
+        function closeEquipmentModal() { document.getElementById('equipmentModal').classList.add('hidden'); }
+
+        function saveEquipment(e) {
+            e.preventDefault();
+            const name = document.getElementById('eqName').value;
+            const status = document.getElementById('eqStatus').value;
+
+            window.appState.equipments.push({ id: 'eq-' + Date.now(), name, status });
+            window.syncToFirebase();
+            closeEquipmentModal();
+        }
+
+        function deleteEquipment(id) {
+            window.appState.equipments = window.appState.equipments.filter(e => e.id !== id);
+            window.syncToFirebase();
+        }
+
+        function openReferenceModal() { document.getElementById('referenceModal').classList.remove('hidden'); }
+        function closeReferenceModal() { document.getElementById('referenceModal').classList.add('hidden'); }
+
+        function saveReferenceItem(e) {
+            e.preventDefault();
+            const title = document.getElementById('refTitle').value;
+            const imageUrl = document.getElementById('refImageUrl').value;
+            const link = document.getElementById('refLink').value;
+
+            window.appState.references.unshift({ id: 'ref-' + Date.now(), title, imageUrl, link });
+            window.syncToFirebase();
+            closeReferenceModal();
+        }
+
+        function deleteReference(id) {
+            window.appState.references = window.appState.references.filter(r => r.id !== id);
+            window.syncToFirebase();
+        }
+
+        function openNoticeModal() {
+            document.getElementById('noticeModal').classList.remove('hidden');
+            updateNoticeText();
+        }
+
+        function closeNoticeModal() { document.getElementById('noticeModal').classList.add('hidden'); }
+
+        function updateNoticeText() {
+            const schId = document.getElementById('noticeScheduleSelect').value;
+            const sch = window.appState.schedules.find(s => s.id === schId);
+            const textArea = document.getElementById('noticeTextArea');
+
+            if (!sch) {
+                textArea.value = "Nenhuma escala selecionada.";
                 return;
             }
-            const r = appData.roster[0];
-            const d = new Date(r.date);
-            const msg = `🚨 *ESCALA DE MÍDIA - ${r.title.toUpperCase()}* 🚨\n📅 Data: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}\n\n🎥 *Câmera 1:* ${r.cam1 || 'Pendente'}\n🎥 *Câmera 2:* ${r.cam2 || 'Pendente'}\n📱 *Stories/Redes:* ${r.stories || 'Pendente'}\n💻 *Telão/Holyrics:* ${r.telao || 'Pendente'}\n🎨 *Design Culto:* ${r.desculto || 'Pendente'}\n🎨 *Design Eventos:* ${r.desevento || 'Pendente'}\n\n⚠️ *Lembrete: Chegar com 45min de antecedência.*`;
 
-            document.getElementById('group-message-text').value = msg;
-            document.getElementById('modal-group-msg').classList.remove('hidden');
-            document.getElementById('modal-group-msg').classList.add('flex');
-        }
+            const formattedDate = new Date(sch.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
 
-        function closeGroupMessageModal() { document.getElementById('modal-group-msg').classList.add('hidden'); document.getElementById('modal-group-msg').classList.remove('flex'); }
+            let text = `📢 *ESCALA DE MÍDIA - ${sch.title.toUpperCase()}*\n`;
+            text += `📅 *Data:* ${formattedDate}\n`;
+            text += `⏰ *Horário:* ${sch.time}\n\n`;
+            text += `*ESCALADOS:*\n`;
 
-        function copyGroupMessage() {
-            const txt = document.getElementById('group-message-text');
-            txt.select();
-            document.execCommand('copy');
-            alert("Texto copiado para o WhatsApp!");
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-            const a = document.createElement('a');
-            a.setAttribute("href", dataStr);
-            a.setAttribute("download", `midia_hub_backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        }
-
-        // OUTRAS ABAS (KANBAN, GALLERY, REF, TEAM)
-        function renderKanban() {
-            const cols = { pending: [], doing: [], done: [] };
-            appData.tasks.forEach(t => { if(cols[t.status]) cols[t.status].push(t); });
-
-            ['pending', 'doing', 'done'].forEach(status => {
-                const countEl = document.getElementById(`count-${status}`);
-                const colEl = document.getElementById(`column-${status}`);
-                if(countEl) countEl.innerText = cols[status].length;
-                if(colEl) {
-                    colEl.innerHTML = cols[status].map(t => `
-                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2 text-xs">
-                            <div class="flex justify-between items-start">
-                                <span class="text-[10px] px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded">${t.category}</span>
-                                <button onclick="deleteTask(${t.id})" class="text-slate-500 hover:text-red-400"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
-                            </div>
-                            <h4 class="font-bold text-slate-100">${t.title}</h4>
-                            <p class="text-slate-400">${t.desc || ''}</p>
-                            <div class="text-slate-300">Resp: <strong>${t.designer || 'Não atribuído'}</strong></div>
-                        </div>
-                    `).join('') || '<div class="p-4 text-center text-xs text-slate-600">Sem tarefas</div>';
-                }
+            sch.assignments.forEach(a => {
+                const member = window.appState.team.find(m => m.id === a.volunteerId);
+                text += `• *${a.role}:* ${member ? member.name : 'Pendente'}\n`;
             });
+
+            text += `\n📌 *Por favor, confirmem sua presença aqui no grupo!*`;
+            textArea.value = text;
         }
 
-        function renderTeam() {
-            const container = document.getElementById('team-container');
-            if(!container) return;
-            container.innerHTML = appData.team.map(m => `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs">
-                    <h3 class="font-bold text-sm text-slate-100">${m.name}</h3>
-                    <p class="text-blue-400">${m.phone}</p>
-                    <p class="text-slate-400">${m.role}</p>
-                </div>
-            `).join('');
+        function copyNoticeText() {
+            const textArea = document.getElementById('noticeTextArea');
+            textArea.select();
+            document.execCommand('copy');
+            showToast("Aviso copiado com sucesso!");
         }
-
-        function renderGallery() {
-            const container = document.getElementById('gallery-container');
-            if(!container) return;
-            container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800">Use a opção acima para subir imagens.</div>`;
-        }
-
-        function renderReferences() {
-            const container = document.getElementById('ref-container');
-            if(!container) return;
-            container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800">Sem referências salvas.</div>`;
-        }
-
-        loadData();
     </script>
 </body>
 </html>
