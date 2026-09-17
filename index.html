@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Mídia Hub - Gestão de Mídia</title>
+
+    <!-- PWA Settings (Para virar aplicativo no celular) -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mídia Hub">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3178/3178283.png">
+
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#090d16',
+                            card: '#111827',
+                            border: '#1f2937',
+                            hover: '#374151'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #090d16; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #090d16; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row text-slate-100">
+
+    <!-- SIDEBAR / NAVIGATION -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 flex flex-col justify-between">
+        <div>
+            <!-- LOGO & HEADING -->
+            <div class="flex items-center gap-3 px-2 py-3 border-b border-slate-800 mb-6">
+                <div class="p-2 bg-blue-600 rounded-xl text-white">
+                    <i data-lucide="video" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Mídia Hub</h1>
+                    <p class="text-xs text-slate-400">Portal Interno da Equipe</p>
+                </div>
+            </div>
+
+            <!-- MENU ITEM LINKS -->
+            <nav class="space-y-1">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </button>
+                <button onclick="switchTab('roster')" id="nav-roster" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="calendar" class="w-4 h-4"></i> Escala & Avisos
+                </button>
+                <button onclick="switchTab('kanban')" id="nav-kanban" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="kanban" class="w-4 h-4"></i> Pedidos de Design
+                </button>
+                <button onclick="switchTab('resolutions')" id="nav-resolutions" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="monitor" class="w-4 h-4"></i> Guia de Telas & Artes
+                </button>
+                <button onclick="switchTab('checklist')" id="nav-checklist" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="check-square" class="w-4 h-4"></i> Checklist Pré-Culto
+                </button>
+            </nav>
+        </div>
+
+        <!-- FOOTER INFOS -->
+        <div class="mt-8 pt-4 border-t border-slate-800 space-y-2">
+            <button onclick="exportData()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Backup
+            </button>
+            <label class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg cursor-pointer transition-colors">
+                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Restaurar Backup
+                <input type="file" id="importFile" onchange="importData(event)" class="hidden" accept=".json">
+            </label>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+
+        <!-- DASHBOARD TAB -->
+        <section id="tab-dashboard" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold">Painel Geral de Mídia</h2>
+                    <p class="text-slate-400 text-sm">Avisos rápidos, escala do próximo culto e ferramentas técnicas.</p>
+                </div>
+                <button onclick="openGroupMessageModal()" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-green-900/30">
+                    <i data-lucide="message-square" class="w-4 h-4"></i> Gerar Aviso para Grupo
+                </button>
+            </div>
+
+            <!-- DASHBOARD CARDS GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- ROSTER PREVIEW CARD -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-400">Próximo Culto</span>
+                        <i data-lucide="users" class="w-5 h-5 text-slate-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-100" id="dash-next-service-title">Culto de Domingo</h3>
+                        <p class="text-xs text-slate-400 mt-1" id="dash-next-service-date">Carregando...</p>
+                    </div>
+                    <div class="space-y-2 pt-2 border-t border-slate-800/60" id="dash-roster-summary">
+                        <!-- Dynamic content -->
+                    </div>
+                    <button onclick="switchTab('roster')" class="w-full text-center text-xs text-blue-400 hover:underline pt-2">Ver Escala Completa &rarr;</button>
+                </div>
+
+                <!-- DESIGN TASKS PREVIEW CARD -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-amber-400">Demandas de Design</span>
+                        <i data-lucide="image" class="w-5 h-5 text-slate-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-slate-100" id="dash-pending-tasks-count">0</h3>
+                        <p class="text-xs text-slate-400">Artes pendentes ou em produção</p>
+                    </div>
+                    <div class="space-y-2 pt-2 border-t border-slate-800/60" id="dash-recent-tasks">
+                        <!-- Dynamic content -->
+                    </div>
+                    <button onclick="switchTab('kanban')" class="w-full text-center text-xs text-blue-400 hover:underline pt-2">Abrir Quadro de Artes &rarr;</button>
+                </div>
+
+                <!-- QUICK LINKS CARD -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-purple-400">Acesso Rápido</span>
+                        <i data-lucide="link" class="w-5 h-5 text-slate-500"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="https://drive.google.com" target="_blank" class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 rounded-xl text-xs font-medium transition-all">
+                            <span class="flex items-center gap-2"><i data-lucide="hard-drive" class="w-4 h-4 text-blue-400"></i> Google Drive da Mídia</span>
+                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
+                        </a>
+                        <a href="https://canva.com" target="_blank" class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 rounded-xl text-xs font-medium transition-all">
+                            <span class="flex items-center gap-2"><i data-lucide="palette" class="w-4 h-4 text-purple-400"></i> Canva / Editáveis</span>
+                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
+                        </a>
+                        <a href="https://figma.com" target="_blank" class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 rounded-xl text-xs font-medium transition-all">
+                            <span class="flex items-center gap-2"><i data-lucide="layout" class="w-4 h-4 text-pink-400"></i> Figma de Identidade</span>
+                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-500"></i>
+                        </a>
+                    </div>
+                    <div class="pt-2 border-t border-slate-800/60">
+                        <p class="text-xs text-slate-500 text-center">Para atualizar e sincronizar dados, use as funções de backup no menu lateral.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ROSTER TAB (ESCALA E AVISOS) -->
+        <section id="tab-roster" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold">Escala da Mídia & Lembretes</h2>
+                    <p class="text-slate-400 text-sm">Organize e envie lembretes automáticos para o WhatsApp do pessoal.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openRosterModal()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Escala
+                    </button>
+                    <button onclick="openGroupMessageModal()" class="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-all">
+                        <i data-lucide="share-2" class="w-4 h-4"></i> Copiar Escala p/ WhatsApp
+                    </button>
+                </div>
+            </div>
+
+            <!-- ROSTER CARDS CONTAINER -->
+            <div id="roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Content dynamically populated -->
+            </div>
+        </section>
+
+        <!-- KANBAN DESIGNS TAB -->
+        <section id="tab-kanban" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold">Quadro de Solicitações de Design</h2>
+                    <p class="text-slate-400 text-sm">Acompanhe e produza os designs de Culto, Eventos, Stories e Telão.</p>
+                </div>
+                <button onclick="openTaskModal()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Novo Pedido de Arte
+                </button>
+            </div>
+
+            <!-- KANBAN BOARD COLUMNS -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- PENDING COLUMN -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-col space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <span class="font-bold text-amber-400 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Pendentes / A Fazer</span>
+                        <span id="count-pending" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="column-pending" class="space-y-3 min-h-[300px]">
+                        <!-- Tasks dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- DOING COLUMN -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-col space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <span class="font-bold text-blue-400 flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4"></i> Em Produção</span>
+                        <span id="count-doing" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="column-doing" class="space-y-3 min-h-[300px]">
+                        <!-- Tasks dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- DONE COLUMN -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-col space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <span class="font-bold text-green-400 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> Concluídos</span>
+                        <span id="count-done" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="column-done" class="space-y-3 min-h-[300px]">
+                        <!-- Tasks dynamically populated -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESOLUTIONS CHEAT SHEET TAB -->
+        <section id="tab-resolutions" class="hidden space-y-6">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <h2 class="text-2xl font-bold">Guia Rápido de Resoluções e Formatos</h2>
+                <p class="text-slate-400 text-sm">Padrões de tamanho e proporção para Telão, Stories, Feed e Mídia Interna.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- TELÃO & HOLYRICS -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <div class="p-3 bg-blue-600/10 text-blue-400 rounded-xl w-fit">
+                        <i data-lucide="tv" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Telão / Holyrics</h3>
+                        <p class="text-xs text-slate-400">Fundo para louvor, pregador e avisos</p>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Resolução:</span>
+                            <span class="font-mono font-bold text-white">1920 x 1080 px</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Proporção:</span>
+                            <span class="font-mono text-white">16:9 (Full HD)</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Formato:</span>
+                            <span class="font-mono text-white">JPG ou PNG</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STORIES & REELS -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <div class="p-3 bg-purple-600/10 text-purple-400 rounded-xl w-fit">
+                        <i data-lucide="smartphone" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Stories & Reels</h3>
+                        <p class="text-xs text-slate-400">Instagram, WhatsApp e Shorts</p>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Resolução:</span>
+                            <span class="font-mono font-bold text-white">1080 x 1920 px</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Proporção:</span>
+                            <span class="font-mono text-white">9:16 (Vertical)</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Margem Segura:</span>
+                            <span class="font-mono text-white">250px topo/base</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FEED INSTAGRAM -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <div class="p-3 bg-pink-600/10 text-pink-400 rounded-xl w-fit">
+                        <i data-lucide="instagram" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Feed Instagram</h3>
+                        <p class="text-xs text-slate-400">Posts de Avisos e Eventos</p>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Retrato (Recomendado):</span>
+                            <span class="font-mono font-bold text-white">1080 x 1350 px</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Proporção:</span>
+                            <span class="font-mono text-white">4:5</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Quadrado:</span>
+                            <span class="font-mono text-white">1080 x 1080 px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YOUTUBE & TRANSMISSÃO -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <div class="p-3 bg-red-600/10 text-red-400 rounded-xl w-fit">
+                        <i data-lucide="youtube" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">YouTube & Capas</h3>
+                        <p class="text-xs text-slate-400">Thumbnails e Capas da Live</p>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Resolução:</span>
+                            <span class="font-mono font-bold text-white">1280 x 720 px</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Proporção:</span>
+                            <span class="font-mono text-white">16:9</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-800/50 rounded-lg">
+                            <span class="text-slate-400">Tamanho Máx:</span>
+                            <span class="font-mono text-white">2 MB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHECKLIST TAB -->
+        <section id="tab-checklist" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold">Checklist Pré-Culto</h2>
+                    <p class="text-slate-400 text-sm">Garantia de funcionamento antes de iniciar o culto.</p>
+                </div>
+                <button onclick="resetChecklist()" class="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition-colors">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reiniciar Checklist
+                </button>
+            </div>
+
+            <!-- SECTOR CHECKLISTS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- CÂMERAS & FOTO -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-bold text-blue-400 flex items-center gap-2 border-b border-slate-800 pb-2">
+                        <i data-lucide="camera" class="w-4 h-4"></i> Câmeras & Stories
+                    </h3>
+                    <div class="space-y-2" id="checklist-cameras">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+
+                <!-- TELÃO & HOLYRICS -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-bold text-purple-400 flex items-center gap-2 border-b border-slate-800 pb-2">
+                        <i data-lucide="monitor" class="w-4 h-4"></i> Telão / Holyrics
+                    </h3>
+                    <div class="space-y-2" id="checklist-telao">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: NOVA ESCALA -->
+    <div id="modal-roster" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-lg">Adicionar Nova Escala</h3>
+                <button onclick="closeRosterModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-roster" onsubmit="saveRoster(event)" class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Nome do Culto / Evento</label>
+                    <input type="text" id="roster-title" required placeholder="Ex: Culto de Celebração" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Data e Horário</label>
+                    <input type="datetime-local" id="roster-date" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Câmera 1</label>
+                        <input type="text" id="roster-cam1" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Câmera 2</label>
+                        <input type="text" id="roster-cam2" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Stories / Redes</label>
+                        <input type="text" id="roster-stories" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Telão / Holyrics</label>
+                        <input type="text" id="roster-telao" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Designer Culto</label>
+                        <input type="text" id="roster-desculto" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Designer Eventos</label>
+                        <input type="text" id="roster-desevento" placeholder="Nome" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeRosterModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Salvar Escala</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: NOVO PEDIDO DE ARTE -->
+    <div id="modal-task" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-lg">Nova Demanda de Design</h3>
+                <button onclick="closeTaskModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-task" onsubmit="saveTask(event)" class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Título do Pedido</label>
+                    <input type="text" id="task-title" required placeholder="Ex: Banner do Acampamento" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Categoria / Formato</label>
+                    <select id="task-category" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                        <option value="Designer de Culto">Designer de Culto</option>
+                        <option value="Designer de Eventos">Designer de Eventos</option>
+                        <option value="Stories">Stories / Redes</option>
+                        <option value="Telão">Telão / Holyrics</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Data Limite (Prazo)</label>
+                    <input type="date" id="task-deadline" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Observações / Detalhes</label>
+                    <textarea id="task-desc" rows="3" placeholder="Fontes, texto do aviso, cores..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs">Criar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: GERAR MENSAGEM DO GRUPO -->
+    <div id="modal-group-msg" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-lg">Aviso Formatado para WhatsApp</h3>
+                <button onclick="closeGroupMessageModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">Copie o texto abaixo e cole no grupo oficial da mídia da igreja:</p>
+            <textarea id="group-message-text" rows="10" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-green-400 focus:outline-none custom-scrollbar"></textarea>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button onclick="copyGroupMessage()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl text-xs transition-colors">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Copiar Texto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA REGISTRATION SCRIPT -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('PWA Service Worker registrado com sucesso!'))
+                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+
+    <!-- MAIN JAVASCRIPT APP LOGIC -->
+    <script>
+        // Default initial data
+        let appData = {
+            roster: [
+                {
+                    id: 1,
+                    title: "Culto de Celebração",
+                    date: "2026-03-22T19:00",
+                    cam1: "Lucas",
+                    cam2: "Mateus",
+                    stories: "Ana",
+                    telao: "João",
+                    desculto: "Gabriel",
+                    desevento: "Carla"
+                }
+            ],
+            tasks: [
+                { id: 1, title: "Arte de Avisos do Culto", category: "Designer de Culto", deadline: "2026-03-20", status: "pending", desc: "Criar slide 16:9 com avisos da semana" },
+                { id: 2, title: "Vídeo Reels Retrospectiva", category: "Stories", deadline: "2026-03-21", status: "doing", desc: "Editar cortes do último culto" }
+            ],
+            checklist: {
+                cams: [
+                    { id: 1, text: "Baterias das câmeras carregadas", done: false },
+                    { id: 2, text: "Cartões de memória formatados", done: false },
+                    { id: 3, text: "Limpeza das lentes", done: false }
+                ],
+                telao: [
+                    { id: 1, text: "Projetor/LED ligado e testado", done: false },
+                    { id: 2, text: "Letras do louvor atualizadas no Holyrics", done: false },
+                    { id: 3, text: "Slide de avisos pronto na fila", done: false }
+                ]
+            }
+        };
+
+        // Load saved data from LocalStorage
+        function loadData() {
+            const saved = localStorage.getItem('midia_hub_data');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Erro ao carregar dados salvos:", e);
+                }
+            }
+            renderAll();
+        }
+
+        // Save data to LocalStorage
+        function saveData() {
+            localStorage.setItem('midia_hub_data', JSON.stringify(appData));
+            renderAll();
+        }
+
+        // Switch Tabs
+        function switchTab(tabId) {
+            ['dashboard', 'roster', 'kanban', 'resolutions', 'checklist'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white";
+        }
+
+        // Render Functions
+        function renderAll() {
+            renderDashboard();
+            renderRoster();
+            renderKanban();
+            renderChecklist();
+            lucide.createIcons();
+        }
+
+        function renderDashboard() {
+            if(appData.roster.length > 0) {
+                const next = appData.roster[0];
+                document.getElementById('dash-next-service-title').innerText = next.title;
+                const d = new Date(next.date);
+                document.getElementById('dash-next-service-date').innerText = d.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
+                
+                document.getElementById('dash-roster-summary').innerHTML = `
+                    <div class="flex justify-between text-xs"><span class="text-slate-400">Câmeras:</span> <span class="font-medium text-slate-200">${next.cam1 || '-'} / ${next.cam2 || '-'}</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-400">Stories:</span> <span class="font-medium text-slate-200">${next.stories || '-'}</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-400">Telão:</span> <span class="font-medium text-slate-200">${next.telao || '-'}</span></div>
+                `;
+            } else {
+                document.getElementById('dash-next-service-title').innerText = "Nenhuma escala";
+                document.getElementById('dash-next-service-date').innerText = "Cadastre no menu Escalas";
+                document.getElementById('dash-roster-summary').innerHTML = "";
+            }
+
+            const pending = appData.tasks.filter(t => t.status !== 'done');
+            document.getElementById('dash-pending-tasks-count').innerText = pending.length;
+            
+            document.getElementById('dash-recent-tasks').innerHTML = pending.slice(0, 3).map(t => `
+                <div class="flex items-center justify-between text-xs p-2 bg-slate-800/40 rounded-lg">
+                    <span class="truncate font-medium text-slate-300">${t.title}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">${t.category}</span>
+                </div>
+            `).join('') || '<p class="text-xs text-slate-500">Nenhuma arte pendente.</p>';
+        }
+
+        function renderRoster() {
+            const container = document.getElementById('roster-container');
+            if (appData.roster.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800">Nenhuma escala cadastrada. Clique em "Nova Escala".</div>`;
+                return;
+            }
+
+            container.innerHTML = appData.roster.map(r => {
+                const d = new Date(r.date);
+                const dateStr = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+                return `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                        <div class="flex items-start justify-between border-b border-slate-800 pb-3">
+                            <div>
+                                <h3 class="font-bold text-slate-100">${r.title}</h3>
+                                <p class="text-xs text-blue-400 font-mono mt-0.5">${dateStr}</p>
+                            </div>
+                            <button onclick="deleteRoster(${r.id})" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between"><span class="text-slate-400">Câmera 1:</span> <span class="font-medium">${r.cam1 || '-'}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Câmera 2:</span> <span class="font-medium">${r.cam2 || '-'}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Stories:</span> <span class="font-medium">${r.stories || '-'}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Telão / Holyrics:</span> <span class="font-medium">${r.telao || '-'}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Des. Culto:</span> <span class="font-medium">${r.desculto || '-'}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Des. Eventos:</span> <span class="font-medium">${r.desevento || '-'}</span></div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-800 flex gap-2">
+                            <button onclick="sendIndividualWhatsApp(${r.id})" class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-600/10 hover:bg-green-600/20 text-green-400 border border-green-600/30 rounded-xl text-xs transition-colors">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Avisar no Wpp
+                            </button>
+                            <button onclick="downloadICS('${r.title}', '${r.date}')" class="flex items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors" title="Baixar compromisso na agenda">
+                                <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderKanban() {
+            const cols = { pending: [], doing: [], done: [] };
+            appData.tasks.forEach(t => { if(cols[t.status]) cols[t.status].push(t); });
+
+            ['pending', 'doing', 'done'].forEach(status => {
+                document.getElementById(`count-${status}`).innerText = cols[status].length;
+                document.getElementById(`column-${status}`).innerHTML = cols[status].map(t => `
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3">
+                        <div class="flex items-start justify-between">
+                            <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">${t.category}</span>
+                            <button onclick="deleteTask(${t.id})" class="text-slate-500 hover:text-red-400"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-100">${t.title}</h4>
+                        <p class="text-xs text-slate-400">${t.desc || ''}</p>
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
+                            <span class="text-slate-500 font-mono text-[11px]">Prazo: ${t.deadline}</span>
+                            <select onchange="moveTask(${t.id}, this.value)" class="bg-slate-800 text-xs text-slate-300 rounded px-2 py-1 border border-slate-700 focus:outline-none">
+                                <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>Pendente</option>
+                                <option value="doing" ${t.status === 'doing' ? 'selected' : ''}>Em Produção</option>
+                                <option value="done" ${t.status === 'done' ? 'selected' : ''}>Concluído</option>
+                            </select>
+                        </div>
+                    </div>
+                `).join('') || '<div class="p-4 text-center text-xs text-slate-600 border border-dashed border-slate-800 rounded-xl">Vazio</div>';
+            });
+        }
+
+        function renderChecklist() {
+            document.getElementById('checklist-cameras').innerHTML = appData.checklist.cams.map((item, idx) => `
+                <label class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl cursor-pointer hover:bg-slate-800/80 transition-colors text-xs">
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklist('cams', ${idx})" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0">
+                    <span class="${item.done ? 'line-through text-slate-500' : 'text-slate-200'}">${item.text}</span>
+                </label>
+            `).join('');
+
+            document.getElementById('checklist-telao').innerHTML = appData.checklist.telao.map((item, idx) => `
+                <label class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl cursor-pointer hover:bg-slate-800/80 transition-colors text-xs">
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklist('telao', ${idx})" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0">
+                    <span class="${item.done ? 'line-through text-slate-500' : 'text-slate-200'}">${item.text}</span>
+                </label>
+            `).join('');
+        }
+
+        // Roster Handlers
+        function openRosterModal() { document.getElementById('modal-roster').classList.remove('hidden'); document.getElementById('modal-roster').classList.add('flex'); }
+        function closeRosterModal() { document.getElementById('modal-roster').classList.add('hidden'); document.getElementById('modal-roster').classList.remove('flex'); }
+        
+        function saveRoster(e) {
+            e.preventDefault();
+            const newRoster = {
+                id: Date.now(),
+                title: document.getElementById('roster-title').value,
+                date: document.getElementById('roster-date').value,
+                cam1: document.getElementById('roster-cam1').value,
+                cam2: document.getElementById('roster-cam2').value,
+                stories: document.getElementById('roster-stories').value,
+                telao: document.getElementById('roster-telao').value,
+                desculto: document.getElementById('roster-desculto').value,
+                desevento: document.getElementById('roster-desevento').value
+            };
+            appData.roster.push(newRoster);
+            saveData();
+            closeRosterModal();
+            document.getElementById('form-roster').reset();
+        }
+
+        function deleteRoster(id) {
+            appData.roster = appData.roster.filter(r => r.id !== id);
+            saveData();
+        }
+
+        // Task Handlers
+        function openTaskModal() { document.getElementById('modal-task').classList.remove('hidden'); document.getElementById('modal-task').classList.add('flex'); }
+        function closeTaskModal() { document.getElementById('modal-task').classList.add('hidden'); document.getElementById('modal-task').classList.remove('flex'); }
+
+        function saveTask(e) {
+            e.preventDefault();
+            const newTask = {
+                id: Date.now(),
+                title: document.getElementById('task-title').value,
+                category: document.getElementById('task-category').value,
+                deadline: document.getElementById('task-deadline').value,
+                desc: document.getElementById('task-desc').value,
+                status: 'pending'
+            };
+            appData.tasks.push(newTask);
+            saveData();
+            closeTaskModal();
+            document.getElementById('form-task').reset();
+        }
+
+        function moveTask(id, newStatus) {
+            const task = appData.tasks.find(t => t.id === id);
+            if(task) { task.status = newStatus; saveData(); }
+        }
+
+        function deleteTask(id) {
+            appData.tasks = appData.tasks.filter(t => t.id !== id);
+            saveData();
+        }
+
+        // Checklist Toggle
+        function toggleChecklist(category, idx) {
+            appData.checklist[category][idx].done = !appData.checklist[category][idx].done;
+            saveData();
+        }
+
+        function resetChecklist() {
+            appData.checklist.cams.forEach(i => i.done = false);
+            appData.checklist.telao.forEach(i => i.done = false);
+            saveData();
+        }
+
+        // WhatsApp Messaging Logic
+        function sendIndividualWhatsApp(id) {
+            const r = appData.roster.find(item => item.id === id);
+            if(!r) return;
+            const d = new Date(r.date);
+            const text = `Olá! Lembrete da escala de Mídia para *${r.title}* (%0AData: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}):%0A%0A- *Câmera 1:* ${r.cam1 || '-' }%0A- *Câmera 2:* ${r.cam2 || '-' }%0A- *Stories:* ${r.stories || '-' }%0A- *Telão:* ${r.telao || '-' }%0A- *Des. Culto:* ${r.desculto || '-' }%0A- *Des. Eventos:* ${r.desevento || '-' }%0A%0A_Por favor, confirme sua presença!_`;
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        function openGroupMessageModal() {
+            if(appData.roster.length === 0) {
+                alert("Nenhuma escala disponível para gerar o texto.");
+                return;
+            }
+            const r = appData.roster[0];
+            const d = new Date(r.date);
+            const msg = `🚨 *ESCALA DE MÍDIA - ${r.title.toUpperCase()}* 🚨\n📅 Date: ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}\n\n🎥 *Câmera 1:* ${r.cam1 || 'Pendente'}\n🎥 *Câmera 2:* ${r.cam2 || 'Pendente'}\n📱 *Stories/Redes:* ${r.stories || 'Pendente'}\n💻 *Telão/Holyrics:* ${r.telao || 'Pendente'}\n🎨 *Design Culto:* ${r.desculto || 'Pendente'}\n🎨 *Design Eventos:* ${r.desevento || 'Pendente'}\n\n⚠️ *Chegar com 45 minutos de antecedência para o checklist.*`;
+            
+            document.getElementById('group-message-text').value = msg;
+            document.getElementById('modal-group-msg').classList.remove('hidden');
+            document.getElementById('modal-group-msg').classList.add('flex');
+        }
+
+        function closeGroupMessageModal() {
+            document.getElementById('modal-group-msg').classList.add('hidden');
+            document.getElementById('modal-group-msg').classList.remove('flex');
+        }
+
+        function copyGroupMessage() {
+            const txt = document.getElementById('group-message-text');
+            txt.select();
+            document.execCommand('copy');
+            alert("Texto copiado! Agora cole no grupo do WhatsApp da equipe.");
+        }
+
+        // ICS Calendar File Generator
+        function downloadICS(title, dateStr) {
+            const startDate = new Date(dateStr);
+            const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000)); // +2 hours
+
+            const formatDate = (date) => date.toISOString().replace(/-|:|\.\d+/g, '');
+
+            const icsContent = 
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Midia Hub//NONSGML Event//PT
+BEGIN:VEVENT
+SUMMARY:${title} - Escala Mídia
+DTSTART:${formatDate(startDate)}
+DTEND:${formatDate(endDate)}
+DESCRIPTION:Escala do Ministério de Mídia da Igreja
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`;
+
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', `escala-${title.toLowerCase().replace(/\s+/g, '-')}.ics`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Export/Import Local Data Backup
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `midia_hub_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    appData = JSON.parse(e.target.result);
+                    saveData();
+                    alert("Dados e backup restaurados com sucesso!");
+                } catch(err) {
+                    alert("Erro ao importar o arquivo. Certifique-se de ser um arquivo JSON válido.");
+                }
+            };
+            reader.readAsText(event.target.files[0]);
+        }
+
+        // Initialize App
+        loadData();
+    </script>
+</body>
+</html>
