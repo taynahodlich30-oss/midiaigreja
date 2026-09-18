@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>Portal de Ministérios - CEP Pirapozinho</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .login-background {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(79, 70, 229, .22), transparent 32%),
+        radial-gradient(circle at 85% 80%, rgba(124, 58, 237, .18), transparent 30%),
+        #020617;
+    }
+    .login-card { box-shadow: 0 28px 80px rgba(0, 0, 0, .48); }
+    .login-field:focus-within { border-color: rgb(99 102 241); box-shadow: 0 0 0 3px rgba(99, 102, 241, .14); }
+    .login-button:disabled { cursor: wait; opacity: .75; }
+    body {
+      background:
+        radial-gradient(circle at 8% 5%, rgba(79, 70, 229, .11), transparent 24rem),
+        radial-gradient(circle at 92% 34%, rgba(124, 58, 237, .08), transparent 28rem),
+        #020617;
+    }
+    header { box-shadow: 0 1px 30px rgba(0, 0, 0, .25); }
+    main nav {
+      padding: .45rem;
+      border: 1px solid rgba(71, 85, 105, .55) !important;
+      border-radius: 1rem;
+      background: rgba(15, 23, 42, .72);
+      backdrop-filter: blur(16px);
+      scrollbar-width: none;
+    }
+    main nav::-webkit-scrollbar { display: none; }
+    .tab-btn, .midia-tab-btn { min-height: 42px; border-radius: .75rem !important; }
+    .tab-content > div, .midia-tab-content > div {
+      border-color: rgba(71, 85, 105, .55) !important;
+      border-radius: 1.25rem !important;
+      background: linear-gradient(145deg, rgba(15, 23, 42, .94), rgba(15, 23, 42, .72)) !important;
+      box-shadow: 0 18px 55px rgba(0, 0, 0, .22);
+    }
+    #roster-list-container > div, #media-roster-container > div,
+    #equipment-grid > div, #events-grid > div, #events-grid-midia > div {
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    #roster-list-container > div:hover, #media-roster-container > div:hover,
+    #equipment-grid > div:hover, #events-grid > div:hover, #events-grid-midia > div:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99, 102, 241, .55) !important;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, .25);
+    }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(129, 140, 248, .5);
+      outline-offset: 2px;
+    }
+    #pdf-fullscreen-modal iframe { height: 100%; width: 100%; border: 0; background: white; }
+    .cifra-layout-stage { overflow: auto; background: #0b1120; border-radius: 1rem; padding: 1rem; }
+    .cifra-layout-page { position: relative; margin: 0 auto 1rem; background: white; color: #0f172a; box-shadow: 0 18px 45px rgba(0,0,0,.35); transform-origin: top center; }
+    .cifra-layout-page span { position: absolute; white-space: pre; line-height: 1; font-family: Arial, Helvetica, sans-serif; }
+    #layout-fullscreen-pages { min-width: max-content; }
+    .upload-progress { animation: uploadPulse 1.3s ease-in-out infinite; }
+    @keyframes uploadPulse { 50% { opacity: .55; } }
+    @media (max-width: 640px) {
+      main { padding: .75rem !important; }
+      .tab-content > div, .midia-tab-content > div { border-radius: 1rem !important; }
+      #teleprompter-modal > div:first-child, #pdf-fullscreen-modal > div:first-child { padding: .7rem; }
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- LOGIN / DEPARTMENT SELECTION SCREEN -->
+  <div id="auth-screen" class="login-background fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="login-card max-w-md w-full bg-slate-900/95 border border-slate-700/80 rounded-3xl p-7 sm:p-9 space-y-7 backdrop-blur-xl">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 mx-auto flex items-center justify-center shadow-xl shadow-indigo-600/30">
+          <i data-lucide="church" class="w-8 h-8 text-white"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-white">CEP Pirapozinho</h1>
+        <p class="text-sm text-slate-400">Entre com sua conta para acessar o portal</p>
+      </div>
+
+      <form id="login-form" class="space-y-5" novalidate>
+        <div>
+          <label for="login-dept" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Área inicial</label>
+          <div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl transition">
+            <i data-lucide="users" class="w-5 h-5 ml-3 text-indigo-400 shrink-0"></i>
+          <select id="login-dept" class="w-full bg-transparent p-3 text-sm text-white focus:outline-none">
+            <option value="louvor">Ministério de Louvor, Cifras & Projeção</option>
+            <option value="midia">Ministério de Mídia & Transmissão</option>
+          </select>
+          </div>
+        </div>
+
+        <div id="register-name-wrap" class="hidden">
+          <label for="register-name" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Seu nome</label>
+          <div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl transition"><i data-lucide="user" class="w-5 h-5 ml-3 text-indigo-400 shrink-0"></i><input type="text" id="register-name" autocomplete="name" placeholder="Nome completo" class="min-w-0 flex-1 bg-transparent p-3 text-sm text-white focus:outline-none"></div>
+        </div>
+        <div id="register-extra-wrap" class="hidden grid sm:grid-cols-2 gap-3">
+          <div><label for="register-phone" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">WhatsApp</label><div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl"><i data-lucide="phone" class="w-4 h-4 ml-3 text-indigo-400"></i><input type="tel" id="register-phone" inputmode="tel" placeholder="DDD + número" class="min-w-0 flex-1 bg-transparent p-3 text-sm text-white focus:outline-none"></div></div>
+          <div><label for="register-church-role" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">O que faz na igreja</label><div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl"><i data-lucide="heart-handshake" class="w-4 h-4 ml-3 text-indigo-400"></i><input type="text" id="register-church-role" placeholder="Ex.: Vocal, câmera" class="min-w-0 flex-1 bg-transparent p-3 text-sm text-white focus:outline-none"></div></div>
+        </div>
+
+        <div>
+          <label for="login-email" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">E-mail</label>
+          <div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl transition"><i data-lucide="mail" class="w-5 h-5 ml-3 text-indigo-400 shrink-0"></i><input type="email" id="login-email" autocomplete="email" placeholder="seuemail@exemplo.com" required class="min-w-0 flex-1 bg-transparent p-3 text-sm text-white focus:outline-none"></div>
+        </div>
+
+        <div>
+          <label for="login-pin" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Senha</label>
+          <div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl transition">
+            <i data-lucide="lock-keyhole" class="w-5 h-5 ml-3 text-indigo-400 shrink-0"></i>
+            <input type="password" id="login-pin" autocomplete="current-password" autocapitalize="none" spellcheck="false" placeholder="Digite sua senha" class="min-w-0 flex-1 bg-transparent p-3 text-sm text-white focus:outline-none">
+            <button id="toggle-password" type="button" class="p-3 text-slate-400 hover:text-white" aria-label="Mostrar senha" title="Mostrar senha">
+              <i data-lucide="eye" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <p id="login-error" class="hidden text-xs text-red-400 mt-2 flex items-center gap-1.5" role="alert"><i data-lucide="circle-alert" class="w-4 h-4"></i><span id="login-error-text">Não foi possível entrar.</span></p>
+        </div>
+
+        <button id="login-button" type="submit" class="login-button w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i> <span id="login-button-text">Entrar no Portal</span>
+        </button>
+        <div class="flex items-center justify-between text-xs"><button id="auth-mode-toggle" type="button" onclick="toggleAuthMode()" class="text-indigo-300 hover:text-indigo-200">Criar uma conta</button><button type="button" onclick="resetPassword()" class="text-slate-400 hover:text-white">Esqueci a senha</button></div>
+        <p class="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Suas anotações são particulares</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOP APP HEADER WITH DEPARTMENT SELECTOR -->
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+          <i data-lucide="church" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg tracking-tight text-white flex items-center gap-2">
+            CEP Pirapozinho <span id="current-dept-badge" class="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full">Louvor</span>
+          </h1>
+          <p class="text-xs text-slate-400" id="header-subtitle">Sistema Integrado de Apoio aos Ministérios</p>
+        </div>
+      </div>
+
+      <!-- DEPARTMENT SWITCHER & ACTIONS -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1">
+          <button id="dept-btn-louvor" onclick="switchDepartment('louvor')" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition bg-indigo-600 text-white shadow">
+            <i data-lucide="music" class="w-3.5 h-3.5"></i> Louvor & Projeção
+          </button>
+          <button id="dept-btn-midia" onclick="switchDepartment('midia')" class="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-slate-400 hover:text-slate-200">
+            <i data-lucide="monitor" class="w-3.5 h-3.5"></i> Mídia & Transmissão
+          </button>
+        </div>
+
+        <button onclick="requestNotificationPermission()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-medium flex items-center gap-1.5 transition" title="Ativar Alertas de Escala">
+          <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+          <span class="hidden sm:inline">Notificações</span>
+        </button>
+
+        <button onclick="logoutPortal()" class="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-300 rounded-xl text-xs font-medium flex items-center gap-1.5 transition" title="Trocar Ministério">
+          <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- LOUVOR & PROJEÇÃO DEPARTMENT VIEW -->
+    <div id="view-louvor" class="space-y-6">
+      <nav class="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 text-sm">
+        <button onclick="switchTab('roster')" id="tab-btn-roster" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> Escalas & Presença</button>
+        <button onclick="switchTab('repertoire')" id="tab-btn-repertoire" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i> Músicas & Cifras</button>
+        <button onclick="switchTab('pads')" id="tab-btn-pads" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5"><i data-lucide="waves" class="w-4 h-4 text-indigo-400"></i> Worship Pads</button>
+        <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="calendar-days" class="w-4 h-4"></i> Agenda</button>
+        <button onclick="switchTab('team')" id="tab-btn-team" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="users-round" class="w-4 h-4"></i> Equipe</button>
+      </nav>
+
+      <!-- TAB 1: ESCALAS LOUVOR -->
+      <div id="tab-roster" class="tab-content space-y-6">
+        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800 flex-wrap gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-white">Escalas de Cultos, Louvor & Projeção</h2>
+            <p class="text-xs text-slate-400">Confirme sua presença ou solicite troca com antecedência.</p>
+          </div>
+          <div class="flex gap-2"><button data-leader-only onclick="configureWhatsappGroup()" class="px-3 py-1.5 bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Grupo</button><button data-leader-only onclick="openNewRosterModal('louvor')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Novo Culto</button></div>
+        </div>
+        <div id="roster-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+
+      <!-- TAB 2: MÚSICAS & CIFRAS COM PROJEÇÃO -->
+      <div id="tab-repertoire" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
+                <i data-lucide="book-open" class="w-6 h-6"></i> Repertório, Cifras & Projeção de Slides
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Visualize cifras digitadas, arquivos PDF ou abra o teleprompter para projeção.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button data-uploader-only onclick="document.getElementById('direct-pdf-upload').click()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition shadow-lg shadow-emerald-950/30">
+                <i data-lucide="upload" class="w-4 h-4"></i> Enviar PDF
+              </button>
+              <input id="direct-pdf-upload" type="file" accept="application/pdf,.pdf" multiple class="hidden" onchange="uploadPdfFiles(this.files); this.value=''">
+              <button data-uploader-only onclick="openNewSongModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+                <i data-lucide="plus" class="w-4 h-4"></i> Cifra em texto
+              </button>
+            </div>
+          </div>
+          <div id="pdf-upload-status" class="hidden mb-5 p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-sm text-indigo-200 items-center gap-3" role="status">
+            <i data-lucide="loader-circle" class="upload-progress w-5 h-5"></i><span id="pdf-upload-status-text">Preparando PDF...</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-3">
+              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Lista de Músicas</label>
+              <div id="songs-list-container" class="space-y-2 max-h-[500px] overflow-y-auto pr-2"></div>
+            </div>
+            <div class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col justify-between">
+              <div id="song-detail-view">
+                <div class="text-center py-16 text-slate-500">
+                  <i data-lucide="music" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
+                  <p class="text-sm">Selecione uma música ao lado para ver a cifra, PDF ou abrir o teleprompter / projeção.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: WORSHIP PADS -->
+      <div id="tab-pads" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
+                <i data-lucide="waves" class="w-6 h-6"></i> Worship Pads / Continuous Ambient Drones
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Sintetizador Web Audio API para sustentação e ambiente em momentos de oração.</p>
+            </div>
+            <button onclick="stopWorshipPad()" class="px-4 py-2 bg-red-600/30 hover:bg-red-600/50 border border-red-500/40 text-red-300 rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+              <i data-lucide="square" class="w-4 h-4"></i> Parar Pad
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-950/60 p-4 rounded-lg border border-slate-800/80 mb-6">
+            <div>
+              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Volume do Ambient Pad</label>
+              <div class="flex items-center gap-3">
+                <i data-lucide="volume-2" class="w-5 h-5 text-indigo-400"></i>
+                <input type="range" id="pad-volume" min="0" max="1" step="0.01" value="0.5" oninput="updatePadVolume(this.value)" class="w-full accent-indigo-500">
+                <span id="pad-vol-text" class="text-xs text-slate-400 w-10 text-right">50%</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Timbre / Textura do Pad</label>
+              <select id="pad-timbre" onchange="changePadTimbre(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-sm p-2 text-slate-200">
+                <option value="warm">Warm & Deep (Grave Envolvente)</option>
+                <option value="bright">Celestial & Bright (Brilhante)</option>
+                <option value="organ">Soft Organ (Órgão Suave)</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-3">Selecione o Tom para Tocar:</label>
+          <div id="pad-keys-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
+
+          <div id="pad-now-playing" class="mt-6 p-4 rounded-lg bg-indigo-950/40 border border-indigo-800/50 flex items-center justify-between text-indigo-300 hidden">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+              <span class="text-sm">Tocando Pad em tom de <strong id="current-pad-key" class="text-white text-base">C</strong></span>
+            </div>
+            <span class="text-xs text-indigo-400">Transição suave ativada</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: CALENDAR -->
+      <div id="tab-calendar" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
+                <i data-lucide="calendar" class="w-6 h-6"></i> Agenda de Cultos & Eventos
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Gerencie a programação e horários.</p>
+            </div>
+            <button onclick="openNewEventModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Evento
+            </button>
+          </div>
+          <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+      </div>
+
+      <!-- TAB 5: EQUIPE -->
+      <div id="tab-team" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+          <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
+            <div><h2 class="text-xl font-bold text-indigo-400 flex items-center gap-2"><i data-lucide="users-round" class="w-6 h-6"></i> Equipe de Louvor & Projeção</h2><p class="text-xs text-slate-400 mt-1">Cadastre integrantes, funções e WhatsApp.</p></div>
+            <button data-leader-only onclick="addMember('louvor')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Adicionar membro</button>
+          </div>
+          <div id="members-louvor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          <section data-admin-only class="mt-8 pt-6 border-t border-slate-800">
+            <div class="mb-4"><h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i> Permissões das contas</h3><p class="text-xs text-slate-400 mt-1">Escolha quem pode enviar e editar cifras. Somente a administradora altera estas permissões.</p></div>
+            <div id="users-permissions-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"><p class="text-sm text-slate-500">Carregando contas...</p></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDIA DEPARTMENT VIEW (ÁUDIO, STREAMING & CÂMERAS) -->
+    <div id="view-midia" class="space-y-6 hidden">
+      <nav class="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 text-sm">
+        <button onclick="switchMidiaTab('roster')" id="midia-tab-btn-roster" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> Escalas</button>
+        <button onclick="switchMidiaTab('equipment')" id="midia-tab-btn-equipment" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4"></i> Equipamentos</button>
+        <button onclick="switchMidiaTab('calendar')" id="midia-tab-btn-calendar" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="calendar-days" class="w-4 h-4"></i> Agenda</button>
+        <button onclick="switchMidiaTab('team')" id="midia-tab-btn-team" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="users-round" class="w-4 h-4"></i> Equipe</button>
+      </nav>
+
+      <!-- MIDIA TAB 1: ESCALAS -->
+      <div id="midia-tab-roster" class="midia-tab-content space-y-6">
+        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800 flex-wrap gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-white">Escala Detalhada de Mídia & Transmissão</h2>
+            <p class="text-xs text-slate-400">Operadores de som, transmissão ao vivo, câmeras e cortes.</p>
+          </div>
+          <button data-leader-only onclick="openNewMediaModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Escala de Mídia
+          </button>
+        </div>
+        <div id="media-roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+
+      <!-- MIDIA TAB 2: EQUIPMENT INVENTORY -->
+      <div id="midia-tab-equipment" class="midia-tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+          <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-indigo-400 flex items-center gap-2"><i data-lucide="cpu" class="w-6 h-6"></i> Inventário de Equipamentos de Mídia</h2>
+              <p class="text-xs text-slate-400 mt-1">Status de câmeras, mesas de som, computadores e cabos.</p>
+            </div>
+            <button onclick="openNewEquipmentModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2">
+              <i data-lucide="plus" class="w-4 h-4"></i> Novo Item
+            </button>
+          </div>
+          <div id="equipment-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </div>
+      </div>
+
+      <!-- MIDIA TAB 3: CALENDAR -->
+      <div id="midia-tab-calendar" class="midia-tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
+                <i data-lucide="calendar" class="w-6 h-6"></i> Agenda de Transmissões & Treinamentos
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Eventos técnicos e manutenções.</p>
+            </div>
+            <button onclick="openNewEventModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i> Novo Evento
+            </button>
+          </div>
+          <div id="events-grid-midia" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+      </div>
+
+      <!-- MIDIA TAB 4: TEAM -->
+      <div id="midia-tab-team" class="midia-tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+          <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
+            <div><h2 class="text-xl font-bold text-violet-400 flex items-center gap-2"><i data-lucide="users-round" class="w-6 h-6"></i> Equipe de Mídia & Transmissão</h2><p class="text-xs text-slate-400 mt-1">Cadastre integrantes, funções e WhatsApp.</p></div>
+            <button data-leader-only onclick="addMember('midia')" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Adicionar membro</button>
+          </div>
+          <div id="members-midia" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- CIFRA RECRIADA EM TELA INTEIRA -->
+  <div id="layout-fullscreen-modal" class="fixed inset-0 bg-slate-950 z-[65] flex flex-col hidden" role="dialog" aria-modal="true">
+    <div class="p-3 sm:p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
+      <div class="min-w-0"><p class="text-[10px] uppercase tracking-widest text-indigo-400">Visual recriado do PDF</p><h2 id="layout-fullscreen-title" class="font-bold text-white truncate">Cifra</h2></div>
+      <div class="flex items-center gap-2"><button onclick="changeLayoutFullscreenZoom(-10)" class="p-2 bg-slate-800 rounded-lg text-white" title="Diminuir"><i data-lucide="zoom-out" class="w-4 h-4"></i></button><span id="layout-fullscreen-zoom-label" class="text-xs text-slate-300 w-12 text-center">100%</span><button onclick="changeLayoutFullscreenZoom(10)" class="p-2 bg-slate-800 rounded-lg text-white" title="Aumentar"><i data-lucide="zoom-in" class="w-4 h-4"></i></button><button onclick="closeLayoutFullscreen()" class="p-2 bg-red-500/15 text-red-300 rounded-lg" title="Fechar"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+    </div>
+    <div id="layout-fullscreen-stage" class="cifra-layout-stage flex-1 rounded-none overflow-auto"><div id="layout-fullscreen-pages"></div></div>
+  </div>
+
+  <!-- PDF EM TELA INTEIRA: funciona como overlay no celular e no computador -->
+  <div id="pdf-fullscreen-modal" class="fixed inset-0 bg-slate-950 z-[60] flex flex-col hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-fullscreen-title">
+    <div class="p-3 sm:p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
+      <div class="min-w-0 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-red-500/15 text-red-300 flex items-center justify-center shrink-0"><i data-lucide="file-text" class="w-5 h-5"></i></div>
+        <div class="min-w-0"><p class="text-[10px] uppercase tracking-widest text-slate-500">Cifra em PDF</p><h2 id="pdf-fullscreen-title" class="font-bold text-white truncate">Música</h2></div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="requestPdfNativeFullscreen()" class="hidden sm:flex px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold items-center gap-2"><i data-lucide="maximize" class="w-4 h-4"></i> Tela cheia</button>
+        <button onclick="closePdfFullscreen()" class="p-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-xl" aria-label="Fechar PDF"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+    </div>
+    <div class="flex-1 min-h-0"><iframe id="pdf-fullscreen-frame" title="Visualizador da cifra em PDF"></iframe></div>
+  </div>
+
+  <!-- TELEPROMPTER OVERLAY -->
+  <div id="teleprompter-modal" class="fixed inset-0 bg-slate-950 z-50 flex flex-col hidden">
+    <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-slate-300">
+      <div class="flex items-center gap-3">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <h2 id="teleprompter-title" class="font-bold text-lg text-white">Música Projeção</h2>
+        <span id="teleprompter-key-tag" class="text-xs bg-indigo-900/60 text-indigo-300 border border-indigo-700 px-2 py-0.5 rounded"></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">Tamanho Texto:</span>
+          <button onclick="changeTeleprompterFontSize(-4)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded">-</button>
+          <button onclick="changeTeleprompterFontSize(4)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded">+</button>
+        </div>
+        <button id="teleprompter-scroll-btn" onclick="toggleTeleprompterAutoScroll()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold flex items-center gap-1.5">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i> Rolagem Auto
+        </button>
+        <button onclick="toggleFullScreen()" class="p-2 hover:bg-slate-800 rounded text-slate-300 hover:text-white" title="Tela Cheia">
+          <i data-lucide="maximize" class="w-5 h-5"></i>
+        </button>
+        <button onclick="closeTeleprompterMode()" class="p-2 bg-red-600/30 hover:bg-red-600/60 text-red-300 rounded" title="Sair">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+    <div id="teleprompter-content-container" class="flex-1 overflow-y-auto p-8 sm:p-16 flex flex-col items-center justify-start text-center">
+      <div id="teleprompter-text" class="max-w-4xl w-full text-slate-100 font-bold leading-relaxed space-y-8" style="font-size: 32px;"></div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCqvB5B9sH8zGo1VDupgahDQyGKK9MLMao",
+      authDomain: "midiacep-596a3.firebaseapp.com",
+      databaseURL: "https://midiacep-596a3-default-rtdb.firebaseio.com",
+      projectId: "midiacep-596a3",
+      storageBucket: "midiacep-596a3.firebasestorage.app",
+      messagingSenderId: "918179980040",
+      appId: "1:918179980040:web:a4890816b72badc1bcc2bd",
+      measurementId: "G-FWNRHW94M4"
+    };
+    const ADMIN_UID = 'v7IIVCiLYlh1ALLn1YplBJZTSFi2';
+    const FCM_VAPID_KEY = 'BMKOYrmxwSNvBVwEw4QVRA9J-5OC6StUQzz6gna9CPLOhxwX1cXUtlr7HohAM7aFTf7KyMgE0m9QeizpGwUkI_E';
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let messaging = null;
+    try { messaging = firebase.messaging(); } catch (error) { console.warn('Notificações push não suportadas:', error); }
+    let currentUser = null;
+    let currentUserRole = 'member';
+    const privateNotes = {};
+    const noteSaveTimers = {};
+    const layoutZoomLevels = {};
+    let fullscreenLayoutSongId = null;
+    let fullscreenLayoutZoom = 100;
+    let isRegisterMode = false;
+    let appInitialized = false;
+    let songsUnsubscribe = null;
+    let membersUnsubscribe = null;
+    let usersUnsubscribe = null;
+    let rostersUnsubscribe = null;
+    let settingsUnsubscribe = null;
+    let groupWhatsappLink = '';
+    let currentDepartment = localStorage.getItem('cep_logged_dept') || 'louvor';
+    let currentTab = 'roster';
+    let currentMidiaTab = 'roster';
+
+    function showAuthError(message) {
+      document.getElementById('login-error-text').textContent = message;
+      document.getElementById('login-error').classList.remove('hidden');
+    }
+
+    function friendlyAuthError(error) {
+      const messages = {
+        'auth/invalid-credential': 'E-mail ou senha incorretos.',
+        'auth/email-already-in-use': 'Este e-mail já possui uma conta.',
+        'auth/invalid-email': 'Digite um e-mail válido.',
+        'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
+        'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.'
+      };
+      return messages[error?.code] || 'Não foi possível concluir. Verifique os dados e tente novamente.';
+    }
+
+    async function handleLogin(event) {
+      if (event) event.preventDefault();
+      const dept = document.getElementById('login-dept').value;
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-pin').value;
+      const name = document.getElementById('register-name').value.trim();
+      const phone = cleanPhone(document.getElementById('register-phone').value);
+      const churchRole = document.getElementById('register-church-role').value.trim();
+      const error = document.getElementById('login-error');
+      const button = document.getElementById('login-button');
+      if (isRegisterMode && (!name || !phone || !churchRole)) return showAuthError('Preencha nome, WhatsApp e o que você faz na igreja.');
+      button.disabled = true;
+      try {
+        let credential;
+        if (isRegisterMode) {
+          credential = await auth.createUserWithEmailAndPassword(email, password);
+          await credential.user.updateProfile({ displayName: name });
+          const profile = { name, email, phone, churchRole, department: dept, role: 'member', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+          await db.collection('users').doc(credential.user.uid).set(profile);
+          await db.collection('members').doc(credential.user.uid).set({ name, email, phone, role: churchRole, churchRole, department: dept, accountUid: credential.user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        } else {
+          credential = await auth.signInWithEmailAndPassword(email, password);
+        }
+        error.classList.add('hidden');
+        currentDepartment = dept;
+        localStorage.setItem('cep_logged_dept', dept);
+      } catch (authError) {
+        showAuthError(friendlyAuthError(authError));
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      document.getElementById('register-name-wrap').classList.toggle('hidden', !isRegisterMode);
+      document.getElementById('register-extra-wrap').classList.toggle('hidden', !isRegisterMode);
+      document.getElementById('login-button-text').textContent = isRegisterMode ? 'Criar minha conta' : 'Entrar no Portal';
+      document.getElementById('auth-mode-toggle').textContent = isRegisterMode ? 'Já tenho uma conta' : 'Criar uma conta';
+      document.getElementById('login-error').classList.add('hidden');
+    }
+
+    async function resetPassword() {
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) return showAuthError('Digite seu e-mail primeiro.');
+      try {
+        await auth.sendPasswordResetEmail(email);
+        alert('Enviamos um link para redefinir sua senha. Confira também a caixa de spam.');
+      } catch (error) { showAuthError(friendlyAuthError(error)); }
+    }
+
+    async function logoutPortal() {
+      await auth.signOut();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('login-form').addEventListener('submit', handleLogin);
+      document.getElementById('toggle-password').addEventListener('click', () => {
+        const input = document.getElementById('login-pin');
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        document.getElementById('toggle-password').innerHTML = `<i data-lucide="${show ? 'eye-off' : 'eye'}" class="w-5 h-5"></i>`;
+        document.getElementById('toggle-password').setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha');
+        if (window.lucide) lucide.createIcons();
+      });
+      if (window.lucide) lucide.createIcons();
+      auth.onAuthStateChanged(async user => {
+        currentUser = user;
+        if (user) {
+          if (user.uid === ADMIN_UID) {
+            currentUserRole = 'admin';
+          } else {
+            const profile = await db.collection('users').doc(user.uid).get();
+            currentUserRole = profile.exists ? (profile.data().role || 'member') : 'member';
+          }
+          document.getElementById('auth-screen').classList.add('hidden');
+          initApp();
+          subscribeSharedData();
+          applyAdminVisibility();
+        } else {
+          document.getElementById('auth-screen').classList.remove('hidden');
+          if (songsUnsubscribe) songsUnsubscribe();
+          if (membersUnsubscribe) membersUnsubscribe();
+          if (usersUnsubscribe) usersUnsubscribe();
+          if (rostersUnsubscribe) rostersUnsubscribe();
+          if (settingsUnsubscribe) settingsUnsubscribe();
+        }
+      });
+    });
+
+    function initApp() {
+      switchDepartment(currentDepartment || 'louvor');
+      renderRoster();
+      renderMediaRoster();
+      renderEvents();
+      renderEquipment();
+      renderMembers();
+      if (window.lucide) lucide.createIcons();
+      appInitialized = true;
+    }
+
+    function applyAdminVisibility() {
+      const admin = currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID;
+      const leader = admin || currentUserRole === 'leader';
+      const uploader = leader || currentUserRole === 'uploader';
+      document.querySelectorAll('[data-admin-only]').forEach(element => element.classList.toggle('hidden', !admin));
+      document.querySelectorAll('[data-leader-only]').forEach(element => element.classList.toggle('hidden', !leader));
+      document.querySelectorAll('[data-uploader-only]').forEach(element => element.classList.toggle('hidden', !uploader));
+    }
+
+    function subscribeSharedData() {
+      if (songsUnsubscribe) songsUnsubscribe();
+      if (membersUnsubscribe) membersUnsubscribe();
+      songsUnsubscribe = db.collection('songs').orderBy('title').onSnapshot(snapshot => {
+        songsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        selectedSongId = songsData.some(song => song.id === selectedSongId) ? selectedSongId : (songsData[0]?.id || null);
+        renderSongsList();
+      }, error => console.error('Erro ao carregar músicas:', error));
+      membersUnsubscribe = db.collection('members').orderBy('name').onSnapshot(snapshot => {
+        membersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderMembers();
+      }, error => console.error('Erro ao carregar membros:', error));
+      if (currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID) subscribeUsersPermissions();
+      rostersUnsubscribe = db.collection('rosters').orderBy('dateTime').onSnapshot(snapshot => {
+        const all = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        rosterData = all.filter(item => item.department !== 'midia');
+        mediaRosterData = all.filter(item => item.department === 'midia');
+        renderRoster();
+        renderMediaRoster();
+        checkRosterReminders(all);
+      }, error => console.error('Erro ao carregar escalas:', error));
+      settingsUnsubscribe = db.collection('settings').doc('whatsapp').onSnapshot(doc => {
+        groupWhatsappLink = doc.exists ? (doc.data().groupLink || '') : '';
+      });
+    }
+
+    function subscribeUsersPermissions() {
+      if (usersUnsubscribe) usersUnsubscribe();
+      usersUnsubscribe = db.collection('users').orderBy('name').onSnapshot(snapshot => {
+        const container = document.getElementById('users-permissions-list');
+        if (!container) return;
+        const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        container.innerHTML = users.length ? users.map(user => {
+          const isMainAdmin = user.id === ADMIN_UID;
+          return `<article class="p-4 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center font-bold">${memberInitials(user.name || user.email || 'U')}</div><div class="min-w-0 flex-1"><p class="text-sm font-bold text-white truncate">${user.name || 'Usuário'}</p><p class="text-xs text-slate-500 truncate">${user.email || ''}</p></div><select onchange='changeUserRole(${JSON.stringify(user.id)}, this.value)' ${isMainAdmin ? 'disabled' : ''} class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white disabled:opacity-60"><option value="member" ${(user.role || 'member') === 'member' ? 'selected' : ''}>Membro</option><option value="uploader" ${user.role === 'uploader' ? 'selected' : ''}>Responsável por cifras</option><option value="leader" ${user.role === 'leader' ? 'selected' : ''}>Líder</option>${isMainAdmin ? '<option value="admin" selected>Administradora</option>' : ''}</select></article>`;
+        }).join('') : '<p class="text-sm text-slate-500">Nenhuma conta cadastrada pelo portal ainda.</p>';
+        if (window.lucide) lucide.createIcons();
+      }, error => console.error('Erro ao carregar contas:', error));
+    }
+
+    async function changeUserRole(userId, role) {
+      if (currentUser?.uid !== ADMIN_UID) return;
+      await db.collection('users').doc(String(userId)).update({ role, roleUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+
+    // Roster Data (Includes Projection operator in Louvor)
+    let rosterData = JSON.parse(localStorage.getItem('cep_roster')) || [
+      { id: 1, date: 'Domingo, 20 Out - 19:00', service: 'Culto de Celebração', minister: 'Pr. João Pedro', singer: 'Ana & Beatriz', keyboard: 'Mateus Silva', guitar: 'Gabriel', projection: 'Ana Souza', status: 'confirmed' },
+      { id: 2, date: 'Quarta, 23 Out - 19:30', service: 'Culto da Família', minister: 'Pra. Maria', singer: 'Lucas', keyboard: 'João Pedro', guitar: 'Rafael', projection: 'Beatriz Lima', status: 'pending' }
+    ];
+
+    // Media Roster Data (Audio, Streaming, Cameras)
+    let mediaRosterData = JSON.parse(localStorage.getItem('cep_media_roster')) || [
+      { id: 1, date: 'Domingo, 20 Out - 19:00', service: 'Culto de Celebração', audio: 'Gabriel Rocha', streaming: 'Lucas Oliveira', cameras: 'Carlos & Marcos', status: 'confirmed' },
+      { id: 2, date: 'Quarta, 23 Out - 19:30', service: 'Culto da Família', audio: 'João Pedro', streaming: 'Matheus Silva', cameras: 'João Vitor', status: 'pending' }
+    ];
+
+    // Equipment Data
+    let equipmentData = JSON.parse(localStorage.getItem('cep_equipment')) || [
+      { id: 1, name: 'Mesa de Som Behringer X32', category: 'Áudio', status: 'Operacional' },
+      { id: 2, name: 'Projetor Principal Epson 4000 Lumens', category: 'Projeção', status: 'Manutenção Preventiva' },
+      { id: 3, name: 'Câmera PTZ Sony 4K (Transmissão)', category: 'Vídeo', status: 'Operacional' }
+    ];
+
+    // Events Data
+    let eventsData = JSON.parse(localStorage.getItem('cep_events')) || [
+      { id: 1, title: 'Ensaio Geral do Louvor & Slides', date: 'Sábado, 19 Out - 16:00', desc: 'Passagem de repertório e testes de projeção para o culto de domingo.' },
+      { id: 2, title: 'Treinamento Técnico de Som & Transmissão', date: 'Sexta, 25 Out - 20:00', desc: 'Capacitação para novos operadores.' }
+    ];
+
+    // Songs Repertoire Data
+    let songsData = JSON.parse(localStorage.getItem('cep_songs')) || [
+      {
+        id: 1,
+        title: 'Maravilhosas Graças (Grace Changes Everything)',
+        originalKey: 'C',
+        type: 'text',
+        content: `[Verso 1]\nC               G\nMinha vida estava perdida\nAm              F\nMas o teu amor me alcançou\n\n[Refrão]\nC       G       Am      F\nOh quão maravilhosa graça\nC       G       C\nQue me salvou na cruz`,
+        pdfUrl: ''
+      },
+      {
+        id: 2,
+        title: 'Lugar Secreto (Cifra com PDF Exemplo)',
+        originalKey: 'D',
+        type: 'pdf',
+        content: '',
+        pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+      }
+    ];
+
+    let membersData = JSON.parse(localStorage.getItem('cep_members')) || [
+      { id: 1, department: 'louvor', name: 'Pr. João Pedro', role: 'Ministro de Louvor', phone: '' },
+      { id: 2, department: 'louvor', name: 'Mateus Silva', role: 'Teclado & Piano', phone: '' },
+      { id: 3, department: 'louvor', name: 'Ana Souza', role: 'Projeção & Slides', phone: '' },
+      { id: 4, department: 'midia', name: 'Gabriel Rocha', role: 'Mesa de Som', phone: '' },
+      { id: 5, department: 'midia', name: 'Lucas Oliveira', role: 'Transmissão / Câmeras', phone: '' }
+    ];
+
+    const MUSICAL_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const PDF_DB_NAME = 'cep_portal_files';
+    const PDF_STORE_NAME = 'pdfs';
+    const pdfObjectUrls = new Map();
+
+    function saveSongs() {
+      localStorage.setItem('cep_songs', JSON.stringify(songsData));
+    }
+
+    function openPdfDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(PDF_DB_NAME, 1);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(PDF_STORE_NAME)) db.createObjectStore(PDF_STORE_NAME);
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function storePdfBlob(id, file) {
+      const db = await openPdfDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(PDF_STORE_NAME, 'readwrite');
+        tx.objectStore(PDF_STORE_NAME).put(file, String(id));
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+      });
+    }
+
+    async function getPdfBlob(id) {
+      const db = await openPdfDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(PDF_STORE_NAME, 'readonly');
+        const request = tx.objectStore(PDF_STORE_NAME).get(String(id));
+        request.onsuccess = () => { db.close(); resolve(request.result || null); };
+        request.onerror = () => { db.close(); reject(request.error); };
+      });
+    }
+
+    async function deletePdfBlob(id) {
+      const db = await openPdfDatabase();
+      return new Promise(resolve => {
+        const tx = db.transaction(PDF_STORE_NAME, 'readwrite');
+        tx.objectStore(PDF_STORE_NAME).delete(String(id));
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); resolve(); };
+      });
+    }
+
+    async function resolvePdfUrl(song) {
+      if (song.pdfStorage === 'indexeddb') {
+        if (pdfObjectUrls.has(song.id)) return pdfObjectUrls.get(song.id);
+        const blob = await getPdfBlob(song.id);
+        if (!blob) return '';
+        const url = URL.createObjectURL(blob);
+        pdfObjectUrls.set(song.id, url);
+        return url;
+      }
+      return song.pdfUrl || '';
+    }
+
+    let selectedSongId = songsData[0]?.id || null;
+    let autoScrollInterval = null;
+    let isAutoScrolling = false;
+
+    // --- DEPARTMENT SWITCHING ---
+    function switchDepartment(dept) {
+      currentDepartment = dept;
+      const louvorView = document.getElementById('view-louvor');
+      const midiaView = document.getElementById('view-midia');
+      const btnLouvor = document.getElementById('dept-btn-louvor');
+      const btnMidia = document.getElementById('dept-btn-midia');
+      const deptBadge = document.getElementById('current-dept-badge');
+      const headerSub = document.getElementById('header-subtitle');
+
+      if (dept === 'louvor') {
+        louvorView.classList.remove('hidden');
+        midiaView.classList.add('hidden');
+        btnLouvor.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition bg-indigo-600 text-white shadow';
+        btnMidia.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-slate-400 hover:text-slate-200';
+        deptBadge.innerText = 'Louvor & Projeção';
+        headerSub.innerText = 'Sistema de Apoio ao Ministério de Louvor, Cifras & Projeção';
+      } else {
+        louvorView.classList.add('hidden');
+        midiaView.classList.remove('hidden');
+        btnMidia.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition bg-indigo-600 text-white shadow';
+        btnLouvor.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-slate-400 hover:text-slate-200';
+        deptBadge.innerText = 'Mídia & Transmissão';
+        headerSub.innerText = 'Sistema de Apoio ao Ministério de Mídia, Som & Transmissão';
+        renderMediaRoster();
+        renderEquipment();
+      }
+      lucide.createIcons();
+    }
+
+    // --- LOUVOR TABS ---
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = 'tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2';
+      });
+
+      const activeContent = document.getElementById(`tab-${tabId}`);
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+      if (activeContent) activeContent.classList.remove('hidden');
+      if (activeBtn) activeBtn.className = 'tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2';
+
+      if (tabId === 'roster') renderRoster();
+      if (tabId === 'repertoire') renderSongsList();
+      if (tabId === 'pads') initPadsUI();
+      if (tabId === 'calendar') renderEvents();
+      if (tabId === 'team') renderMembers();
+      lucide.createIcons();
+    }
+
+    // --- MIDIA TABS ---
+    function switchMidiaTab(tabId) {
+      currentMidiaTab = tabId;
+      document.querySelectorAll('.midia-tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.midia-tab-btn').forEach(btn => {
+        btn.className = 'midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2';
+      });
+
+      const activeContent = document.getElementById(`midia-tab-${tabId}`);
+      const activeBtn = document.getElementById(`midia-tab-btn-${tabId}`);
+      if (activeContent) activeContent.classList.remove('hidden');
+      if (activeBtn) activeBtn.className = 'midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2';
+
+      if (tabId === 'roster') renderMediaRoster();
+      if (tabId === 'equipment') renderEquipment();
+      if (tabId === 'calendar') renderEvents();
+      if (tabId === 'team') renderMembers();
+      lucide.createIcons();
+    }
+
+    // --- RENDER LOUVOR ROSTER (WITH PROJECTION) ---
+    function renderRoster() {
+      const container = document.getElementById('roster-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      rosterData.forEach((item, index) => {
+        const selectedMembers = membersData.filter(member => (item.memberIds || []).includes(String(member.id)));
+        const selectedSongs = songsData.filter(song => (item.songIds || []).includes(String(song.id)));
+        const rosterId = JSON.stringify(item.id);
+        let badge = `<span class="px-2 py-0.5 text-[11px] rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Pendente</span>`;
+        if (item.status === 'confirmed') {
+          badge = `<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Confirmado</span>`;
+        } else if (item.status === 'swapped') {
+          badge = `<span class="px-2 py-0.5 text-[11px] rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">Troca Solicitada</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-950/80 border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow-lg';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800/60 rounded-full">${item.service}</span>
+              ${badge}
+            </div>
+            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+              <i data-lucide="calendar" class="w-4 h-4 text-indigo-400"></i> ${item.date || formatRosterDate(item.dateTime)}
+            </h3>
+            <div class="space-y-2 text-sm mb-4">
+              ${item.memberIds ? `<div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800"><p class="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Membros escalados</p><div class="flex flex-wrap gap-2">${selectedMembers.map(member => `<span class="px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-xs text-indigo-200">${member.name} · ${member.role || member.churchRole || ''}</span>`).join('') || '<span class="text-xs text-slate-500">Nenhum membro</span>'}</div></div><div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800"><p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Músicas para ensaiar</p><p class="text-xs text-white">${selectedSongs.map(song => song.title).join(' • ') || 'Nenhuma música definida'}</p></div>` : `
+              <div class="flex justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
+                <span class="text-slate-400">Ministro:</span>
+                <span class="text-white font-medium">${item.minister}</span>
+              </div>
+              <div class="flex justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
+                <span class="text-slate-400">Vozes:</span>
+                <span class="text-white font-medium">${item.singer}</span>
+              </div>
+              <div class="flex justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
+                <span class="text-slate-400">Teclado:</span>
+                <span class="text-white font-medium">${item.keyboard}</span>
+              </div>
+              <div class="flex justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
+                <span class="text-slate-400">Violão/Guitarra:</span>
+                <span class="text-white font-medium">${item.guitar}</span>
+              </div>
+              <div class="flex justify-between bg-indigo-950/40 p-2 rounded border border-indigo-800/60 text-xs">
+                <span class="text-indigo-300 font-semibold">Projeção / Telão:</span>
+                <span class="text-white font-bold">${item.projection || 'A definir'}</span>
+              </div>
+              `}
+            </div>
+          </div>
+          <div class="flex gap-2 pt-3 border-t border-slate-800">
+            <button onclick="toggleRosterConfirm(${index})" class="flex-1 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-xs font-semibold rounded border border-emerald-500/30 transition">
+              Confirmar
+            </button>
+            <button onclick="requestRosterSwap(${index})" class="flex-1 py-1.5 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 text-xs font-semibold rounded border border-purple-500/30 transition">
+              Pedir Troca
+            </button>
+            ${currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID ? `<button onclick='editRoster(${rosterId})' class="p-2 bg-indigo-500/15 text-indigo-300 rounded" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button>` : ''}
+          </div>
+          ${item.memberIds ? `<div class="grid grid-cols-2 gap-2 mt-2"><button onclick='notifyRosterMembers(${rosterId})' class="py-2 bg-emerald-600/15 text-emerald-300 border border-emerald-500/20 rounded-lg text-xs font-semibold"><i data-lucide="send" class="w-3.5 h-3.5 inline mr-1"></i> WhatsApp escalados</button><button onclick='openWhatsappGroup(${rosterId})' class="py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold"><i data-lucide="users" class="w-3.5 h-3.5 inline mr-1"></i> Abrir grupo</button></div>` : ''}
+        `;
+        container.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function toggleRosterConfirm(index) {
+      rosterData[index].status = rosterData[index].status === 'confirmed' ? 'pending' : 'confirmed';
+      localStorage.setItem('cep_roster', JSON.stringify(rosterData));
+      renderRoster();
+    }
+
+    function requestRosterSwap(index) {
+      rosterData[index].status = 'swapped';
+      localStorage.setItem('cep_roster', JSON.stringify(rosterData));
+      renderRoster();
+      alert('Solicitação de troca enviada para a liderança!');
+    }
+
+    function openNewRosterModal(type) {
+      openRosterEditor(type || 'louvor');
+    }
+
+    function formatRosterDate(value) {
+      if (!value) return 'Data a definir';
+      const date = new Date(value);
+      return date.toLocaleString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function openRosterEditor(department, rosterId = null) {
+      if (!(currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID)) return;
+      const all = [...rosterData, ...mediaRosterData];
+      const roster = all.find(item => item.id === rosterId) || { department, service: '', dateTime: '', memberIds: [], songIds: [], reminder: 'Ensaie as músicas da escala e chegue com antecedência.' };
+      const modal = document.createElement('div');
+      modal.id = 'roster-editor-modal';
+      modal.className = 'fixed inset-0 z-[80] bg-slate-950/90 backdrop-blur flex items-center justify-center p-3';
+      modal.innerHTML = `<form id="roster-editor-form" class="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 space-y-5 shadow-2xl"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold text-white">${rosterId ? 'Editar escala' : 'Nova escala'}</h2><p class="text-xs text-slate-400">Selecione membros, músicas e horários.</p></div><button type="button" onclick="document.getElementById('roster-editor-modal').remove()" class="p-2 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="grid sm:grid-cols-2 gap-4"><label class="text-xs text-slate-400">Culto ou evento<input id="roster-service" required value="${escapeHtml(roster.service)}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white"></label><label class="text-xs text-slate-400">Data e horário<input id="roster-datetime" type="datetime-local" required value="${roster.dateTime || ''}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white"></label></div><fieldset><legend class="text-sm font-bold text-white mb-2">Membros escalados</legend><div class="grid sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto">${membersData.filter(member => member.department === department || !member.department).map(member => `<label class="flex items-center gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200"><input type="checkbox" name="roster-member" value="${member.id}" ${(roster.memberIds || []).includes(String(member.id)) ? 'checked' : ''} class="accent-indigo-500"> <span>${escapeHtml(member.name)} <small class="text-slate-500">${escapeHtml(member.role || '')}</small></span></label>`).join('') || '<p class="text-sm text-slate-500">Cadastre membros primeiro.</p>'}</div></fieldset>${department === 'louvor' ? `<fieldset><legend class="text-sm font-bold text-white mb-2">Músicas para ensaiar</legend><div class="grid sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto">${songsData.map(song => `<label class="flex items-center gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200"><input type="checkbox" name="roster-song" value="${song.id}" ${(roster.songIds || []).includes(String(song.id)) ? 'checked' : ''} class="accent-indigo-500"> ${escapeHtml(song.title)}</label>`).join('') || '<p class="text-sm text-slate-500">Nenhuma música cadastrada.</p>'}</div></fieldset>` : ''}<label class="text-xs text-slate-400">Mensagem do lembrete<textarea id="roster-reminder" rows="3" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">${escapeHtml(roster.reminder || '')}</textarea></label><button class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl">Salvar escala</button></form>`;
+      document.body.appendChild(modal);
+      if (window.lucide) lucide.createIcons();
+      document.getElementById('roster-editor-form').onsubmit = async event => {
+        event.preventDefault();
+        const data = { department, service: document.getElementById('roster-service').value.trim(), dateTime: document.getElementById('roster-datetime').value, memberIds: [...document.querySelectorAll('[name="roster-member"]:checked')].map(input => input.value), songIds: [...document.querySelectorAll('[name="roster-song"]:checked')].map(input => input.value), reminder: document.getElementById('roster-reminder').value.trim(), status: roster.status || 'pending', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        if (rosterId) await db.collection('rosters').doc(String(rosterId)).set(data, { merge: true }); else await db.collection('rosters').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        modal.remove();
+      };
+    }
+
+    function editRoster(id) {
+      const roster = [...rosterData, ...mediaRosterData].find(item => item.id === id);
+      if (roster) openRosterEditor(roster.department || 'louvor', id);
+    }
+
+    function buildRosterMessage(roster) {
+      const titles = songsData.filter(song => (roster.songIds || []).includes(String(song.id))).map(song => song.title);
+      return `Olá! Você está na escala de ${roster.service} em ${formatRosterDate(roster.dateTime)}.${titles.length ? `\n\nMúsicas para ensaiar:\n• ${titles.join('\n• ')}` : ''}\n\n${roster.reminder || 'Por favor, ensaie e chegue com antecedência.'}`;
+    }
+
+    function notifyRosterMembers(id) {
+      const roster = [...rosterData, ...mediaRosterData].find(item => item.id === id);
+      if (!roster) return;
+      const members = membersData.filter(member => (roster.memberIds || []).includes(String(member.id)) && cleanPhone(member.phone));
+      const modal = document.createElement('div');
+      modal.id = 'whatsapp-members-modal';
+      modal.className = 'fixed inset-0 z-[85] bg-slate-950/90 flex items-center justify-center p-4';
+      const message = encodeURIComponent(buildRosterMessage(roster));
+      modal.innerHTML = `<div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-4"><div class="flex justify-between"><div><h2 class="font-bold text-white">Avisar escalados</h2><p class="text-xs text-slate-400">Abra uma mensagem para cada membro.</p></div><button onclick="document.getElementById('whatsapp-members-modal').remove()"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="space-y-2">${members.map(member => `<a target="_blank" href="https://wa.me/${cleanPhone(member.phone)}?text=${message}" class="flex items-center justify-between p-3 bg-emerald-600/15 border border-emerald-500/20 text-emerald-200 rounded-xl"><span>${escapeHtml(member.name)}</span><i data-lucide="send" class="w-4 h-4"></i></a>`).join('') || '<p class="text-sm text-amber-300">Nenhum escalado possui WhatsApp cadastrado.</p>'}</div></div>`;
+      document.body.appendChild(modal);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function configureWhatsappGroup() {
+      const link = prompt('Cole o link do grupo do WhatsApp:', groupWhatsappLink || 'https://chat.whatsapp.com/');
+      if (!link) return;
+      await db.collection('settings').doc('whatsapp').set({ groupLink: link.trim(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      alert('Link do grupo salvo.');
+    }
+
+    async function openWhatsappGroup(id) {
+      const roster = [...rosterData, ...mediaRosterData].find(item => item.id === id);
+      if (!roster) return;
+      try { await navigator.clipboard.writeText(buildRosterMessage(roster)); } catch (_) {}
+      if (!groupWhatsappLink) return alert('A liderança ainda não cadastrou o link do grupo.');
+      alert('A mensagem da escala foi copiada. Ao abrir o grupo, cole a mensagem no WhatsApp.');
+      window.open(groupWhatsappLink, '_blank');
+    }
+
+    function checkRosterReminders(allRosters) {
+      if (!currentUser) return;
+      const now = new Date();
+      const own = allRosters.filter(roster => (roster.memberIds || []).includes(currentUser.uid) && roster.dateTime);
+      own.forEach(roster => {
+        const eventDate = new Date(roster.dateTime);
+        const hours = (eventDate - now) / 3600000;
+        let moment = null;
+        if (hours > 23 && hours <= 25) moment = 'amanhã';
+        else if (eventDate.toDateString() === now.toDateString() && hours > 1) moment = 'hoje';
+        else if (hours > 0 && hours <= 1) moment = 'em até uma hora';
+        if (!moment) return;
+        const key = `cep_reminder_${roster.id}_${moment}_${now.toISOString().slice(0, 10)}`;
+        if (localStorage.getItem(key)) return;
+        localStorage.setItem(key, 'shown');
+        const message = `${roster.service} será ${moment}. ${buildRosterMessage(roster)}`;
+        alert(`🔔 Lembrete de escala\n\n${message}`);
+        if ('Notification' in window && Notification.permission === 'granted') new Notification('Lembrete de escala — CEP', { body: message });
+      });
+    }
+
+    // --- RENDER MEDIA ROSTER (AUDIO & STREAMING) ---
+    function renderMediaRoster() {
+      const container = document.getElementById('media-roster-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      mediaRosterData.forEach((item, index) => {
+        const selectedMembers = membersData.filter(member => (item.memberIds || []).includes(String(member.id)));
+        const rosterId = JSON.stringify(item.id);
+        let badge = `<span class="px-2 py-0.5 text-[11px] rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Pendente</span>`;
+        if (item.status === 'confirmed') {
+          badge = `<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Confirmado</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-950/80 border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow-lg';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800/60 rounded-full">${item.service}</span>
+              ${badge}
+            </div>
+            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+              <i data-lucide="calendar" class="w-4 h-4 text-indigo-400"></i> ${item.date || formatRosterDate(item.dateTime)}
+            </h3>
+            <div class="space-y-2 text-sm mb-4">
+              ${item.memberIds ? `<div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800"><p class="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Equipe escalada</p><div class="flex flex-wrap gap-2">${selectedMembers.map(member => `<span class="px-2 py-1 bg-violet-500/10 border border-violet-500/20 rounded-lg text-xs text-violet-200">${member.name} · ${member.role || ''}</span>`).join('') || '<span class="text-xs text-slate-500">Nenhum membro</span>'}</div></div>` : `
+              <div class="flex items-center justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
+                <span class="text-slate-400">Mesa de Som (Áudio):</span>
+                <span class="text-white font-medium">${item.audio}</span>
+              </div>
+              <div class="flex items-center justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
+                <span class="text-slate-400">Transmissão / Live:</span>
+                <span class="text-white font-medium">${item.streaming}</span>
+              </div>
+              `}
+              <div class="flex items-center justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
+                <span class="text-slate-400">Câmeras / Cortes:</span>
+                <span class="text-white font-medium">${item.cameras}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 pt-3 border-t border-slate-800">
+            <button onclick="toggleMediaConfirm(${index})" class="flex-1 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-xs font-semibold rounded border border-emerald-500/30 transition">
+              Confirmar Escala
+            </button>
+            ${currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID ? `<button onclick='editRoster(${rosterId})' class="p-2 bg-indigo-500/15 text-indigo-300 rounded"><i data-lucide="pencil" class="w-4 h-4"></i></button>` : ''}
+          </div>
+          ${item.memberIds ? `<div class="grid grid-cols-2 gap-2 mt-2"><button onclick='notifyRosterMembers(${rosterId})' class="py-2 bg-emerald-600/15 text-emerald-300 border border-emerald-500/20 rounded-lg text-xs font-semibold">WhatsApp escalados</button><button onclick='openWhatsappGroup(${rosterId})' class="py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold">Abrir grupo</button></div>` : ''}
+        `;
+        container.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function toggleMediaConfirm(index) {
+      mediaRosterData[index].status = mediaRosterData[index].status === 'confirmed' ? 'pending' : 'confirmed';
+      localStorage.setItem('cep_media_roster', JSON.stringify(mediaRosterData));
+      renderMediaRoster();
+    }
+
+    function openNewMediaModal() {
+      openRosterEditor('midia');
+    }
+
+    function renderEquipment() {
+      const container = document.getElementById('equipment-grid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      equipmentData.forEach((eq, index) => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between';
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-[11px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">${eq.category}</span>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${eq.status}</span>
+            </div>
+            <h4 class="text-sm font-bold text-white mb-1">${eq.name}</h4>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openNewEquipmentModal() {
+      const name = prompt('Nome do Equipamento (Ex: Microfone Sem Fio 01):');
+      if (!name) return;
+      const category = prompt('Categoria (Áudio, Projeção, Vídeo, Iluminação):') || 'Geral';
+      
+      equipmentData.push({ id: Date.now(), name, category, status: 'Operacional' });
+      localStorage.setItem('cep_equipment', JSON.stringify(equipmentData));
+      renderEquipment();
+    }
+
+    // --- MEMBERS ---
+    function memberInitials(name) {
+      return name.trim().split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase();
+    }
+
+    function cleanPhone(phone) {
+      return String(phone || '').replace(/\D/g, '');
+    }
+
+    function renderMembers() {
+      const admin = currentUser?.uid === ADMIN_UID || currentUserRole === 'admin' || currentUserRole === 'leader';
+      const superAdmin = currentUser?.uid === ADMIN_UID || currentUserRole === 'admin';
+      ['louvor', 'midia'].forEach(department => {
+        const container = document.getElementById(`members-${department}`);
+        if (!container) return;
+        const list = membersData.filter(member => member.department === department);
+        container.innerHTML = list.length ? list.map(member => {
+          const phone = cleanPhone(member.phone);
+          return `<article class="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 flex items-center gap-3 group">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br ${department === 'louvor' ? 'from-indigo-600 to-violet-600' : 'from-violet-600 to-fuchsia-600'} text-white font-bold flex items-center justify-center shadow-lg shrink-0">${memberInitials(member.name)}</div>
+            <div class="min-w-0 flex-1"><h4 class="text-sm font-bold text-white truncate">${member.name}</h4><p class="text-xs text-slate-400 truncate">${member.role}</p></div>
+            <div class="flex gap-1">
+              ${phone ? `<a href="https://wa.me/${phone}" target="_blank" class="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg" title="WhatsApp"><i data-lucide="message-circle" class="w-4 h-4"></i></a>` : ''}
+              ${superAdmin && member.accountUid ? `<button onclick='toggleMemberLeader(${JSON.stringify(member.accountUid)}, ${JSON.stringify(member.name)})' class="p-2 text-amber-400 hover:bg-amber-500/10 rounded-lg" title="Dar ou retirar acesso de líder"><i data-lucide="crown" class="w-4 h-4"></i></button>` : ''}
+              ${admin ? `<button onclick='editMember(${JSON.stringify(member.id)})' class="p-2 text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick='deleteMember(${JSON.stringify(member.id)})' class="p-2 text-slate-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+            </div>
+          </article>`;
+        }).join('') : '<div class="col-span-full text-center p-10 text-slate-500"><i data-lucide="users" class="w-9 h-9 mx-auto mb-2 opacity-50"></i><p>Nenhum membro cadastrado.</p></div>';
+      });
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function addMember(department) {
+      const name = prompt('Nome do membro:');
+      if (!name?.trim()) return;
+      const role = prompt('Função (ex.: Vocal, Teclado, Câmera):') || 'Integrante';
+      const phone = prompt('WhatsApp com DDD (opcional):') || '';
+      await db.collection('members').add({ department, name: name.trim(), role: role.trim(), phone: cleanPhone(phone), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+
+    async function editMember(id) {
+      const member = membersData.find(item => item.id === id);
+      if (!member) return;
+      const name = prompt('Nome do membro:', member.name);
+      if (!name?.trim()) return;
+      member.name = name.trim();
+      member.role = (prompt('Função:', member.role) || member.role).trim();
+      member.phone = cleanPhone(prompt('WhatsApp com DDD:', member.phone) ?? member.phone);
+      await db.collection('members').doc(String(id)).update({ name: member.name, role: member.role, phone: member.phone });
+    }
+
+    async function deleteMember(id) {
+      if (!confirm('Deseja excluir este membro?')) return;
+      await db.collection('members').doc(String(id)).delete();
+    }
+
+    async function toggleMemberLeader(userId, name) {
+      const profile = await db.collection('users').doc(String(userId)).get();
+      if (!profile.exists) return alert('Este membro ainda não possui uma conta no portal.');
+      const isLeader = profile.data().role === 'leader';
+      const nextRole = isLeader ? 'member' : 'leader';
+      if (!confirm(`${isLeader ? 'Retirar acesso de líder de' : 'Definir como líder:'} ${name}?`)) return;
+      await changeUserRole(userId, nextRole);
+      alert(isLeader ? 'Acesso de líder retirado.' : 'Líder definido. A pessoa deve sair e entrar novamente.');
+    }
+
+    // --- SONGS & PDF UPLOAD ---
+    function setPdfUploadStatus(message, visible = true, success = false) {
+      const box = document.getElementById('pdf-upload-status');
+      const text = document.getElementById('pdf-upload-status-text');
+      if (!box || !text) return;
+      text.textContent = message;
+      box.classList.toggle('hidden', !visible);
+      box.classList.toggle('flex', visible);
+      box.classList.toggle('border-emerald-500/30', success);
+      box.classList.toggle('bg-emerald-500/10', success);
+      box.classList.toggle('text-emerald-200', success);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function extractPdfText(file) {
+      if (!window.pdfjsLib) throw new Error('Leitor de PDF indisponível');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+      const textPages = [];
+      const layoutPages = [];
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        const page = await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 1 });
+        const content = await page.getTextContent();
+        const lines = new Map();
+        const layoutItems = [];
+        content.items.forEach(item => {
+          const y = Math.round(item.transform?.[5] || 0);
+          if (!lines.has(y)) lines.set(y, []);
+          lines.get(y).push({ x: item.transform?.[4] || 0, text: item.str });
+          if (item.str?.trim()) {
+            const size = Math.max(6, Math.hypot(item.transform?.[0] || 0, item.transform?.[1] || 0));
+            layoutItems.push({
+              t: item.str,
+              x: Math.round((item.transform?.[4] || 0) * 10) / 10,
+              y: Math.round((viewport.height - (item.transform?.[5] || 0) - size) * 10) / 10,
+              s: Math.round(size * 10) / 10
+            });
+          }
+        });
+        const pageText = [...lines.entries()].sort((a, b) => b[0] - a[0]).map(([, items]) => items.sort((a, b) => a.x - b.x).map(item => item.text).join('  ')).join('\n');
+        textPages.push(pageText);
+        layoutPages.push({ w: Math.round(viewport.width * 10) / 10, h: Math.round(viewport.height * 10) / 10, items: layoutItems });
+      }
+      return { text: textPages.join('\n\n'), layoutPages };
+    }
+
+    async function uploadPdfFiles(fileList) {
+      if (!(currentUserRole === 'admin' || currentUserRole === 'leader' || currentUserRole === 'uploader' || currentUser?.uid === ADMIN_UID)) return alert('Sua conta não possui permissão para enviar cifras.');
+      const files = [...fileList].filter(file => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
+      if (!files.length) return alert('Selecione um arquivo PDF válido.');
+      let imported = 0;
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        setPdfUploadStatus(`Importando ${index + 1} de ${files.length}: ${file.name}`);
+        let extraction = { text: '', layoutPages: [] };
+        try { extraction = await extractPdfText(file); } catch (error) { console.warn(error); }
+        const extractedText = extraction.text || '';
+        if (!extractedText.trim()) {
+          setPdfUploadStatus(`Não foi possível reconhecer texto em ${file.name}.`, true, false);
+          continue;
+        }
+        const layoutJsonSize = JSON.stringify(extraction.layoutPages || []).length;
+        const layoutPages = layoutJsonSize < 700000 ? extraction.layoutPages : [];
+        const docRef = await db.collection('songs').add({
+          title: file.name.replace(/\.pdf$/i, ''),
+          originalKey: 'C',
+          currentKey: 'C',
+          type: 'pdf',
+          content: extractedText.trim(),
+          sourceContent: extractedText.trim(),
+          layoutPages,
+          pdfUrl: '',
+          extractionStatus: 'success',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: currentUser.uid
+        });
+        selectedSongId = docRef.id;
+        imported++;
+      }
+      setPdfUploadStatus(imported ? `${imported} cifra${imported === 1 ? '' : 's'} salva${imported === 1 ? '' : 's'} para todos.` : 'Nenhuma cifra pôde ser extraída.', true, imported > 0);
+      setTimeout(() => setPdfUploadStatus('', false), 3500);
+    }
+
+    function transposeNote(note, semitones) {
+      const flats = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
+      const normalized = flats[note] || note;
+      const index = MUSICAL_KEYS.indexOf(normalized);
+      return index < 0 ? note : MUSICAL_KEYS[(index + semitones + 12) % 12];
+    }
+
+    function transposeChordToken(token, semitones) {
+      return token.replace(/^([A-G](?:#|b)?)(.*?)(?:\/([A-G](?:#|b)?))?$/, (_, root, suffix, bass) => `${transposeNote(root, semitones)}${suffix}${bass ? '/' + transposeNote(bass, semitones) : ''}`);
+    }
+
+    function transposeExtractedCifra(text, semitones) {
+      const chordPattern = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add|M)?\d*(?:\([^)]*\))?(?:\/[A-G](?:#|b)?)?$/;
+      return String(text || '').split('\n').map(line => {
+        const parts = line.split(/(\s+)/);
+        const words = parts.filter(part => part.trim());
+        const chords = words.filter(word => chordPattern.test(word.replace(/[|,]/g, '')));
+        const isChordLine = chords.length >= 2 || (words.length === 1 && chords.length === 1) || (words.length > 0 && chords.length / words.length >= .6);
+        if (!isChordLine) return line;
+        return parts.map(part => {
+          const clean = part.replace(/[|,]/g, '');
+          return chordPattern.test(clean) ? part.replace(clean, transposeChordToken(clean, semitones)) : part;
+        }).join('');
+      }).join('\n');
+    }
+
+    async function updateSongOriginalKey(id, key) {
+      const song = songsData.find(item => item.id === id);
+      if (!song) return;
+      song.originalKey = key;
+      song.currentKey = key;
+      song.content = song.sourceContent || song.content || '';
+      if (currentUserRole === 'admin' || currentUserRole === 'leader' || currentUserRole === 'uploader' || currentUser?.uid === ADMIN_UID) await db.collection('songs').doc(String(id)).update({ originalKey: key, currentKey: key });
+      renderSongDetail(id);
+    }
+
+    function changeSongKey(id, key) {
+      const song = songsData.find(item => item.id === id);
+      if (!song) return;
+      const from = MUSICAL_KEYS.indexOf(song.originalKey || 'C');
+      const to = MUSICAL_KEYS.indexOf(key);
+      song.currentKey = key;
+      song.content = transposeExtractedCifra(song.sourceContent || song.content || '', to - from);
+      renderSongDetail(id);
+      renderSongsList();
+    }
+
+    function saveSongNotes(id, notes) {
+      if (!currentUser) return;
+      privateNotes[id] = notes;
+      clearTimeout(noteSaveTimers[id]);
+      noteSaveTimers[id] = setTimeout(() => {
+        db.collection('privateNotes').doc(currentUser.uid).collection('songs').doc(String(id)).set({ notes, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(error => console.error('Erro ao salvar anotação:', error));
+      }, 500);
+    }
+
+    async function loadPrivateNote(id) {
+      if (!currentUser || Object.prototype.hasOwnProperty.call(privateNotes, id)) return;
+      try {
+        const doc = await db.collection('privateNotes').doc(currentUser.uid).collection('songs').doc(String(id)).get();
+        privateNotes[id] = doc.exists ? (doc.data().notes || '') : '';
+      } catch (error) {
+        console.error('Erro ao carregar anotação:', error);
+        privateNotes[id] = '';
+      }
+    }
+
+    function renderSongsList() {
+      const container = document.getElementById('songs-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      songsData.forEach(song => {
+        const isSelected = song.id === selectedSongId;
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left p-3 rounded-lg border transition flex items-center justify-between ${isSelected ? 'bg-indigo-600/20 border-indigo-500/60 text-white' : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-900'}`;
+        btn.onclick = () => selectSong(song.id);
+        btn.innerHTML = `
+          <div>
+            <h4 class="text-sm font-bold">${song.title}</h4>
+            <span class="text-[11px] text-slate-400">Tom: ${song.currentKey || song.originalKey} • ${song.type === 'pdf' ? '✨ Cifra importada' : '📝 Cifra'}</span>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500"></i>
+        `;
+        container.appendChild(btn);
+      });
+
+      if (selectedSongId) renderSongDetail(selectedSongId);
+      lucide.createIcons();
+    }
+
+    async function selectSong(id) {
+      selectedSongId = id;
+      await loadPrivateNote(id);
+      renderSongsList();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+    }
+
+    function renderLayoutPages(song, zoom = 100) {
+      const scale = Math.max(.4, Math.min(2, zoom / 100));
+      const from = MUSICAL_KEYS.indexOf(song.originalKey || 'C');
+      const to = MUSICAL_KEYS.indexOf(song.currentKey || song.originalKey || 'C');
+      const semitones = to - from;
+      return (song.layoutPages || []).map((page, pageIndex) => `<div class="cifra-layout-page" aria-label="Página ${pageIndex + 1}" style="width:${page.w * scale}px;height:${page.h * scale}px">${(page.items || []).map(item => `<span style="left:${item.x * scale}px;top:${item.y * scale}px;font-size:${item.s * scale}px">${escapeHtml(transposeExtractedCifra(item.t, semitones))}</span>`).join('')}</div>`).join('');
+    }
+
+    function updateInlineLayoutZoom(id, zoom) {
+      layoutZoomLevels[id] = Number(zoom);
+      const song = songsData.find(item => item.id === id);
+      const pages = document.getElementById('inline-layout-pages');
+      const label = document.getElementById('inline-layout-zoom-label');
+      if (song && pages) pages.innerHTML = renderLayoutPages(song, layoutZoomLevels[id]);
+      if (label) label.textContent = `${layoutZoomLevels[id]}%`;
+    }
+
+    function openLayoutFullscreen(id) {
+      const song = songsData.find(item => item.id === id);
+      if (!song?.layoutPages?.length) return;
+      fullscreenLayoutSongId = id;
+      fullscreenLayoutZoom = 100;
+      document.getElementById('layout-fullscreen-title').textContent = song.title;
+      document.getElementById('layout-fullscreen-pages').innerHTML = renderLayoutPages(song, fullscreenLayoutZoom);
+      document.getElementById('layout-fullscreen-zoom-label').textContent = '100%';
+      document.getElementById('layout-fullscreen-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function changeLayoutFullscreenZoom(delta) {
+      const song = songsData.find(item => item.id === fullscreenLayoutSongId);
+      if (!song) return;
+      fullscreenLayoutZoom = Math.max(40, Math.min(200, fullscreenLayoutZoom + delta));
+      document.getElementById('layout-fullscreen-pages').innerHTML = renderLayoutPages(song, fullscreenLayoutZoom);
+      document.getElementById('layout-fullscreen-zoom-label').textContent = `${fullscreenLayoutZoom}%`;
+    }
+
+    function closeLayoutFullscreen() {
+      document.getElementById('layout-fullscreen-modal').classList.add('hidden');
+      document.getElementById('layout-fullscreen-pages').innerHTML = '';
+      document.body.style.overflow = '';
+      fullscreenLayoutSongId = null;
+    }
+
+    async function renderSongDetail(id) {
+      const song = songsData.find(s => s.id === id);
+      const container = document.getElementById('song-detail-view');
+      if (!song || !container) return;
+      await loadPrivateNote(id);
+      const sid = JSON.stringify(song.id);
+      const admin = currentUserRole === 'admin' || currentUserRole === 'leader' || currentUser?.uid === ADMIN_UID;
+      const canUpload = admin || currentUserRole === 'leader' || currentUserRole === 'uploader';
+
+      let previewContent = '';
+      const pdfUrl = song.type === 'pdf' ? await resolvePdfUrl(song) : '';
+      if (song.type === 'pdf' && song.layoutPages?.length) {
+        const zoom = layoutZoomLevels[song.id] || 100;
+        previewContent = `<section class="space-y-3"><div class="flex items-center justify-between gap-3 flex-wrap"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan" class="w-4 h-4 text-emerald-400"></i> Visual parecido com o PDF</h4><div class="flex items-center gap-2"><i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i><input type="range" min="50" max="160" step="10" value="${zoom}" oninput='updateInlineLayoutZoom(${sid}, this.value)' class="w-28 accent-indigo-500"><span id="inline-layout-zoom-label" class="text-xs text-slate-300 w-10">${zoom}%</span><button onclick='openLayoutFullscreen(${sid})' class="p-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white" title="Página inteira"><i data-lucide="maximize" class="w-4 h-4"></i></button></div></div><div class="cifra-layout-stage max-h-[650px]"><div id="inline-layout-pages">${renderLayoutPages(song, zoom)}</div></div></section>`;
+      } else if (song.type === 'pdf' && pdfUrl) {
+        previewContent = `<div class="relative overflow-hidden rounded-xl border border-slate-700 bg-white shadow-2xl">
+          <iframe src="${pdfUrl}" class="w-full h-[460px] bg-white" title="PDF da música ${song.title}"></iframe>
+          <button onclick='openPdfFullscreen(${sid})' class="absolute bottom-3 right-3 px-3 py-2 bg-slate-950/90 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xl backdrop-blur">
+            <i data-lucide="maximize" class="w-4 h-4"></i> Abrir página toda
+          </button>
+        </div>`;
+      } else if (song.type !== 'pdf') {
+        previewContent = `<pre class="bg-slate-900 p-4 rounded-lg font-mono text-sm text-indigo-200 overflow-x-auto whitespace-pre-wrap">${song.content}</pre>`;
+      }
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <h3 class="text-lg font-bold text-white">${song.title}</h3>
+              <p class="text-xs text-slate-400">Cifra compartilhada com todos os usuários</p>
+            </div>
+            <div class="flex items-center gap-2">
+              ${song.type === 'pdf' && pdfUrl ? `<button onclick='openPdfFullscreen(${sid})' class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow"><i data-lucide="scan" class="w-3.5 h-3.5"></i> Página toda</button>` : ''}
+              <button onclick='openTeleprompter(${sid})' class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow">
+                <i data-lucide="monitor" class="w-3.5 h-3.5"></i> Abrir cifra
+              </button>
+              ${admin ? `<button onclick='deleteSong(${sid})' class="p-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg text-xs" title="Excluir">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>` : ''}
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-3 p-4 bg-slate-900/80 border border-slate-800 rounded-xl">
+            <label class="text-xs text-slate-400">Tom original
+              <select onchange='updateSongOriginalKey(${sid}, this.value)' ${canUpload ? '' : 'disabled'} class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white disabled:opacity-60">${MUSICAL_KEYS.map(key => `<option value="${key}" ${key === (song.originalKey || 'C') ? 'selected' : ''}>${key}</option>`).join('')}</select>
+            </label>
+            <label class="text-xs text-slate-400">Tom para tocar
+              <select onchange='changeSongKey(${sid}, this.value)' class="mt-1 w-full bg-slate-950 border border-indigo-500/50 rounded-lg p-2 text-white">${MUSICAL_KEYS.map(key => `<option value="${key}" ${key === (song.currentKey || song.originalKey || 'C') ? 'selected' : ''}>${key}</option>`).join('')}</select>
+            </label>
+            <p class="sm:col-span-2 text-[11px] text-amber-300/80 flex gap-2"><i data-lucide="info" class="w-4 h-4 shrink-0"></i> A troca de tom acontece na cifra do portal e não altera o tom escolhido por outros usuários.</p>
+          </div>
+          <div>${previewContent}</div>
+          ${song.type === 'pdf' ? `<section class="space-y-2"><div class="flex items-center justify-between"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan-text" class="w-4 h-4 text-indigo-400"></i> Cifra extraída e transponível</h4><span class="text-[10px] px-2 py-1 rounded-full ${song.content ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}">${song.content ? 'Texto extraído' : 'PDF sem texto reconhecível'}</span></div><pre class="bg-slate-900 p-4 rounded-xl border border-slate-800 font-mono text-sm text-indigo-100 overflow-x-auto whitespace-pre-wrap max-h-[480px]">${song.content || 'Não foi possível extrair texto deste PDF. O arquivo pode ser uma imagem escaneada.'}</pre></section>` : ''}
+          <label class="block text-sm font-semibold text-slate-200"><span class="flex items-center gap-2 mb-2"><i data-lucide="lock-keyhole" class="w-4 h-4 text-amber-400"></i> Minhas anotações particulares</span><textarea oninput='saveSongNotes(${JSON.stringify(song.id)}, this.value)' rows="4" placeholder="Ex.: começar suave, repetir o refrão, entrada do teclado..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">${privateNotes[song.id] || ''}</textarea><span class="text-[11px] text-slate-500 mt-1 block">Somente a sua conta pode visualizar estas anotações.</span></label>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    async function openNewSongModal() {
+      if (!(currentUserRole === 'admin' || currentUserRole === 'leader' || currentUserRole === 'uploader' || currentUser?.uid === ADMIN_UID)) return alert('Sua conta não possui permissão para enviar cifras.');
+      const title = prompt('Nome da Música:');
+      if (!title) return;
+      const originalKey = prompt('Tom (Ex: C, D, G):') || 'C';
+      const content = prompt('Cole a cifra e letra aqui:') || '';
+      if (!content.trim()) return;
+      const docRef = await db.collection('songs').add({ title: title.trim(), originalKey, currentKey: originalKey, type: 'text', content, sourceContent: content, pdfUrl: '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser.uid });
+      selectedSongId = docRef.id;
+    }
+
+    async function deleteSong(id) {
+      if (!confirm('Deseja realmente excluir esta música?')) return;
+      await db.collection('songs').doc(String(id)).delete();
+    }
+
+    async function openPdfFullscreen(songId) {
+      const song = songsData.find(s => s.id === songId);
+      if (!song) return;
+      const pdfUrl = await resolvePdfUrl(song);
+      if (!pdfUrl) return alert('O arquivo PDF não foi encontrado neste dispositivo.');
+      document.getElementById('pdf-fullscreen-title').innerText = song.title;
+      document.getElementById('pdf-fullscreen-frame').src = pdfUrl;
+      document.getElementById('pdf-fullscreen-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closePdfFullscreen() {
+      const modal = document.getElementById('pdf-fullscreen-modal');
+      modal.classList.add('hidden');
+      document.getElementById('pdf-fullscreen-frame').src = 'about:blank';
+      document.body.style.overflow = '';
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    }
+
+    function requestPdfNativeFullscreen() {
+      const modal = document.getElementById('pdf-fullscreen-modal');
+      if (!document.fullscreenElement && modal.requestFullscreen) modal.requestFullscreen().catch(() => {});
+      else if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    }
+
+    // --- TELEPROMPTER ---
+    let teleprompterFontSize = 32;
+    function openTeleprompter(songId) {
+      const song = songsData.find(s => s.id === songId);
+      if (!song) return;
+
+      document.getElementById('teleprompter-title').innerText = song.title;
+      document.getElementById('teleprompter-key-tag').innerText = `Tom: ${song.currentKey || song.originalKey}`;
+      
+      const textContainer = document.getElementById('teleprompter-text');
+      textContainer.innerText = song.content || 'Não foi possível extrair a cifra deste PDF.';
+      textContainer.style.fontSize = `${teleprompterFontSize}px`;
+
+      document.getElementById('teleprompter-modal').classList.remove('hidden');
+    }
+
+    function closeTeleprompterMode() {
+      document.getElementById('teleprompter-modal').classList.add('hidden');
+      stopTeleprompterAutoScroll();
+    }
+
+    function changeTeleprompterFontSize(delta) {
+      teleprompterFontSize = Math.max(18, Math.min(64, teleprompterFontSize + delta));
+      document.getElementById('teleprompter-text').style.fontSize = `${teleprompterFontSize}px`;
+    }
+
+    function toggleTeleprompterAutoScroll() {
+      const btn = document.getElementById('teleprompter-scroll-btn');
+      const container = document.getElementById('teleprompter-content-container');
+
+      if (isAutoScrolling) {
+        clearInterval(autoScrollInterval);
+        isAutoScrolling = false;
+        btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5"></i> Rolagem Auto`;
+      } else {
+        isAutoScrolling = true;
+        btn.innerHTML = `<i data-lucide="pause" class="w-3.5 h-3.5"></i> Pausar`;
+        autoScrollInterval = setInterval(() => { container.scrollBy(0, 1); }, 50);
+      }
+      lucide.createIcons();
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    // --- WORSHIP PADS SYNTHESIZER ---
+    let audioCtx = null;
+    let activeOscillators = [];
+    let padGainNode = null;
+    let currentPadKeyNode = 'C';
+
+    const padFrequencies = {
+      'C': [130.81, 196.00, 261.63, 392.00], 'C#': [138.59, 207.65, 277.18, 415.30],
+      'D': [146.83, 220.00, 293.66, 440.00], 'D#': [155.56, 233.08, 311.13, 466.16],
+      'E': [164.81, 246.94, 329.63, 493.88], 'F': [174.61, 261.63, 349.23, 523.25],
+      'F#': [185.00, 277.18, 369.99, 554.37], 'G': [196.00, 293.66, 392.00, 587.33],
+      'G#': [207.65, 311.13, 415.30, 622.25], 'A': [220.00, 329.63, 440.00, 659.25],
+      'A#': [233.08, 349.23, 466.16, 698.46], 'B': [246.94, 369.99, 493.88, 739.99]
+    };
+
+    function initPadsUI() {
+      const grid = document.getElementById('pad-keys-grid');
+      if (!grid || grid.children.length > 0) return;
+      grid.innerHTML = '';
+
+      Object.keys(padFrequencies).forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = `p-4 rounded-xl font-bold text-lg border transition bg-slate-950 border-slate-800 text-slate-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-500`;
+        btn.innerText = key;
+        btn.onclick = () => playWorshipPad(key);
+        grid.appendChild(btn);
+      });
+    }
+
+    function playWorshipPad(key) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      stopWorshipPadSilently();
+      currentPadKeyNode = key;
+
+      const freqs = padFrequencies[key] || padFrequencies['C'];
+      padGainNode = audioCtx.createGain();
+      const volumeVal = parseFloat(document.getElementById('pad-volume').value) || 0.5;
+      padGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      padGainNode.gain.linearRampToValueAtTime(volumeVal * 0.15, audioCtx.currentTime + 2.5);
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(450, audioCtx.currentTime);
+
+      padGainNode.connect(filter);
+      filter.connect(audioCtx.destination);
+
+      freqs.forEach(f => {
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+        osc.connect(padGainNode);
+        osc.start();
+        activeOscillators.push(osc);
+      });
+
+      document.getElementById('current-pad-key').innerText = key;
+      document.getElementById('pad-now-playing').classList.remove('hidden');
+    }
+
+    function stopWorshipPadSilently() {
+      if (padGainNode && audioCtx) {
+        try {
+          padGainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
+          setTimeout(() => {
+            activeOscillators.forEach(o => { try { o.stop(); } catch(e){} });
+            activeOscillators = [];
+          }, 1500);
+        } catch(e) {
+          activeOscillators.forEach(o => { try { o.stop(); } catch(e){} });
+          activeOscillators = [];
+        }
+      } else {
+        activeOscillators.forEach(o => { try { o.stop(); } catch(e){} });
+        activeOscillators = [];
+      }
+    }
+
+    function stopWorshipPad() {
+      stopWorshipPadSilently();
+      document.getElementById('pad-now-playing').classList.add('hidden');
+    }
+
+    function updatePadVolume(val) {
+      document.getElementById('pad-vol-text').innerText = `${Math.round(val * 100)}%`;
+      if (padGainNode && audioCtx) padGainNode.gain.setValueAtTime(val * 0.15, audioCtx.currentTime);
+    }
+
+    function changePadTimbre(timbre) {
+      if (activeOscillators.length > 0) playWorshipPad(currentPadKeyNode);
+    }
+
+    // --- CALENDAR / EVENTS EDITABLE ---
+    function renderEvents() {
+      ['events-grid', 'events-grid-midia'].forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+
+        eventsData.forEach((ev, index) => {
+          const card = document.createElement('div');
+          card.className = 'bg-slate-950 border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow';
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">Evento</span>
+                <button onclick="deleteEvent(${index})" class="text-slate-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              </div>
+              <h3 class="text-base font-bold text-white mb-1">${ev.title}</h3>
+              <p class="text-xs text-indigo-400 font-medium mb-3 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> ${ev.date}</p>
+              <p class="text-xs text-slate-400">${ev.desc}</p>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      });
+      lucide.createIcons();
+    }
+
+    function openNewEventModal() {
+      const title = prompt('Título do Evento ou Culto:');
+      if (!title) return;
+      const date = prompt('Data e Horário (Ex: Quinta, 24 Out - 19:30):');
+      if (!date) return;
+      const desc = prompt('Descrição ou observações:') || '';
+
+      eventsData.push({ id: Date.now(), title, date, desc });
+      localStorage.setItem('cep_events', JSON.stringify(eventsData));
+      renderEvents();
+    }
+
+    function deleteEvent(index) {
+      if (!confirm('Deseja excluir este evento?')) return;
+      eventsData.splice(index, 1);
+      localStorage.setItem('cep_events', JSON.stringify(eventsData));
+      renderEvents();
+    }
+
+    // --- NOTIFICATIONS ---
+    async function requestNotificationPermission() {
+      if (!("Notification" in window)) {
+        alert('Seu navegador não suporta notificações.');
+        return;
+      }
+      if (!currentUser) return alert('Entre na sua conta antes de ativar as notificações.');
+      if (!messaging) return alert('Este navegador não oferece suporte às notificações do portal.');
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return alert('Permissão de notificações não concedida. Você pode ativá-la nas configurações do navegador.');
+        const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './' });
+        const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: registration });
+        if (!token) throw new Error('Token não gerado');
+        const tokenBytes = new TextEncoder().encode(token);
+        const digest = await crypto.subtle.digest('SHA-256', tokenBytes);
+        const deviceId = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('').slice(0, 40);
+        await db.collection('users').doc(currentUser.uid).collection('devices').doc(deviceId).set({ token, enabled: true, userAgent: navigator.userAgent, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        new Notification('Portal CEP Pirapozinho', { body: 'Notificações ativadas neste aparelho!', icon: './icon-192.png' });
+        alert('Notificações ativadas neste aparelho!');
+      } catch (error) {
+        console.error(error);
+        alert('Não foi possível ativar as notificações. Abra o site publicado no GitHub Pages e tente novamente.');
+      }
+    }
+
+    if (messaging) {
+      messaging.onMessage(payload => {
+        const title = payload.notification?.title || 'Portal CEP Pirapozinho';
+        const body = payload.notification?.body || payload.data?.body || 'Você tem um novo lembrete.';
+        if (Notification.permission === 'granted') new Notification(title, { body, icon: './icon-192.png' });
+      });
+    }
+  </script>
+</body>
+</html>
