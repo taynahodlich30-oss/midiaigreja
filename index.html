@@ -1053,7 +1053,7 @@
         localStorage.setItem(key, 'shown');
         const message = `${roster.service} será ${moment}. ${buildRosterMessage(roster)}`;
         alert(`🔔 Lembrete de escala\n\n${message}`);
-        if ('Notification' in window && Notification.permission === 'granted') new Notification('Lembrete de escala — CEP', { body: message });
+        if ('Notification' in window && Notification.permission === 'granted') showPortalNotification('Lembrete de escala — CEP', { body: message });
       });
     }
 
@@ -1866,6 +1866,16 @@
     }
 
     // --- NOTIFICATIONS ---
+    async function showPortalNotification(title, options = {}) {
+      if (!("Notification" in window) || Notification.permission !== 'granted') return;
+      const notificationOptions = { icon: './icon-192.png', badge: './icon-192.png', ...options };
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        return registration.showNotification(title, notificationOptions);
+      }
+      return new Notification(title, notificationOptions);
+    }
+
     async function requestNotificationPermission() {
       if (!("Notification" in window)) {
         alert('Seu navegador não suporta notificações.');
@@ -1886,7 +1896,7 @@
         const digest = await crypto.subtle.digest('SHA-256', tokenBytes);
         const deviceId = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('').slice(0, 40);
         await db.collection('users').doc(currentUser.uid).collection('devices').doc(deviceId).set({ token, enabled: true, userAgent: navigator.userAgent, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-        new Notification('Portal CEP Pirapozinho', { body: 'Notificações ativadas neste aparelho!', icon: './icon-192.png' });
+        await activeRegistration.showNotification('Portal CEP Pirapozinho', { body: 'Notificações ativadas neste aparelho!', icon: './icon-192.png', badge: './icon-192.png' });
         alert('Notificações ativadas neste aparelho!');
       } catch (error) {
         console.error(error);
@@ -1900,7 +1910,7 @@
       messaging.onMessage(payload => {
         const title = payload.notification?.title || 'Portal CEP Pirapozinho';
         const body = payload.notification?.body || payload.data?.body || 'Você tem um novo lembrete.';
-        if (Notification.permission === 'granted') new Notification(title, { body, icon: './icon-192.png' });
+        if (Notification.permission === 'granted') showPortalNotification(title, { body });
       });
     }
   </script>
