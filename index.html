@@ -61,6 +61,10 @@
       outline-offset: 2px;
     }
     #pdf-fullscreen-modal iframe { height: 100%; width: 100%; border: 0; background: white; }
+    .cifra-layout-stage { overflow: auto; background: #0b1120; border-radius: 1rem; padding: 1rem; }
+    .cifra-layout-page { position: relative; margin: 0 auto 1rem; background: white; color: #0f172a; box-shadow: 0 18px 45px rgba(0,0,0,.35); transform-origin: top center; }
+    .cifra-layout-page span { position: absolute; white-space: pre; line-height: 1; font-family: Arial, Helvetica, sans-serif; }
+    #layout-fullscreen-pages { min-width: max-content; }
     .upload-progress { animation: uploadPulse 1.3s ease-in-out infinite; }
     @keyframes uploadPulse { 50% { opacity: .55; } }
     @media (max-width: 640px) {
@@ -388,6 +392,15 @@
 
   </main>
 
+  <!-- CIFRA RECRIADA EM TELA INTEIRA -->
+  <div id="layout-fullscreen-modal" class="fixed inset-0 bg-slate-950 z-[65] flex flex-col hidden" role="dialog" aria-modal="true">
+    <div class="p-3 sm:p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
+      <div class="min-w-0"><p class="text-[10px] uppercase tracking-widest text-indigo-400">Visual recriado do PDF</p><h2 id="layout-fullscreen-title" class="font-bold text-white truncate">Cifra</h2></div>
+      <div class="flex items-center gap-2"><button onclick="changeLayoutFullscreenZoom(-10)" class="p-2 bg-slate-800 rounded-lg text-white" title="Diminuir"><i data-lucide="zoom-out" class="w-4 h-4"></i></button><span id="layout-fullscreen-zoom-label" class="text-xs text-slate-300 w-12 text-center">100%</span><button onclick="changeLayoutFullscreenZoom(10)" class="p-2 bg-slate-800 rounded-lg text-white" title="Aumentar"><i data-lucide="zoom-in" class="w-4 h-4"></i></button><button onclick="closeLayoutFullscreen()" class="p-2 bg-red-500/15 text-red-300 rounded-lg" title="Fechar"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+    </div>
+    <div id="layout-fullscreen-stage" class="cifra-layout-stage flex-1 rounded-none overflow-auto"><div id="layout-fullscreen-pages"></div></div>
+  </div>
+
   <!-- PDF EM TELA INTEIRA: funciona como overlay no celular e no computador -->
   <div id="pdf-fullscreen-modal" class="fixed inset-0 bg-slate-950 z-[60] flex flex-col hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-fullscreen-title">
     <div class="p-3 sm:p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
@@ -453,6 +466,9 @@
     let currentUserRole = 'member';
     const privateNotes = {};
     const noteSaveTimers = {};
+    const layoutZoomLevels = {};
+    let fullscreenLayoutSongId = null;
+    let fullscreenLayoutZoom = 100;
     let isRegisterMode = false;
     let appInitialized = false;
     let songsUnsubscribe = null;
@@ -1083,20 +1099,33 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const bytes = new Uint8Array(await file.arrayBuffer());
       const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-      const pages = [];
+      const textPages = [];
+      const layoutPages = [];
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
         const page = await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 1 });
         const content = await page.getTextContent();
         const lines = new Map();
+        const layoutItems = [];
         content.items.forEach(item => {
           const y = Math.round(item.transform?.[5] || 0);
           if (!lines.has(y)) lines.set(y, []);
           lines.get(y).push({ x: item.transform?.[4] || 0, text: item.str });
+          if (item.str?.trim()) {
+            const size = Math.max(6, Math.hypot(item.transform?.[0] || 0, item.transform?.[1] || 0));
+            layoutItems.push({
+              t: item.str,
+              x: Math.round((item.transform?.[4] || 0) * 10) / 10,
+              y: Math.round((viewport.height - (item.transform?.[5] || 0) - size) * 10) / 10,
+              s: Math.round(size * 10) / 10
+            });
+          }
         });
         const pageText = [...lines.entries()].sort((a, b) => b[0] - a[0]).map(([, items]) => items.sort((a, b) => a.x - b.x).map(item => item.text).join('  ')).join('\n');
-        pages.push(pageText);
+        textPages.push(pageText);
+        layoutPages.push({ w: Math.round(viewport.width * 10) / 10, h: Math.round(viewport.height * 10) / 10, items: layoutItems });
       }
-      return pages.join('\n\n');
+      return { text: textPages.join('\n\n'), layoutPages };
     }
 
     async function uploadPdfFiles(fileList) {
@@ -1107,12 +1136,15 @@
       for (let index = 0; index < files.length; index++) {
         const file = files[index];
         setPdfUploadStatus(`Importando ${index + 1} de ${files.length}: ${file.name}`);
-        let extractedText = '';
-        try { extractedText = await extractPdfText(file); } catch (error) { console.warn(error); }
+        let extraction = { text: '', layoutPages: [] };
+        try { extraction = await extractPdfText(file); } catch (error) { console.warn(error); }
+        const extractedText = extraction.text || '';
         if (!extractedText.trim()) {
           setPdfUploadStatus(`Não foi possível reconhecer texto em ${file.name}.`, true, false);
           continue;
         }
+        const layoutJsonSize = JSON.stringify(extraction.layoutPages || []).length;
+        const layoutPages = layoutJsonSize < 700000 ? extraction.layoutPages : [];
         const docRef = await db.collection('songs').add({
           title: file.name.replace(/\.pdf$/i, ''),
           originalKey: 'C',
@@ -1120,6 +1152,7 @@
           type: 'pdf',
           content: extractedText.trim(),
           sourceContent: extractedText.trim(),
+          layoutPages,
           pdfUrl: '',
           extractionStatus: 'success',
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1229,6 +1262,55 @@
       renderSongsList();
     }
 
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+    }
+
+    function renderLayoutPages(song, zoom = 100) {
+      const scale = Math.max(.4, Math.min(2, zoom / 100));
+      const from = MUSICAL_KEYS.indexOf(song.originalKey || 'C');
+      const to = MUSICAL_KEYS.indexOf(song.currentKey || song.originalKey || 'C');
+      const semitones = to - from;
+      return (song.layoutPages || []).map((page, pageIndex) => `<div class="cifra-layout-page" aria-label="Página ${pageIndex + 1}" style="width:${page.w * scale}px;height:${page.h * scale}px">${(page.items || []).map(item => `<span style="left:${item.x * scale}px;top:${item.y * scale}px;font-size:${item.s * scale}px">${escapeHtml(transposeExtractedCifra(item.t, semitones))}</span>`).join('')}</div>`).join('');
+    }
+
+    function updateInlineLayoutZoom(id, zoom) {
+      layoutZoomLevels[id] = Number(zoom);
+      const song = songsData.find(item => item.id === id);
+      const pages = document.getElementById('inline-layout-pages');
+      const label = document.getElementById('inline-layout-zoom-label');
+      if (song && pages) pages.innerHTML = renderLayoutPages(song, layoutZoomLevels[id]);
+      if (label) label.textContent = `${layoutZoomLevels[id]}%`;
+    }
+
+    function openLayoutFullscreen(id) {
+      const song = songsData.find(item => item.id === id);
+      if (!song?.layoutPages?.length) return;
+      fullscreenLayoutSongId = id;
+      fullscreenLayoutZoom = 100;
+      document.getElementById('layout-fullscreen-title').textContent = song.title;
+      document.getElementById('layout-fullscreen-pages').innerHTML = renderLayoutPages(song, fullscreenLayoutZoom);
+      document.getElementById('layout-fullscreen-zoom-label').textContent = '100%';
+      document.getElementById('layout-fullscreen-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function changeLayoutFullscreenZoom(delta) {
+      const song = songsData.find(item => item.id === fullscreenLayoutSongId);
+      if (!song) return;
+      fullscreenLayoutZoom = Math.max(40, Math.min(200, fullscreenLayoutZoom + delta));
+      document.getElementById('layout-fullscreen-pages').innerHTML = renderLayoutPages(song, fullscreenLayoutZoom);
+      document.getElementById('layout-fullscreen-zoom-label').textContent = `${fullscreenLayoutZoom}%`;
+    }
+
+    function closeLayoutFullscreen() {
+      document.getElementById('layout-fullscreen-modal').classList.add('hidden');
+      document.getElementById('layout-fullscreen-pages').innerHTML = '';
+      document.body.style.overflow = '';
+      fullscreenLayoutSongId = null;
+    }
+
     async function renderSongDetail(id) {
       const song = songsData.find(s => s.id === id);
       const container = document.getElementById('song-detail-view');
@@ -1240,7 +1322,10 @@
 
       let previewContent = '';
       const pdfUrl = song.type === 'pdf' ? await resolvePdfUrl(song) : '';
-      if (song.type === 'pdf' && pdfUrl) {
+      if (song.type === 'pdf' && song.layoutPages?.length) {
+        const zoom = layoutZoomLevels[song.id] || 100;
+        previewContent = `<section class="space-y-3"><div class="flex items-center justify-between gap-3 flex-wrap"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan" class="w-4 h-4 text-emerald-400"></i> Visual parecido com o PDF</h4><div class="flex items-center gap-2"><i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i><input type="range" min="50" max="160" step="10" value="${zoom}" oninput='updateInlineLayoutZoom(${sid}, this.value)' class="w-28 accent-indigo-500"><span id="inline-layout-zoom-label" class="text-xs text-slate-300 w-10">${zoom}%</span><button onclick='openLayoutFullscreen(${sid})' class="p-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white" title="Página inteira"><i data-lucide="maximize" class="w-4 h-4"></i></button></div></div><div class="cifra-layout-stage max-h-[650px]"><div id="inline-layout-pages">${renderLayoutPages(song, zoom)}</div></div></section>`;
+      } else if (song.type === 'pdf' && pdfUrl) {
         previewContent = `<div class="relative overflow-hidden rounded-xl border border-slate-700 bg-white shadow-2xl">
           <iframe src="${pdfUrl}" class="w-full h-[460px] bg-white" title="PDF da música ${song.title}"></iframe>
           <button onclick='openPdfFullscreen(${sid})' class="absolute bottom-3 right-3 px-3 py-2 bg-slate-950/90 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xl backdrop-blur">
