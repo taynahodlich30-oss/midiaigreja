@@ -1,3 +1,88 @@
+Sim. Podemos fazer de graça usando o Firestore que você já ativou, sem cadastrar cartão.
+
+Funcionaria assim:
+
+O PDF será dividido em pequenos pedaços e salvo no Firestore.
+Quando alguém abrir a cifra, o portal juntará os pedaços novamente.
+A visualização ficará igual ao PDF, inclusive no zoom e em tela inteira.
+A versão transponível continuará separada.
+Podemos limitar cada PDF a 5 MB para não pesar.
+
+O Firestore gratuito oferece atualmente 1 GB de armazenamento, 50 mil leituras diárias e 10 GB de transferência mensal, suficiente para um portal pequeno de igreja. Cada documento possui limite de 1 MB, por isso o arquivo precisa ser dividido. Limites oficiais do Firestore
+
+O Firebase Storage tradicional agora exige o plano Blaze com conta de cobrança, mesmo mantendo alguma franquia gratuita, então não é a melhor opção para você. Mudanças oficiais do Firebase Storage
+
+Minha indicação: usar o Firestore dividido, sem cartão. Assim teremos dois botões:
+
+Ver PDF original: visual idêntico.
+Cifra transponível: permite mudar o tom.
+
+Posso preparar essa versão gratuita para você.
+
+pode ser
+
+Pronto. Fiz a versão gratuita com:
+
+PDF original armazenado no Firestore em partes.
+Visualização idêntica ao PDF.
+Zoom e tela inteira sem desalinhar.
+Cifra transponível separada.
+Limite de 5 MB por PDF.
+Notificações preservadas.
+
+Baixe os arquivos:
+
+index.html atualizado
+Regras completas do Firebase
+Pacote completo
+
+Agora faça:
+
+Substitua somente o index.html no GitHub.
+Abra 
+FIREBASE-REGRAS.txt, copie tudo e cole em Firebase → Firestore Database → Regras → Publicar.
+Aguarde 2 minutos.
+Apague uma cifra antiga do portal e envie novamente o PDF.
+
+As cifras antigas não têm o PDF original armazenado, por isso precisam ser reenviadas. Depois disso, o PDF aparecerá fiel e a versão para mudar o tom ficará separada abaixo.
+
+index.html
+HTML
+FIREBASE-REGRAS.txt
+Documento
+outra duas coisas os pad estão tocando e parando é possivel colocar outros modelos de pad e deixar eles tocando no minimo 5 minutos, outra coisa na hora que vou adicionar alguem ou escrever qualquer coisa o estilo que é pra digitar é muito feio nao parece proficional tem como mudar ?
+
+Pronto. Corrigi os pads e modernizei os campos de digitação.
+
+Nos pads:
+
+Agora tocam continuamente por mais de 5 minutos.
+Só param ao clicar em Parar Pad.
+Corrigido o problema ao mudar o tom ou timbre.
+Adicionei seis modelos:
+Grave envolvente
+Celestial brilhante
+Órgão suave
+Cordas worship
+Coro etéreo
+Shimmer worship
+
+Na interface:
+
+Removi as caixas antigas de digitação.
+Adicionei formulários modernos para membros, cifras, eventos, equipamentos, avisos, WhatsApp e disponibilidade.
+Campos maiores, profissionais e adaptados ao celular.
+
+Baixe e substitua somente o index.html:
+
+Baixar index.html atualizado
+
+Ou baixe o pacote completo:
+
+Baixar pacote completo
+
+Não precisa alterar novamente as regras do Firebase. Depois de substituir, aguarde dois minutos e reabra o portal.
+
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
@@ -293,6 +378,9 @@
                 <option value="warm">Warm & Deep (Grave Envolvente)</option>
                 <option value="bright">Celestial & Bright (Brilhante)</option>
                 <option value="organ">Soft Organ (Órgão Suave)</option>
+                <option value="strings">Worship Strings (Cordas Acolhedoras)</option>
+                <option value="choir">Heavenly Choir (Coro Etéreo)</option>
+                <option value="shimmer">Shimmer Worship (Atmosfera Brilhante)</option>
               </select>
             </div>
           </div>
@@ -305,7 +393,7 @@
               <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
               <span class="text-sm">Tocando Pad em tom de <strong id="current-pad-key" class="text-white text-base">C</strong></span>
             </div>
-            <span class="text-xs text-indigo-400">Transição suave ativada</span>
+            <span class="text-xs text-indigo-400">Contínuo • mínimo de 5 minutos</span>
           </div>
         </div>
       </div>
@@ -417,6 +505,23 @@
     </div>
 
   </main>
+
+  <!-- FORMULÁRIO PROFISSIONAL REUTILIZÁVEL -->
+  <div id="portal-form-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
+    <div class="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl shadow-indigo-950/50">
+      <div class="flex items-start justify-between gap-4 border-b border-slate-800 bg-gradient-to-r from-indigo-950/80 to-slate-900 p-5">
+        <div><p class="text-[10px] font-bold uppercase tracking-[.22em] text-indigo-400">Portal CEP</p><h2 id="portal-form-title" class="mt-1 text-xl font-bold text-white">Preencher informações</h2><p id="portal-form-subtitle" class="mt-1 text-xs text-slate-400"></p></div>
+        <button type="button" onclick="closePortalForm(null)" class="rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-slate-300 transition hover:bg-red-500/15 hover:text-red-300" aria-label="Fechar"><i data-lucide="x" class="h-5 w-5"></i></button>
+      </div>
+      <form id="portal-dynamic-form" class="space-y-4 p-5">
+        <div id="portal-form-fields" class="space-y-4"></div>
+        <div class="flex flex-col-reverse gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:justify-end">
+          <button type="button" onclick="closePortalForm(null)" class="rounded-xl border border-slate-700 bg-slate-800 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-slate-700">Cancelar</button>
+          <button id="portal-form-submit" type="submit" class="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:from-indigo-500 hover:to-violet-500"><i data-lucide="check" class="h-4 w-4"></i> Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- CIFRA RECRIADA EM TELA INTEIRA -->
   <div id="layout-fullscreen-modal" class="fixed inset-0 bg-slate-950 z-[65] flex flex-col hidden" role="dialog" aria-modal="true">
@@ -1035,9 +1140,9 @@
     }
 
     async function configureWhatsappGroup() {
-      const link = prompt('Cole o link do grupo do WhatsApp:', groupWhatsappLink || 'https://chat.whatsapp.com/');
-      if (!link) return;
-      await db.collection('settings').doc('whatsapp').set({ groupLink: link.trim(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      const values = await openPortalForm({ title: 'Grupo do WhatsApp', subtitle: 'Cadastre o convite fixo usado nas escalas.', fields: [{ name: 'link', label: 'Link do grupo', type: 'url', value: groupWhatsappLink || 'https://chat.whatsapp.com/', placeholder: 'https://chat.whatsapp.com/...', required: true }] });
+      if (!values?.link) return;
+      await db.collection('settings').doc('whatsapp').set({ groupLink: values.link.trim(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
       alert('Link do grupo salvo.');
     }
 
@@ -1106,11 +1211,11 @@
       try { const doc = await db.collection('availability').doc(currentUser.uid).get(); myAvailability = doc.exists ? (doc.data().unavailableDates || []) : []; } catch (_) { myAvailability = []; }
     }
 
-    function openAvailabilityModal() {
+    async function openAvailabilityModal() {
       const current = myAvailability.join(', ');
-      const value = prompt('Digite as datas em que você NÃO poderá servir, separadas por vírgula.\nExemplo: 2026-10-10, 2026-10-18', current);
-      if (value === null) return;
-      myAvailability = value.split(',').map(item => item.trim()).filter(item => /^\d{4}-\d{2}-\d{2}$/.test(item));
+      const values = await openPortalForm({ title: 'Minha disponibilidade', subtitle: 'Informe os dias em que você não poderá servir.', fields: [{ name: 'dates', label: 'Datas indisponíveis', type: 'textarea', rows: 3, value: current, placeholder: '2026-10-10, 2026-10-18', hint: 'Use o formato ano-mês-dia e separe as datas por vírgula.' }] });
+      if (!values) return;
+      myAvailability = values.dates.split(',').map(item => item.trim()).filter(item => /^\d{4}-\d{2}-\d{2}$/.test(item));
       db.collection('availability').doc(currentUser.uid).set({ unavailableDates: myAvailability, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       alert('Disponibilidade salva.');
     }
@@ -1124,9 +1229,9 @@
     }
 
     async function createAnnouncement() {
-      const message = prompt('Digite o aviso para todos:');
-      if (!message?.trim()) return;
-      await db.collection('announcements').add({ message: message.trim(), author: currentUser.displayName || currentUser.email, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      const values = await openPortalForm({ title: 'Novo aviso', subtitle: 'Este comunicado aparecerá para todos no portal.', submitLabel: 'Publicar aviso', fields: [{ name: 'message', label: 'Mensagem', type: 'textarea', rows: 4, placeholder: 'Escreva o aviso aqui...', required: true }] });
+      if (!values?.message?.trim()) return;
+      await db.collection('announcements').add({ message: values.message.trim(), author: currentUser.displayName || currentUser.email, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
 
     async function deleteAnnouncement(id) { if (confirm('Excluir este aviso?')) await db.collection('announcements').doc(String(id)).delete(); }
@@ -1229,12 +1334,10 @@
       });
     }
 
-    function openNewEquipmentModal() {
-      const name = prompt('Nome do Equipamento (Ex: Microfone Sem Fio 01):');
-      if (!name) return;
-      const category = prompt('Categoria (Áudio, Projeção, Vídeo, Iluminação):') || 'Geral';
-      
-      equipmentData.push({ id: Date.now(), name, category, status: 'Operacional' });
+    async function openNewEquipmentModal() {
+      const values = await openPortalForm({ title: 'Novo equipamento', subtitle: 'Cadastre um item usado pela equipe.', fields: [{ name: 'name', label: 'Nome do equipamento', placeholder: 'Ex.: Microfone sem fio 01', required: true }, { name: 'category', label: 'Categoria', type: 'select', value: 'Áudio', options: ['Áudio', 'Projeção', 'Vídeo', 'Iluminação', 'Geral'] }] });
+      if (!values?.name?.trim()) return;
+      equipmentData.push({ id: Date.now(), name: values.name.trim(), category: values.category || 'Geral', status: 'Operacional' });
       localStorage.setItem('cep_equipment', JSON.stringify(equipmentData));
       renderEquipment();
     }
@@ -1272,21 +1375,19 @@
     }
 
     async function addMember(department) {
-      const name = prompt('Nome do membro:');
-      if (!name?.trim()) return;
-      const role = prompt('Função (ex.: Vocal, Teclado, Câmera):') || 'Integrante';
-      const phone = prompt('WhatsApp com DDD (opcional):') || '';
-      await db.collection('members').add({ department, name: name.trim(), role: role.trim(), phone: cleanPhone(phone), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      const values = await openPortalForm({ title: 'Adicionar membro', subtitle: department === 'midia' ? 'Equipe de Mídia e Transmissão' : 'Equipe de Louvor e Projeção', submitLabel: 'Adicionar membro', fields: [{ name: 'name', label: 'Nome completo', placeholder: 'Nome do membro', required: true }, { name: 'role', label: 'Função na igreja', placeholder: 'Ex.: Vocal, Teclado, Câmera', value: 'Integrante', required: true }, { name: 'phone', label: 'WhatsApp com DDD', type: 'tel', placeholder: '(18) 99999-9999', hint: 'Opcional' }] });
+      if (!values?.name?.trim()) return;
+      await db.collection('members').add({ department, name: values.name.trim(), role: (values.role || 'Integrante').trim(), phone: cleanPhone(values.phone), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
 
     async function editMember(id) {
       const member = membersData.find(item => item.id === id);
       if (!member) return;
-      const name = prompt('Nome do membro:', member.name);
-      if (!name?.trim()) return;
-      member.name = name.trim();
-      member.role = (prompt('Função:', member.role) || member.role).trim();
-      member.phone = cleanPhone(prompt('WhatsApp com DDD:', member.phone) ?? member.phone);
+      const values = await openPortalForm({ title: 'Editar membro', subtitle: 'Atualize os dados da pessoa.', fields: [{ name: 'name', label: 'Nome completo', value: member.name, required: true }, { name: 'role', label: 'Função na igreja', value: member.role, required: true }, { name: 'phone', label: 'WhatsApp com DDD', type: 'tel', value: member.phone || '', placeholder: '(18) 99999-9999' }] });
+      if (!values?.name?.trim()) return;
+      member.name = values.name.trim();
+      member.role = (values.role || member.role).trim();
+      member.phone = cleanPhone(values.phone ?? member.phone);
       await db.collection('members').doc(String(id)).update({ name: member.name, role: member.role, phone: member.phone });
     }
 
@@ -1558,6 +1659,52 @@
       return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
     }
 
+    let portalFormResolver = null;
+
+    function openPortalForm({ title, subtitle = '', submitLabel = 'Salvar', fields = [] }) {
+      return new Promise(resolve => {
+        portalFormResolver = resolve;
+        const modal = document.getElementById('portal-form-modal');
+        const form = document.getElementById('portal-dynamic-form');
+        document.getElementById('portal-form-title').textContent = title;
+        document.getElementById('portal-form-subtitle').textContent = subtitle;
+        document.getElementById('portal-form-submit').lastChild.textContent = ` ${submitLabel}`;
+        document.getElementById('portal-form-fields').innerHTML = fields.map(field => {
+          const common = `name="${escapeHtml(field.name)}" id="portal-field-${escapeHtml(field.name)}" ${field.required ? 'required' : ''}`;
+          const baseClass = 'mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20';
+          let control = '';
+          if (field.type === 'textarea') {
+            control = `<textarea ${common} rows="${field.rows || 4}" placeholder="${escapeHtml(field.placeholder || '')}" class="${baseClass} resize-y">${escapeHtml(field.value || '')}</textarea>`;
+          } else if (field.type === 'select') {
+            control = `<select ${common} class="${baseClass}">${(field.options || []).map(option => { const value = typeof option === 'string' ? option : option.value; const label = typeof option === 'string' ? option : option.label; return `<option value="${escapeHtml(value)}" ${String(value) === String(field.value ?? '') ? 'selected' : ''}>${escapeHtml(label)}</option>`; }).join('')}</select>`;
+          } else {
+            control = `<input ${common} type="${escapeHtml(field.type || 'text')}" value="${escapeHtml(field.value || '')}" placeholder="${escapeHtml(field.placeholder || '')}" class="${baseClass}">`;
+          }
+          return `<label class="block text-sm font-semibold text-slate-200">${escapeHtml(field.label)}${field.required ? '<span class="ml-1 text-rose-400">*</span>' : ''}${control}${field.hint ? `<span class="mt-1.5 block text-[11px] font-normal text-slate-500">${escapeHtml(field.hint)}</span>` : ''}</label>`;
+        }).join('');
+        form.onsubmit = event => {
+          event.preventDefault();
+          const values = Object.fromEntries(new FormData(form).entries());
+          closePortalForm(values);
+        };
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => document.getElementById(`portal-field-${fields[0]?.name}`)?.focus(), 80);
+      });
+    }
+
+    function closePortalForm(result) {
+      const modal = document.getElementById('portal-form-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+      const resolver = portalFormResolver;
+      portalFormResolver = null;
+      if (resolver) resolver(result);
+    }
+
     function renderLayoutPages(song, zoom = 100) {
       const scale = Math.max(.4, Math.min(2, zoom / 100));
       const verticalSpacing = 1.16;
@@ -1660,12 +1807,11 @@
 
     async function openNewSongModal() {
       if (!(currentUserRole === 'admin' || currentUserRole === 'leader' || currentUserRole === 'uploader' || currentUser?.uid === ADMIN_UID)) return alert('Sua conta não possui permissão para enviar cifras.');
-      const title = prompt('Nome da Música:');
-      if (!title) return;
-      const originalKey = prompt('Tom (Ex: C, D, G):') || 'C';
-      const content = prompt('Cole a cifra e letra aqui:') || '';
-      if (!content.trim()) return;
-      const docRef = await db.collection('songs').add({ title: title.trim(), originalKey, currentKey: originalKey, type: 'text', content, sourceContent: content, pdfUrl: '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser.uid });
+      const values = await openPortalForm({ title: 'Nova cifra', subtitle: 'Cadastre uma música digitada no portal.', submitLabel: 'Salvar cifra', fields: [{ name: 'title', label: 'Nome da música', placeholder: 'Ex.: Lugar Secreto', required: true }, { name: 'originalKey', label: 'Tom original', type: 'select', value: 'C', options: MUSICAL_KEYS }, { name: 'content', label: 'Cifra e letra', type: 'textarea', rows: 9, placeholder: 'Cole ou digite a cifra completa...', required: true }] });
+      if (!values?.title?.trim() || !values?.content?.trim()) return;
+      const originalKey = values.originalKey || 'C';
+      const content = values.content;
+      const docRef = await db.collection('songs').add({ title: values.title.trim(), originalKey, currentKey: originalKey, type: 'text', content, sourceContent: content, pdfUrl: '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser.uid });
       selectedSongId = docRef.id;
     }
 
@@ -1765,6 +1911,16 @@
     let activeOscillators = [];
     let padGainNode = null;
     let currentPadKeyNode = 'C';
+    let padKeepAliveTimer = null;
+
+    const padTimbreModels = {
+      warm: { waves: ['sawtooth', 'triangle'], filter: 520, resonance: 0.7, detune: 5, level: 0.14 },
+      bright: { waves: ['triangle', 'sine'], filter: 1450, resonance: 1.2, detune: 8, level: 0.12 },
+      organ: { waves: ['sine', 'square'], filter: 900, resonance: 0.5, detune: 2, level: 0.11 },
+      strings: { waves: ['sawtooth', 'sawtooth'], filter: 780, resonance: 0.9, detune: 11, level: 0.11 },
+      choir: { waves: ['sine', 'triangle'], filter: 1050, resonance: 2.2, detune: 14, level: 0.12 },
+      shimmer: { waves: ['triangle', 'sine'], filter: 2100, resonance: 1.8, detune: 18, level: 0.1, octave: true }
+    };
 
     const padFrequencies = {
       'C': [130.81, 196.00, 261.63, 392.00], 'C#': [138.59, 207.65, 277.18, 415.30],
@@ -1789,65 +1945,89 @@
       });
     }
 
-    function playWorshipPad(key) {
+    async function playWorshipPad(key) {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
 
       stopWorshipPadSilently();
       currentPadKeyNode = key;
 
       const freqs = padFrequencies[key] || padFrequencies['C'];
+      const timbreName = document.getElementById('pad-timbre')?.value || 'warm';
+      const model = padTimbreModels[timbreName] || padTimbreModels.warm;
       padGainNode = audioCtx.createGain();
       const volumeVal = parseFloat(document.getElementById('pad-volume').value) || 0.5;
       padGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      padGainNode.gain.linearRampToValueAtTime(volumeVal * 0.15, audioCtx.currentTime + 2.5);
+      padGainNode.gain.linearRampToValueAtTime(volumeVal * model.level, audioCtx.currentTime + 2.5);
 
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(450, audioCtx.currentTime);
+      filter.frequency.setValueAtTime(model.filter, audioCtx.currentTime);
+      filter.Q.setValueAtTime(model.resonance, audioCtx.currentTime);
+
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
+      compressor.knee.setValueAtTime(18, audioCtx.currentTime);
+      compressor.ratio.setValueAtTime(3, audioCtx.currentTime);
+      compressor.attack.setValueAtTime(0.15, audioCtx.currentTime);
+      compressor.release.setValueAtTime(1.8, audioCtx.currentTime);
 
       padGainNode.connect(filter);
-      filter.connect(audioCtx.destination);
+      filter.connect(compressor);
+      compressor.connect(audioCtx.destination);
 
-      freqs.forEach(f => {
+      const voices = model.octave ? [...freqs, freqs[0] * 2, freqs[1] * 2] : freqs;
+      voices.forEach((f, index) => {
         const osc = audioCtx.createOscillator();
-        osc.type = 'sawtooth';
+        osc.type = model.waves[index % model.waves.length];
         osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+        osc.detune.setValueAtTime(index % 2 ? model.detune : -model.detune, audioCtx.currentTime);
         osc.connect(padGainNode);
         osc.start();
         activeOscillators.push(osc);
       });
+
+      clearInterval(padKeepAliveTimer);
+      padKeepAliveTimer = setInterval(() => {
+        if (activeOscillators.length && audioCtx?.state === 'suspended') audioCtx.resume().catch(() => {});
+      }, 15000);
 
       document.getElementById('current-pad-key').innerText = key;
       document.getElementById('pad-now-playing').classList.remove('hidden');
     }
 
     function stopWorshipPadSilently() {
+      const oscillatorsToStop = activeOscillators;
+      activeOscillators = [];
       if (padGainNode && audioCtx) {
         try {
+          padGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          padGainNode.gain.setValueAtTime(padGainNode.gain.value, audioCtx.currentTime);
           padGainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
           setTimeout(() => {
-            activeOscillators.forEach(o => { try { o.stop(); } catch(e){} });
-            activeOscillators = [];
+            oscillatorsToStop.forEach(o => { try { o.stop(); } catch(e){} });
           }, 1500);
         } catch(e) {
-          activeOscillators.forEach(o => { try { o.stop(); } catch(e){} });
-          activeOscillators = [];
+          oscillatorsToStop.forEach(o => { try { o.stop(); } catch(e){} });
         }
       } else {
-        activeOscillators.forEach(o => { try { o.stop(); } catch(e){} });
-        activeOscillators = [];
+        oscillatorsToStop.forEach(o => { try { o.stop(); } catch(e){} });
       }
     }
 
     function stopWorshipPad() {
       stopWorshipPadSilently();
+      clearInterval(padKeepAliveTimer);
+      padKeepAliveTimer = null;
       document.getElementById('pad-now-playing').classList.add('hidden');
     }
 
     function updatePadVolume(val) {
       document.getElementById('pad-vol-text').innerText = `${Math.round(val * 100)}%`;
-      if (padGainNode && audioCtx) padGainNode.gain.setValueAtTime(val * 0.15, audioCtx.currentTime);
+      if (padGainNode && audioCtx) {
+        const model = padTimbreModels[document.getElementById('pad-timbre')?.value || 'warm'] || padTimbreModels.warm;
+        padGainNode.gain.setTargetAtTime(val * model.level, audioCtx.currentTime, 0.08);
+      }
     }
 
     function changePadTimbre(timbre) {
@@ -1881,14 +2061,10 @@
       lucide.createIcons();
     }
 
-    function openNewEventModal() {
-      const title = prompt('Título do Evento ou Culto:');
-      if (!title) return;
-      const date = prompt('Data e Horário (Ex: Quinta, 24 Out - 19:30):');
-      if (!date) return;
-      const desc = prompt('Descrição ou observações:') || '';
-
-      eventsData.push({ id: Date.now(), title, date, desc });
+    async function openNewEventModal() {
+      const values = await openPortalForm({ title: 'Novo evento', subtitle: 'Adicione um culto, treinamento ou compromisso.', submitLabel: 'Adicionar evento', fields: [{ name: 'title', label: 'Título do evento ou culto', placeholder: 'Ex.: Culto de Celebração', required: true }, { name: 'date', label: 'Data e horário', placeholder: 'Ex.: Quinta, 24 Out - 19:30', required: true }, { name: 'desc', label: 'Descrição ou observações', type: 'textarea', rows: 3, placeholder: 'Informações importantes...' }] });
+      if (!values?.title?.trim() || !values?.date?.trim()) return;
+      eventsData.push({ id: Date.now(), title: values.title.trim(), date: values.date.trim(), desc: values.desc?.trim() || '' });
       localStorage.setItem('cep_events', JSON.stringify(eventsData));
       renderEvents();
     }
@@ -1951,3 +2127,5 @@
   </script>
 </body>
 </html>
+index.html
+HTML
