@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function loggedIn() { return request.auth != null; }
+    function isAdmin() { return loggedIn() && request.auth.uid == "v7IIVCiLYlh1ALLn1YplBJZTSFi2"; }
+    function userRole() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+    function isLeader() { return isAdmin() || (loggedIn() && userRole() == "leader"); }
+    function canUploadSongs() { return isLeader() || (loggedIn() && userRole() == "uploader"); }
+
+    match /users/{userId} {
+      allow create: if loggedIn() && request.auth.uid == userId && request.resource.data.role == "member";
+      allow read: if loggedIn() && (request.auth.uid == userId || isAdmin());
+      allow update: if isAdmin() || (loggedIn() && request.auth.uid == userId && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+    }
+    match /users/{userId}/devices/{deviceId} {
+      allow read, create, update, delete: if loggedIn() && request.auth.uid == userId;
+    }
+    match /members/{memberId} {
+      allow read: if loggedIn();
+      allow create: if isLeader() || (loggedIn() && request.auth.uid == memberId && request.resource.data.accountUid == request.auth.uid);
+      allow update, delete: if isLeader();
+    }
+    match /songs/{songId} {
+      allow read: if loggedIn();
+      allow create, update: if canUploadSongs();
+      allow delete: if isLeader();
+    }
+    match /rosters/{rosterId} {
+      allow read: if loggedIn();
+      allow create, update, delete: if isLeader();
+    }
+    match /events/{documentId} { allow read: if loggedIn(); allow write: if isLeader(); }
+    match /equipment/{documentId} { allow read: if loggedIn(); allow write: if isLeader(); }
+    match /settings/{documentId} { allow read: if loggedIn(); allow write: if isLeader(); }
+    match /privateNotes/{userId}/songs/{songId} {
+      allow read, create, update, delete: if loggedIn() && request.auth.uid == userId;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
