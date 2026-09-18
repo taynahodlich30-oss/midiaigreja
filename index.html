@@ -69,7 +69,8 @@
     #pdf-fullscreen-modal iframe { height: 100%; width: 100%; border: 0; background: white; }
     .cifra-layout-stage { overflow: auto; background: #0b1120; border-radius: 1rem; padding: 1rem; }
     .cifra-layout-page { position: relative; margin: 0 auto 1rem; background: white; color: #0f172a; box-shadow: 0 18px 45px rgba(0,0,0,.35); transform-origin: top center; }
-    .cifra-layout-page span { position: absolute; white-space: pre; line-height: 1; font-family: Arial, Helvetica, sans-serif; }
+    .cifra-layout-page span { position: absolute; white-space: pre; line-height: 1.18; font-family: Arial, Helvetica, sans-serif; }
+    .cifra-text-view { line-height: 1.9; letter-spacing: .01em; }
     #layout-fullscreen-pages { min-width: max-content; }
     .upload-progress { animation: uploadPulse 1.3s ease-in-out infinite; }
     @keyframes uploadPulse { 50% { opacity: .55; } }
@@ -798,6 +799,19 @@
     }
 
     async function resolvePdfUrl(song) {
+      if (song.pdfStorage === 'firestore-chunks') {
+        if (pdfObjectUrls.has(song.id)) return pdfObjectUrls.get(song.id);
+        const snapshot = await db.collection('songs').doc(String(song.id)).collection('pdfChunks').orderBy('index').get();
+        if (snapshot.empty) return '';
+        const chunks = snapshot.docs.map(doc => doc.data().data?.toUint8Array?.()).filter(Boolean);
+        const totalSize = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const merged = new Uint8Array(totalSize);
+        let offset = 0;
+        chunks.forEach(chunk => { merged.set(chunk, offset); offset += chunk.length; });
+        const url = URL.createObjectURL(new Blob([merged], { type: song.pdfMime || 'application/pdf' }));
+        pdfObjectUrls.set(song.id, url);
+        return url;
+      }
       if (song.pdfStorage === 'indexeddb') {
         if (pdfObjectUrls.has(song.id)) return pdfObjectUrls.get(song.id);
         const blob = await getPdfBlob(song.id);
@@ -1376,17 +1390,27 @@
       let imported = 0;
       for (let index = 0; index < files.length; index++) {
         const file = files[index];
+        if (file.size > 5 * 1024 * 1024) {
+          setPdfUploadStatus(`${file.name} ultrapassa o limite gratuito de 5 MB.`, true, false);
+          continue;
+        }
         setPdfUploadStatus(`Importando ${index + 1} de ${files.length}: ${file.name}`);
         let extraction = { text: '', layoutPages: [] };
         try { extraction = await extractPdfText(file); } catch (error) { console.warn(error); }
         const extractedText = extraction.text || '';
-        if (!extractedText.trim()) {
-          setPdfUploadStatus(`Não foi possível reconhecer texto em ${file.name}.`, true, false);
-          continue;
-        }
         const layoutJsonSize = JSON.stringify(extraction.layoutPages || []).length;
         const layoutPages = layoutJsonSize < 700000 ? extraction.layoutPages : [];
-        const docRef = await db.collection('songs').add({
+        const docRef = db.collection('songs').doc();
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const chunkSize = 700 * 1024;
+        const chunkCount = Math.ceil(bytes.length / chunkSize);
+        const batch = db.batch();
+        for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
+          const chunk = bytes.slice(chunkIndex * chunkSize, Math.min(bytes.length, (chunkIndex + 1) * chunkSize));
+          const chunkRef = docRef.collection('pdfChunks').doc(String(chunkIndex).padStart(4, '0'));
+          batch.set(chunkRef, { index: chunkIndex, data: firebase.firestore.Blob.fromUint8Array(chunk) });
+        }
+        batch.set(docRef, {
           title: file.name.replace(/\.pdf$/i, ''),
           originalKey: 'C',
           currentKey: 'C',
@@ -1395,10 +1419,15 @@
           sourceContent: extractedText.trim(),
           layoutPages,
           pdfUrl: '',
-          extractionStatus: 'success',
+          pdfStorage: 'firestore-chunks',
+          pdfChunkCount: chunkCount,
+          pdfSize: file.size,
+          pdfMime: file.type || 'application/pdf',
+          extractionStatus: extractedText.trim() ? 'success' : 'no-text',
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           createdBy: currentUser.uid
         });
+        await batch.commit();
         selectedSongId = docRef.id;
         imported++;
       }
@@ -1531,10 +1560,11 @@
 
     function renderLayoutPages(song, zoom = 100) {
       const scale = Math.max(.4, Math.min(2, zoom / 100));
+      const verticalSpacing = 1.16;
       const from = MUSICAL_KEYS.indexOf(song.originalKey || 'C');
       const to = MUSICAL_KEYS.indexOf(song.currentKey || song.originalKey || 'C');
       const semitones = to - from;
-      return (song.layoutPages || []).map((page, pageIndex) => `<div class="cifra-layout-page" aria-label="Página ${pageIndex + 1}" style="width:${page.w * scale}px;height:${page.h * scale}px">${(page.items || []).map(item => `<span style="left:${item.x * scale}px;top:${item.y * scale}px;font-size:${item.s * scale}px">${escapeHtml(item.chordLine ? transposeChordToken(item.t, semitones) : item.t)}</span>`).join('')}</div>`).join('');
+      return (song.layoutPages || []).map((page, pageIndex) => `<div class="cifra-layout-page" aria-label="Página ${pageIndex + 1}" style="width:${page.w * scale}px;height:${page.h * scale * verticalSpacing}px">${(page.items || []).map(item => `<span style="left:${item.x * scale}px;top:${item.y * scale * verticalSpacing}px;font-size:${item.s * scale}px">${escapeHtml(item.chordLine ? transposeChordToken(item.t, semitones) : item.t)}</span>`).join('')}</div>`).join('');
     }
 
     function updateInlineLayoutZoom(id, zoom) {
@@ -1585,18 +1615,13 @@
 
       let previewContent = '';
       const pdfUrl = song.type === 'pdf' ? await resolvePdfUrl(song) : '';
-      if (song.type === 'pdf' && song.layoutPages?.length) {
+      if (song.type === 'pdf' && pdfUrl) {
+        previewContent = `<section class="space-y-3"><div class="flex items-center justify-between gap-3 flex-wrap"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> PDF original — visual fiel</h4><button onclick='openPdfFullscreen(${sid})' class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2"><i data-lucide="maximize" class="w-4 h-4"></i> Tela inteira e zoom</button></div><div class="relative overflow-hidden rounded-xl border border-slate-700 bg-white shadow-2xl"><iframe src="${pdfUrl}" class="w-full h-[560px] bg-white" title="PDF original da música ${escapeHtml(song.title)}"></iframe></div></section>`;
+      } else if (song.type === 'pdf' && song.layoutPages?.length) {
         const zoom = layoutZoomLevels[song.id] || 100;
         previewContent = `<section class="space-y-3"><div class="flex items-center justify-between gap-3 flex-wrap"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan" class="w-4 h-4 text-emerald-400"></i> Visual parecido com o PDF</h4><div class="flex items-center gap-2"><i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i><input type="range" min="50" max="160" step="10" value="${zoom}" oninput='updateInlineLayoutZoom(${sid}, this.value)' class="w-28 accent-indigo-500"><span id="inline-layout-zoom-label" class="text-xs text-slate-300 w-10">${zoom}%</span><button onclick='openLayoutFullscreen(${sid})' class="p-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white" title="Página inteira"><i data-lucide="maximize" class="w-4 h-4"></i></button></div></div><div class="cifra-layout-stage max-h-[650px]"><div id="inline-layout-pages">${renderLayoutPages(song, zoom)}</div></div></section>`;
-      } else if (song.type === 'pdf' && pdfUrl) {
-        previewContent = `<div class="relative overflow-hidden rounded-xl border border-slate-700 bg-white shadow-2xl">
-          <iframe src="${pdfUrl}" class="w-full h-[460px] bg-white" title="PDF da música ${song.title}"></iframe>
-          <button onclick='openPdfFullscreen(${sid})' class="absolute bottom-3 right-3 px-3 py-2 bg-slate-950/90 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xl backdrop-blur">
-            <i data-lucide="maximize" class="w-4 h-4"></i> Abrir página toda
-          </button>
-        </div>`;
       } else if (song.type !== 'pdf') {
-        previewContent = `<pre class="bg-slate-900 p-4 rounded-lg font-mono text-sm text-indigo-200 overflow-x-auto whitespace-pre-wrap">${song.content}</pre>`;
+        previewContent = `<pre class="cifra-text-view bg-slate-900 p-4 rounded-lg font-mono text-sm text-indigo-200 overflow-x-auto whitespace-pre-wrap">${song.content}</pre>`;
       }
 
       container.innerHTML = `
@@ -1626,7 +1651,7 @@
             <p class="sm:col-span-2 text-[11px] text-amber-300/80 flex gap-2"><i data-lucide="info" class="w-4 h-4 shrink-0"></i> A troca de tom acontece na cifra do portal e não altera o tom escolhido por outros usuários.</p>
           </div>
           <div>${previewContent}</div>
-          ${song.type === 'pdf' ? `<section class="space-y-2"><div class="flex items-center justify-between"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan-text" class="w-4 h-4 text-indigo-400"></i> Cifra extraída e transponível</h4><span class="text-[10px] px-2 py-1 rounded-full ${song.content ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}">${song.content ? 'Texto extraído' : 'PDF sem texto reconhecível'}</span></div><pre class="bg-slate-900 p-4 rounded-xl border border-slate-800 font-mono text-sm text-indigo-100 overflow-x-auto whitespace-pre-wrap max-h-[480px]">${song.content || 'Não foi possível extrair texto deste PDF. O arquivo pode ser uma imagem escaneada.'}</pre></section>` : ''}
+          ${song.type === 'pdf' ? `<section class="space-y-2"><div class="flex items-center justify-between"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan-text" class="w-4 h-4 text-indigo-400"></i> Cifra extraída e transponível</h4><span class="text-[10px] px-2 py-1 rounded-full ${song.content ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}">${song.content ? 'Texto extraído' : 'PDF sem texto reconhecível'}</span></div><pre class="cifra-text-view bg-slate-900 p-4 rounded-xl border border-slate-800 font-mono text-sm text-indigo-100 overflow-x-auto whitespace-pre-wrap max-h-[480px]">${song.content || 'Não foi possível extrair texto deste PDF. O arquivo pode ser uma imagem escaneada.'}</pre></section>` : ''}
           <label class="block text-sm font-semibold text-slate-200"><span class="flex items-center gap-2 mb-2"><i data-lucide="lock-keyhole" class="w-4 h-4 text-amber-400"></i> Minhas anotações particulares</span><textarea oninput='saveSongNotes(${JSON.stringify(song.id)}, this.value)' rows="4" placeholder="Ex.: começar suave, repetir o refrão, entrada do teclado..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">${privateNotes[song.id] || ''}</textarea><span class="text-[11px] text-slate-500 mt-1 block">Somente a sua conta pode visualizar estas anotações.</span></label>
         </div>
       `;
@@ -1646,6 +1671,16 @@
 
     async function deleteSong(id) {
       if (!confirm('Deseja realmente excluir esta música?')) return;
+      const chunks = await db.collection('songs').doc(String(id)).collection('pdfChunks').get();
+      if (!chunks.empty) {
+        const batch = db.batch();
+        chunks.docs.forEach(chunk => batch.delete(chunk.ref));
+        await batch.commit();
+      }
+      if (pdfObjectUrls.has(id)) {
+        URL.revokeObjectURL(pdfObjectUrls.get(id));
+        pdfObjectUrls.delete(id);
+      }
       await db.collection('songs').doc(String(id)).delete();
     }
 
