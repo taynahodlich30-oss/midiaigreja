@@ -1730,7 +1730,9 @@
         alert('Notificações ativadas neste aparelho!');
       } catch (error) {
         console.error(error);
-        alert('Não foi possível ativar as notificações. Abra o site publicado no GitHub Pages e tente novamente.');
+        const errorCode = error?.code ? `Código: ${error.code}` : '';
+        const errorMessage = error?.message ? `Detalhes: ${error.message}` : 'Sem detalhes adicionais.';
+        alert(`Não foi possível ativar as notificações.\n\n${errorCode}\n${errorMessage}`);
       }
     }
 
