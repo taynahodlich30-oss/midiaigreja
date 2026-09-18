@@ -1,9 +1,9 @@
 name: Lembretes das escalas
 
-on:
-  schedule:
-    - cron: "*/15 * * * *"
+'on':
   workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
 
 permissions:
   contents: read
@@ -19,7 +19,7 @@ jobs:
       - name: Preparar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '22'
 
       - name: Instalar Firebase Admin
         run: npm install --no-save firebase-admin@13
