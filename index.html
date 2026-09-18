@@ -6,10 +6,62 @@
   <title>Portal de Ministérios - CEP Pirapozinho</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
+    .login-background {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(79, 70, 229, .22), transparent 32%),
+        radial-gradient(circle at 85% 80%, rgba(124, 58, 237, .18), transparent 30%),
+        #020617;
+    }
+    .login-card { box-shadow: 0 28px 80px rgba(0, 0, 0, .48); }
+    .login-field:focus-within { border-color: rgb(99 102 241); box-shadow: 0 0 0 3px rgba(99, 102, 241, .14); }
+    .login-button:disabled { cursor: wait; opacity: .75; }
+    body {
+      background:
+        radial-gradient(circle at 8% 5%, rgba(79, 70, 229, .11), transparent 24rem),
+        radial-gradient(circle at 92% 34%, rgba(124, 58, 237, .08), transparent 28rem),
+        #020617;
+    }
+    header { box-shadow: 0 1px 30px rgba(0, 0, 0, .25); }
+    main nav {
+      padding: .45rem;
+      border: 1px solid rgba(71, 85, 105, .55) !important;
+      border-radius: 1rem;
+      background: rgba(15, 23, 42, .72);
+      backdrop-filter: blur(16px);
+      scrollbar-width: none;
+    }
+    main nav::-webkit-scrollbar { display: none; }
+    .tab-btn, .midia-tab-btn { min-height: 42px; border-radius: .75rem !important; }
+    .tab-content > div, .midia-tab-content > div {
+      border-color: rgba(71, 85, 105, .55) !important;
+      border-radius: 1.25rem !important;
+      background: linear-gradient(145deg, rgba(15, 23, 42, .94), rgba(15, 23, 42, .72)) !important;
+      box-shadow: 0 18px 55px rgba(0, 0, 0, .22);
+    }
+    #roster-list-container > div, #media-roster-container > div,
+    #equipment-grid > div, #events-grid > div, #events-grid-midia > div {
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    #roster-list-container > div:hover, #media-roster-container > div:hover,
+    #equipment-grid > div:hover, #events-grid > div:hover, #events-grid-midia > div:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99, 102, 241, .55) !important;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, .25);
+    }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(129, 140, 248, .5);
+      outline-offset: 2px;
+    }
+    #pdf-fullscreen-modal iframe { height: 100%; width: 100%; border: 0; background: white; }
+    @media (max-width: 640px) {
+      main { padding: .75rem !important; }
+      .tab-content > div, .midia-tab-content > div { border-radius: 1rem !important; }
+      #teleprompter-modal > div:first-child, #pdf-fullscreen-modal > div:first-child { padding: .7rem; }
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
@@ -19,35 +71,45 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
 
   <!-- LOGIN / DEPARTMENT SELECTION SCREEN -->
-  <div id="auth-screen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
+  <div id="auth-screen" class="login-background fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="login-card max-w-md w-full bg-slate-900/95 border border-slate-700/80 rounded-3xl p-7 sm:p-9 space-y-7 backdrop-blur-xl">
       <div class="text-center space-y-2">
         <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 mx-auto flex items-center justify-center shadow-xl shadow-indigo-600/30">
           <i data-lucide="church" class="w-8 h-8 text-white"></i>
         </div>
-        <h1 class="text-xl font-bold text-white">CEP Pirapozinho</h1>
-        <p class="text-xs text-slate-400">Selecione o Ministério e informe a senha de acesso</p>
+        <h1 class="text-2xl font-bold text-white">CEP Pirapozinho</h1>
+        <p class="text-sm text-slate-400">Portal de apoio aos ministérios</p>
       </div>
 
-      <div class="space-y-4">
+      <form id="login-form" class="space-y-5" novalidate>
         <div>
-          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Ministério</label>
-          <select id="login-dept" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
+          <label for="login-dept" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Ministério</label>
+          <div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl transition">
+            <i data-lucide="users" class="w-5 h-5 ml-3 text-indigo-400 shrink-0"></i>
+          <select id="login-dept" class="w-full bg-transparent p-3 text-sm text-white focus:outline-none">
             <option value="louvor">Ministério de Louvor, Cifras & Projeção</option>
             <option value="midia">Ministério de Mídia & Transmissão</option>
           </select>
+          </div>
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Senha de Acesso</label>
-          <input type="password" id="login-pin" placeholder="Digite a senha (1233456)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-          <p class="text-[11px] text-slate-500 mt-1">Senha única: <code class="text-indigo-400">1233456</code></p>
+          <label for="login-pin" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Senha de acesso</label>
+          <div class="login-field flex items-center bg-slate-950 border border-slate-800 rounded-xl transition">
+            <i data-lucide="lock-keyhole" class="w-5 h-5 ml-3 text-indigo-400 shrink-0"></i>
+            <input type="password" id="login-pin" inputmode="numeric" autocomplete="current-password" placeholder="Digite a senha" class="min-w-0 flex-1 bg-transparent p-3 text-sm text-white focus:outline-none">
+            <button id="toggle-password" type="button" class="p-3 text-slate-400 hover:text-white" aria-label="Mostrar senha" title="Mostrar senha">
+              <i data-lucide="eye" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <p id="login-error" class="hidden text-xs text-red-400 mt-2 flex items-center gap-1.5" role="alert"><i data-lucide="circle-alert" class="w-4 h-4"></i><span>Senha incorreta. Tente novamente.</span></p>
         </div>
 
-        <button onclick="handleLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+        <button id="login-button" type="submit" class="login-button w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
           <i data-lucide="log-in" class="w-4 h-4"></i> Entrar no Portal
         </button>
-      </div>
+        <p class="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Acesso restrito à equipe CEP</p>
+      </form>
     </div>
   </div>
 
@@ -95,11 +157,11 @@
     <!-- LOUVOR & PROJEÇÃO DEPARTMENT VIEW -->
     <div id="view-louvor" class="space-y-6">
       <nav class="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 text-sm">
-        <button onclick="switchTab('roster')" id="tab-btn-roster" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white">Escalas & Presença</button>
-        <button onclick="switchTab('repertoire')" id="tab-btn-repertoire" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Músicas, Cifras & Projeção</button>
+        <button onclick="switchTab('roster')" id="tab-btn-roster" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> Escalas & Presença</button>
+        <button onclick="switchTab('repertoire')" id="tab-btn-repertoire" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i> Músicas & Cifras</button>
         <button onclick="switchTab('pads')" id="tab-btn-pads" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5"><i data-lucide="waves" class="w-4 h-4 text-indigo-400"></i> Worship Pads</button>
-        <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Agenda Cultos</button>
-        <button onclick="switchTab('team')" id="tab-btn-team" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Equipe Louvor & Projeção</button>
+        <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="calendar-days" class="w-4 h-4"></i> Agenda</button>
+        <button onclick="switchTab('team')" id="tab-btn-team" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="users-round" class="w-4 h-4"></i> Equipe</button>
       </nav>
 
       <!-- TAB 1: ESCALAS LOUVOR -->
@@ -126,15 +188,9 @@
               </h2>
               <p class="text-xs text-slate-400 mt-1">Visualize cifras digitadas, arquivos PDF ou abra o teleprompter para projeção.</p>
             </div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <button onclick="document.getElementById('bulk-pdf-input').click()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
-                <i data-lucide="files" class="w-4 h-4"></i> Importar vários PDFs
-              </button>
-              <input id="bulk-pdf-input" type="file" accept="application/pdf" multiple class="hidden" onchange="importMultiplePDFs(this.files)">
-              <button onclick="openNewSongModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
-                <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Nova Música
-              </button>
-            </div>
+            <button onclick="openNewSongModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Nova Música
+            </button>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -224,18 +280,6 @@
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
           <h2 class="text-xl font-bold mb-2 text-indigo-400">Equipe de Louvor & Projeção</h2>
           <p class="text-xs text-slate-400 mb-6">Contatos e integrantes cadastrados (incluindo operadores de slides e projeção).</p>
-          <div class="mb-6 p-4 bg-slate-950 rounded-xl border border-slate-800">
-            <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
-              <div>
-                <h3 class="text-sm font-bold text-white">Membros cadastrados</h3>
-                <p class="text-xs text-slate-400">Cadastre nome, função e WhatsApp. Esses membros poderão ser escolhidos nas escalas.</p>
-              </div>
-              <button onclick="openMemberModal()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2">
-                <i data-lucide="user-plus" class="w-4 h-4"></i> Adicionar membro
-              </button>
-            </div>
-            <div id="members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
-          </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-3">
               <div class="w-10 h-10 rounded-full bg-indigo-600/30 text-indigo-300 font-bold flex items-center justify-center">JP</div>
@@ -266,10 +310,10 @@
     <!-- MIDIA DEPARTMENT VIEW (ÁUDIO, STREAMING & CÂMERAS) -->
     <div id="view-midia" class="space-y-6 hidden">
       <nav class="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 text-sm">
-        <button onclick="switchMidiaTab('roster')" id="midia-tab-btn-roster" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white">Escalas de Mídia & Presença</button>
-        <button onclick="switchMidiaTab('equipment')" id="midia-tab-btn-equipment" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Inventário & Equipamentos</button>
-        <button onclick="switchMidiaTab('calendar')" id="midia-tab-btn-calendar" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Agenda & Treinamentos</button>
-        <button onclick="switchMidiaTab('team')" id="midia-tab-btn-team" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700">Equipe de Mídia</button>
+        <button onclick="switchMidiaTab('roster')" id="midia-tab-btn-roster" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> Escalas</button>
+        <button onclick="switchMidiaTab('equipment')" id="midia-tab-btn-equipment" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4"></i> Equipamentos</button>
+        <button onclick="switchMidiaTab('calendar')" id="midia-tab-btn-calendar" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="calendar-days" class="w-4 h-4"></i> Agenda</button>
+        <button onclick="switchMidiaTab('team')" id="midia-tab-btn-team" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="users-round" class="w-4 h-4"></i> Equipe</button>
       </nav>
 
       <!-- MIDIA TAB 1: ESCALAS -->
@@ -347,6 +391,21 @@
 
   </main>
 
+  <!-- PDF EM TELA INTEIRA: funciona como overlay no celular e no computador -->
+  <div id="pdf-fullscreen-modal" class="fixed inset-0 bg-slate-950 z-[60] flex flex-col hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-fullscreen-title">
+    <div class="p-3 sm:p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-3">
+      <div class="min-w-0 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-red-500/15 text-red-300 flex items-center justify-center shrink-0"><i data-lucide="file-text" class="w-5 h-5"></i></div>
+        <div class="min-w-0"><p class="text-[10px] uppercase tracking-widest text-slate-500">Cifra em PDF</p><h2 id="pdf-fullscreen-title" class="font-bold text-white truncate">Música</h2></div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="requestPdfNativeFullscreen()" class="hidden sm:flex px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold items-center gap-2"><i data-lucide="maximize" class="w-4 h-4"></i> Tela cheia</button>
+        <button onclick="closePdfFullscreen()" class="p-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-xl" aria-label="Fechar PDF"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+    </div>
+    <div class="flex-1 min-h-0"><iframe id="pdf-fullscreen-frame" title="Visualizador da cifra em PDF"></iframe></div>
+  </div>
+
   <!-- TELEPROMPTER OVERLAY -->
   <div id="teleprompter-modal" class="fixed inset-0 bg-slate-950 z-50 flex flex-col hidden">
     <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-slate-300">
@@ -384,17 +443,23 @@
     let currentMidiaTab = 'roster';
 
     // PIN Validation & Login (Now both use password 1233456)
-    function handleLogin() {
+    function handleLogin(event) {
+      if (event) event.preventDefault();
       const dept = document.getElementById('login-dept').value;
-      const pin = document.getElementById('login-pin').value;
+      const pinInput = document.getElementById('login-pin');
+      const pin = pinInput.value.trim();
+      const error = document.getElementById('login-error');
 
       if (pin === '1233456') {
+        error.classList.add('hidden');
         currentDepartment = dept;
         localStorage.setItem('cep_logged_dept', dept);
         document.getElementById('auth-screen').classList.add('hidden');
         initApp();
       } else {
-        alert('Senha incorreta! Use a senha 1233456.');
+        error.classList.remove('hidden');
+        pinInput.focus();
+        pinInput.select();
       }
     }
 
@@ -404,6 +469,16 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('login-form').addEventListener('submit', handleLogin);
+      document.getElementById('toggle-password').addEventListener('click', () => {
+        const input = document.getElementById('login-pin');
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        document.getElementById('toggle-password').innerHTML = `<i data-lucide="${show ? 'eye-off' : 'eye'}" class="w-5 h-5"></i>`;
+        document.getElementById('toggle-password').setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha');
+        if (window.lucide) lucide.createIcons();
+      });
+      if (window.lucide) lucide.createIcons();
       if (currentDepartment) {
         document.getElementById('auth-screen').classList.add('hidden');
         initApp();
@@ -416,8 +491,7 @@
       renderMediaRoster();
       renderEvents();
       renderEquipment();
-      renderMembers();
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     // Roster Data (Includes Projection operator in Louvor)
@@ -538,115 +612,6 @@
       lucide.createIcons();
     }
 
-    // --- MEMBERS / CONTATOS ---
-    let membersData = JSON.parse(localStorage.getItem('cep_members')) || [];
-
-    function saveMembers() {
-      localStorage.setItem('cep_members', JSON.stringify(membersData));
-      renderMembers();
-    }
-
-    function renderMembers() {
-      const container = document.getElementById('members-grid');
-      if (!container) return;
-      if (!membersData.length) {
-        container.innerHTML = `<div class="sm:col-span-2 md:col-span-3 text-xs text-slate-500 p-4 border border-dashed border-slate-700 rounded-lg">Nenhum membro cadastrado ainda.</div>`;
-        return;
-      }
-      container.innerHTML = membersData.map((m, index) => {
-        const initials = (m.name || 'M').split(/\s+/).slice(0,2).map(x => x[0]).join('').toUpperCase();
-        const phone = (m.phone || '').replace(/\D/g, '');
-        return `<div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
-          <div class="flex items-start gap-3">
-            <div class="w-10 h-10 shrink-0 rounded-full bg-indigo-600/30 text-indigo-300 font-bold flex items-center justify-center">${initials}</div>
-            <div class="min-w-0 flex-1">
-              <h4 class="text-sm font-bold text-white truncate">${escapeHtml(m.name)}</h4>
-              <p class="text-xs text-slate-400">${escapeHtml(m.role || 'Membro')}</p>
-              <p class="text-xs text-slate-500 mt-1">${phone ? escapeHtml(m.phone) : 'Sem WhatsApp cadastrado'}</p>
-            </div>
-          </div>
-          <div class="flex gap-2 mt-3">
-            ${phone ? `<button onclick="openWhatsApp('${phone}', 'Olá ${escapeJs(m.name)}!')" class="flex-1 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-300 rounded text-xs font-semibold"><i data-lucide="message-circle" class="w-3.5 h-3.5 inline"></i> WhatsApp</button>` : ''}
-            <button onclick="editMember(${index})" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs">Editar</button>
-            <button onclick="deleteMember(${index})" class="px-2 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded text-xs">Excluir</button>
-          </div>
-        </div>`;
-      }).join('');
-      lucide.createIcons();
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
-    }
-
-    function escapeJs(value) {
-      return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    }
-
-    function openMemberModal(editIndex = null) {
-      const existing = editIndex !== null ? membersData[editIndex] : null;
-      const name = prompt('Nome do membro:', existing?.name || '');
-      if (!name) return;
-      const role = prompt('Função (Ex: Vocal, Teclado, Projeção):', existing?.role || 'Membro') || 'Membro';
-      const phone = prompt('WhatsApp com DDD (Ex: 18999999999):', existing?.phone || '') || '';
-
-      const member = { id: existing?.id || Date.now(), name: name.trim(), role: role.trim(), phone: phone.trim() };
-      if (editIndex === null) membersData.push(member);
-      else membersData[editIndex] = member;
-      saveMembers();
-    }
-
-    function editMember(index) {
-      openMemberModal(index);
-    }
-
-    function deleteMember(index) {
-      const m = membersData[index];
-      if (!m || !confirm(`Excluir o membro "${m.name}"?`)) return;
-      membersData.splice(index, 1);
-      saveMembers();
-    }
-
-    function openWhatsApp(phone, message) {
-      const digits = String(phone || '').replace(/\D/g, '');
-      if (!digits) return alert('Este membro não tem WhatsApp cadastrado.');
-      const url = `https://wa.me/${digits}?text=${encodeURIComponent(message || '')}`;
-      window.open(url, '_blank');
-    }
-
-    function sendRosterWhatsAppToMembers(selectedMembers, message) {
-      const members = selectedMembers || [];
-      members.forEach((m, i) => {
-        const phone = (m.phone || '').replace(/\D/g, '');
-        if (phone) {
-          setTimeout(() => openWhatsApp(phone, message), i * 900);
-        }
-      });
-    }
-
-    function notifyRosterMembers(index) {
-      const item = rosterData[index];
-      if (!item?.members?.length) return alert('Não há membros vinculados a esta escala.');
-      const selected = item.members.map(id => membersData.find(m => m.id === id)).filter(Boolean);
-      const message = `Olá! Você está na escala do ${item.service}, ${item.date}. Por favor, confirme sua presença no Portal CEP Pirapozinho.`;
-      sendRosterWhatsAppToMembers(selected, message);
-
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Escala do CEP Pirapozinho', { body: `Aviso preparado para ${selected.length} membro(s) escalado(s).` });
-      }
-    }
-
-    // Notificação do navegador: funciona no dispositivo/navegador que autorizou.
-    function notifyMemberOnThisDevice(member, rosterItem) {
-      if (!('Notification' in window)) return;
-      if (Notification.permission === 'granted') {
-        new Notification('Você está na escala', {
-          body: `${rosterItem.service} — ${rosterItem.date}`,
-          icon: 'https://placehold.co/128x128/4f46e5/ffffff?text=CEP'
-        });
-      }
-    }
-
     // --- RENDER LOUVOR ROSTER (WITH PROJECTION) ---
     function renderRoster() {
       const container = document.getElementById('roster-list-container');
@@ -673,13 +638,6 @@
               <i data-lucide="calendar" class="w-4 h-4 text-indigo-400"></i> ${item.date}
             </h3>
             <div class="space-y-2 text-sm mb-4">
-              ${item.members?.length ? `<div class="bg-indigo-950/30 p-2 rounded border border-indigo-800/50 text-xs">
-                <span class="text-indigo-300 font-semibold block mb-1">Membros escalados:</span>
-                <span class="text-white">${item.members.map(mid => {
-                  const m = membersData.find(x => x.id === mid);
-                  return m ? m.name : '';
-                }).filter(Boolean).join(', ') || 'A definir'}</span>
-              </div>` : ''}
               <div class="flex justify-between bg-slate-900/80 p-2 rounded border border-slate-800 text-xs">
                 <span class="text-slate-400">Ministro:</span>
                 <span class="text-white font-medium">${item.minister}</span>
@@ -702,16 +660,13 @@
               </div>
             </div>
           </div>
-          <div class="flex gap-2 pt-3 border-t border-slate-800 flex-wrap">
-            <button onclick="toggleRosterConfirm(${index})" class="flex-1 min-w-[90px] py-1.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-xs font-semibold rounded border border-emerald-500/30 transition">
+          <div class="flex gap-2 pt-3 border-t border-slate-800">
+            <button onclick="toggleRosterConfirm(${index})" class="flex-1 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-xs font-semibold rounded border border-emerald-500/30 transition">
               Confirmar
             </button>
-            <button onclick="requestRosterSwap(${index})" class="flex-1 min-w-[90px] py-1.5 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 text-xs font-semibold rounded border border-purple-500/30 transition">
+            <button onclick="requestRosterSwap(${index})" class="flex-1 py-1.5 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 text-xs font-semibold rounded border border-purple-500/30 transition">
               Pedir Troca
             </button>
-            ${item.members?.length ? `<button onclick="notifyRosterMembers(${index})" class="w-full py-1.5 bg-green-600/20 hover:bg-green-600/40 text-green-300 text-xs font-semibold rounded border border-green-500/30 transition flex items-center justify-center gap-1.5">
-              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp dos escalados
-            </button>` : ''}
           </div>
         `;
         container.appendChild(card);
@@ -739,40 +694,20 @@
       if (!date) return;
       const minister = prompt('Ministro responsável:') || 'A definir';
       const projection = prompt('Operador de Projeção / Telão:') || 'A definir';
-
-      if (!membersData.length) {
-        alert('Cadastre pelo menos um membro na aba "Equipe Louvor & Projeção" antes de montar a escala.');
-      }
-
-      const names = membersData.map((m, i) => `${i + 1} - ${m.name} (${m.role || 'Membro'})`).join('\n');
-      const answer = membersData.length
-        ? prompt(`Digite os números dos membros para esta escala, separados por vírgula.\n\n${names}`)
-        : '';
-      const selected = (answer || '').split(',')
-        .map(v => parseInt(v.trim(), 10) - 1)
-        .filter(i => Number.isInteger(i) && membersData[i])
-        .map(i => membersData[i]);
-
+      
       rosterData.push({
         id: Date.now(),
         date,
         service,
         minister,
-        singer: selected.filter(m => /voz|vocal|cant/i.test(m.role || '')).map(m => m.name).join(', ') || 'A definir',
-        keyboard: selected.filter(m => /tecl|piano/i.test(m.role || '')).map(m => m.name).join(', ') || 'A definir',
-        guitar: selected.filter(m => /viol|guit|baix/i.test(m.role || '')).map(m => m.name).join(', ') || 'A definir',
+        singer: 'A definir',
+        keyboard: 'A definir',
+        guitar: 'A definir',
         projection,
-        members: selected.map(m => m.id),
         status: 'pending'
       });
       localStorage.setItem('cep_roster', JSON.stringify(rosterData));
       renderRoster();
-
-      if (selected.length) {
-        const msg = `Olá! Você foi colocado(a) na escala do ${service}, ${date}. Confira sua participação no Portal CEP Pirapozinho.`;
-        const sendNow = confirm(`Escala criada com ${selected.length} membro(s).\n\nDeseja abrir o WhatsApp para avisar os membros agora?`);
-        if (sendNow) sendRosterWhatsAppToMembers(selected, msg);
-      }
     }
 
     // --- RENDER MEDIA ROSTER (AUDIO & STREAMING) ---
@@ -883,65 +818,6 @@
       renderEquipment();
     }
 
-    // --- ARQUIVOS PDF DAS MÚSICAS (IndexedDB) ---
-    let songDbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open('cep_musicas_db', 1);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains('pdfs')) db.createObjectStore('pdfs');
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-
-    async function saveSongPdf(id, file) {
-      const db = await songDbPromise;
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction('pdfs', 'readwrite');
-        tx.objectStore('pdfs').put(file, String(id));
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-      });
-    }
-
-    async function getSongPdf(id) {
-      const db = await songDbPromise;
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction('pdfs', 'readonly');
-        const req = tx.objectStore('pdfs').get(String(id));
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function deleteSongPdf(id) {
-      const db = await songDbPromise;
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction('pdfs', 'readwrite');
-        tx.objectStore('pdfs').delete(String(id));
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-      });
-    }
-
-    async async function importMultiplePDFs(fileList) {
-      const files = Array.from(fileList || []).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
-      if (!files.length) return;
-      let added = 0;
-      for (const file of files) {
-        const id = Date.now() + added + Math.floor(Math.random() * 1000);
-        const title = file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim() || `Música ${id}`;
-        songsData.push({ id, title, originalKey: 'C', type: 'pdf-local', content: '', pdfUrl: '', fileName: file.name, cifraText: '' });
-        await saveSongPdf(id, file);
-        added++;
-      }
-      localStorage.setItem('cep_songs', JSON.stringify(songsData));
-      renderSongsList();
-      const input = document.getElementById('bulk-pdf-input');
-      if (input) input.value = '';
-      alert(`${added} PDF(s) importado(s) com sucesso. Agora você pode abrir o PDF em tela cheia ou transformar o texto em cifra.`);
-    }
-
     // --- SONGS & PDF UPLOAD ---
     function renderSongsList() {
       const container = document.getElementById('songs-list-container');
@@ -956,7 +832,7 @@
         btn.innerHTML = `
           <div>
             <h4 class="text-sm font-bold">${song.title}</h4>
-            <span class="text-[11px] text-slate-400">Tom: ${song.originalKey} • ${(song.type === 'pdf' || song.type === 'pdf-local') ? '📄 PDF' : '📝 Cifra'}</span>
+            <span class="text-[11px] text-slate-400">Tom: ${song.originalKey} • ${song.type === 'pdf' ? '📄 PDF' : '📝 Cifra'}</span>
           </div>
           <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500"></i>
         `;
@@ -972,105 +848,44 @@
       renderSongsList();
     }
 
-    async function renderSongDetail(id) {
+    function renderSongDetail(id) {
       const song = songsData.find(s => s.id === id);
       const container = document.getElementById('song-detail-view');
       if (!song || !container) return;
 
       let previewContent = '';
-      let localPdfUrl = '';
-      if ((song.type === 'pdf' || song.type === 'pdf-local') && song.pdfUrl) {
-        previewContent = `<div id="pdf-viewer-${song.id}" class="bg-white rounded-lg overflow-hidden"><iframe src="${song.pdfUrl}" class="w-full h-[650px] border-0"></iframe></div>`;
-      } else if (song.type === 'pdf-local') {
-        const file = await getSongPdf(song.id);
-        if (file) {
-          localPdfUrl = URL.createObjectURL(file);
-          previewContent = `<div id="pdf-viewer-${song.id}" class="bg-white rounded-lg overflow-hidden"><iframe src="${localPdfUrl}" class="w-full h-[650px] border-0"></iframe></div>
-            <p class="text-[11px] text-slate-500 mt-2">Arquivo: ${escapeHtml(song.fileName || file.name || 'PDF')}</p>`;
-        } else {
-          previewContent = `<div class="p-6 text-sm text-amber-300 bg-amber-950/30 border border-amber-800 rounded-lg">O PDF não foi encontrado neste navegador. Importe o arquivo novamente.</div>`;
-        }
+      if (song.type === 'pdf' && song.pdfUrl) {
+        previewContent = `<div class="relative overflow-hidden rounded-xl border border-slate-700 bg-white shadow-2xl">
+          <iframe src="${song.pdfUrl}" class="w-full h-[460px] bg-white" title="PDF da música ${song.title}"></iframe>
+          <button onclick="openPdfFullscreen(${song.id})" class="absolute bottom-3 right-3 px-3 py-2 bg-slate-950/90 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xl backdrop-blur">
+            <i data-lucide="maximize" class="w-4 h-4"></i> Abrir página toda
+          </button>
+        </div>`;
       } else {
-        previewContent = `<pre class="bg-slate-900 p-4 rounded-lg font-mono text-sm text-indigo-200 overflow-x-auto whitespace-pre-wrap min-h-[500px]">${escapeHtml(song.content)}</pre>`;
+        previewContent = `<pre class="bg-slate-900 p-4 rounded-lg font-mono text-sm text-indigo-200 overflow-x-auto whitespace-pre-wrap">${song.content}</pre>`;
       }
-
-      const isPdf = song.type === 'pdf' || song.type === 'pdf-local';
-      const hasCifra = !!(song.cifraText || (song.type === 'text' && song.content));
 
       container.innerHTML = `
         <div class="space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-800">
             <div>
-              <h3 class="text-lg font-bold text-white">${escapeHtml(song.title)}</h3>
-              <p class="text-xs text-slate-400">Tom Original: <strong class="text-indigo-400">${escapeHtml(song.originalKey || 'C')}</strong></p>
+              <h3 class="text-lg font-bold text-white">${song.title}</h3>
+              <p class="text-xs text-slate-400">Tom Original: <strong class="text-indigo-400">${song.originalKey}</strong></p>
             </div>
-            <div class="flex items-center gap-2 flex-wrap">
-              ${isPdf ? `<button onclick="togglePdfFullPage(${song.id})" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5"><i data-lucide="maximize" class="w-3.5 h-3.5"></i> Página toda</button>` : ''}
-              ${isPdf ? `<button onclick="convertPdfToCifra(${song.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5"><i data-lucide="file-music" class="w-3.5 h-3.5"></i> ${hasCifra ? 'Abrir cifra' : 'Transformar em cifra'}</button>` : ''}
-              <button onclick="openTeleprompter(${song.id})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow"><i data-lucide="monitor" class="w-3.5 h-3.5"></i> Projetar no Telão</button>
-              <button onclick="deleteSong(${song.id})" class="p-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg text-xs" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <div class="flex items-center gap-2">
+              ${song.type === 'pdf' && song.pdfUrl ? `<button onclick="openPdfFullscreen(${song.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow"><i data-lucide="scan" class="w-3.5 h-3.5"></i> Página toda</button>` : ''}
+              <button onclick="openTeleprompter(${song.id})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow">
+                <i data-lucide="monitor" class="w-3.5 h-3.5"></i> Projetar no Telão
+              </button>
+              <button onclick="deleteSong(${song.id})" class="p-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg text-xs" title="Excluir">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
             </div>
           </div>
           <div>${previewContent}</div>
-          ${hasCifra && isPdf ? `<div class="mt-4"><div class="flex items-center justify-between mb-2"><h4 class="text-sm font-bold text-white">Cifra extraída do PDF</h4><button onclick="openCifraFullPage(${song.id})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs">Cifra em página toda</button></div><pre id="cifra-preview-${song.id}" class="bg-slate-900 p-5 rounded-lg font-mono text-sm text-indigo-100 overflow-x-auto whitespace-pre-wrap min-h-[250px]">${escapeHtml(song.cifraText)}</pre></div>` : ''}
         </div>
       `;
       lucide.createIcons();
-    }
-
-    async function convertPdfToCifra(songId) {
-      const song = songsData.find(s => s.id === songId);
-      if (!song) return;
-      if (song.cifraText) {
-        openCifraFullPage(songId);
-        return;
-      }
-      const file = await getSongPdf(songId);
-      if (!file) { alert('PDF não encontrado neste navegador.'); return; }
-      try {
-        const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs');
-        pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
-        const buffer = await file.arrayBuffer();
-        const pdf = await pdfjs.getDocument({data: buffer}).promise;
-        let text = '';
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const content = await page.getTextContent();
-          let lastY = null;
-          const lines = [];
-          for (const item of content.items) {
-            const y = item.transform ? Math.round(item.transform[5]) : null;
-            if (lastY !== null && y !== null && Math.abs(y - lastY) > 4) lines.push('\n');
-            lines.push(item.str);
-            if (y !== null) lastY = y;
-          }
-          text += lines.join(' ').replace(/ \n /g, '\n').replace(/\n +/g, '\n').trim() + `\n\n--- Página ${pageNum} ---\n\n`;
-        }
-        text = text.replace(/\n\n--- Página \d+ ---\n\n$/, '').trim();
-        song.cifraText = text || 'Não foi possível extrair texto deste PDF. Se o PDF for uma imagem escaneada, será necessário usar OCR.';
-        localStorage.setItem('cep_songs', JSON.stringify(songsData));
-        renderSongDetail(songId);
-        alert('Cifra/texto extraído do PDF com sucesso.');
-      } catch (e) {
-        console.error(e);
-        alert('Não consegui transformar este PDF em texto. Se ele for escaneado como imagem, será necessário OCR.');
-      }
-    }
-
-    function togglePdfFullPage(songId) {
-      const viewer = document.getElementById(`pdf-viewer-${songId}`);
-      if (!viewer) return;
-      if (!document.fullscreenElement) viewer.requestFullscreen?.().catch(() => {});
-      else document.exitFullscreen?.();
-    }
-
-    function openCifraFullPage(songId) {
-      const song = songsData.find(s => s.id === songId);
-      if (!song || !song.cifraText) { alert('Primeiro clique em "Transformar em cifra".'); return; }
-      const win = window.open('', '_blank');
-      if (!win) { alert('O navegador bloqueou a nova página. Permita pop-ups para este site.'); return; }
-      win.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(song.title)}</title><style>body{margin:0;background:#0b1220;color:#eef2ff;font-family:Arial,sans-serif}header{position:sticky;top:0;background:#111827;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}main{max-width:1100px;margin:auto;padding:30px 5vw}pre{white-space:pre-wrap;font:22px/1.65 monospace}button{padding:10px 14px;border:0;border-radius:8px;cursor:pointer}@media print{header{display:none}body{color:#000;background:#fff}main{max-width:none}pre{font-size:18px}}</style></head><body><header><strong>${escapeHtml(song.title)}</strong><button onclick="document.documentElement.requestFullscreen?.()">Tela cheia</button></header><main><pre>${escapeHtml(song.cifraText)}</pre></main></body></html>`);
-      win.document.close();
     }
 
     function openNewSongModal() {
@@ -1083,11 +898,7 @@
       let content = '';
 
       if (typeChoice === 'pdf') {
-        pdfUrl = prompt('Cole o link do PDF hospedado (ou cancele e use "Importar vários PDFs"):') || '';
-        if (!pdfUrl) {
-          alert('Para PDF local, use o botão "Importar vários PDFs".');
-          return;
-        }
+        pdfUrl = prompt('Cole o link do PDF hospedado:') || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
       } else {
         content = prompt('Cole a cifra e letra aqui:') || '[Verso]\nC G Am F';
       }
@@ -1101,9 +912,32 @@
       if (!confirm('Deseja realmente excluir esta música?')) return;
       songsData = songsData.filter(s => s.id !== id);
       localStorage.setItem('cep_songs', JSON.stringify(songsData));
-      deleteSongPdf(id).catch(() => {});
       selectedSongId = songsData[0]?.id || null;
       renderSongsList();
+    }
+
+    function openPdfFullscreen(songId) {
+      const song = songsData.find(s => s.id === songId);
+      if (!song || !song.pdfUrl) return;
+      document.getElementById('pdf-fullscreen-title').innerText = song.title;
+      document.getElementById('pdf-fullscreen-frame').src = song.pdfUrl;
+      document.getElementById('pdf-fullscreen-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closePdfFullscreen() {
+      const modal = document.getElementById('pdf-fullscreen-modal');
+      modal.classList.add('hidden');
+      document.getElementById('pdf-fullscreen-frame').src = 'about:blank';
+      document.body.style.overflow = '';
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    }
+
+    function requestPdfNativeFullscreen() {
+      const modal = document.getElementById('pdf-fullscreen-modal');
+      if (!document.fullscreenElement && modal.requestFullscreen) modal.requestFullscreen().catch(() => {});
+      else if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
     }
 
     // --- TELEPROMPTER ---
@@ -1112,11 +946,16 @@
       const song = songsData.find(s => s.id === songId);
       if (!song) return;
 
+      if (song.type === 'pdf' && song.pdfUrl) {
+        openPdfFullscreen(songId);
+        return;
+      }
+
       document.getElementById('teleprompter-title').innerText = song.title;
       document.getElementById('teleprompter-key-tag').innerText = `Tom: ${song.originalKey}`;
       
       const textContainer = document.getElementById('teleprompter-text');
-      textContainer.innerText = song.cifraText || song.content || 'Arquivo PDF em exibição no projetor. Para transformar o PDF em cifra, use o botão correspondente.';
+      textContainer.innerText = song.content || 'Arquivo PDF em exibição no projetor.';
       textContainer.style.fontSize = `${teleprompterFontSize}px`;
 
       document.getElementById('teleprompter-modal').classList.remove('hidden');
