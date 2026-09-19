@@ -42,7 +42,7 @@ const title = `📖 Versículo do Dia — ${ref}`;
 const body = text;
 
 const users = await db.collection('users').get();
-
+console.log(`Usuários encontrados: ${users.size}`);
 let sent = 0;
 
 for (const userDoc of users.docs) {
