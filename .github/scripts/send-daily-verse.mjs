@@ -42,17 +42,16 @@ const title = `📖 Versículo do Dia — ${ref}`;
 const body = text;
 
 const users = await db.collection('users').get();
-console.log(`Usuários encontrados: ${users.size}`);
+
 let sent = 0;
 
 for (const userDoc of users.docs) {
-console.log(`ID do usuário: ${userDoc.id}`);
+
   const devices = await userDoc.ref
     .collection('devices')
     .where('enabled', '==', true)
     .get();
-console.log(`Dispositivos encontrados: ${devices.size}`);
-  
+
   const tokens = devices.docs
     .map(d => d.data().token)
     .filter(Boolean);
@@ -78,11 +77,7 @@ console.log(`Dispositivos encontrados: ${devices.size}`);
       }
     }
   });
-result.responses.forEach((response, index) => {
-  if (!response.success) {
-    console.log(`ERRO NO TOKEN ${index + 1}:`, response.error?.code, response.error?.message);
-  }
-});
+
   if (result.successCount) {
 
     await userDoc.ref
