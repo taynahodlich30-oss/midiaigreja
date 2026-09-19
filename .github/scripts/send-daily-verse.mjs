@@ -46,7 +46,7 @@ console.log(`Usuários encontrados: ${users.size}`);
 let sent = 0;
 
 for (const userDoc of users.docs) {
-
+console.log(`ID do usuário: ${userDoc.id}`);
   const devices = await userDoc.ref
     .collection('devices')
     .where('enabled', '==', true)
