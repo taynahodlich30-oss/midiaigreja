@@ -18,9 +18,6 @@ const PORTAL_URL =
 
 const TIME_ZONE = "America/Sao_Paulo";
 
-const IS_MANUAL_TEST =
-  process.env.GITHUB_EVENT_NAME === "workflow_dispatch";
-
 
 // ======================================================
 // DATA / HORÁRIO DE SÃO PAULO
@@ -42,10 +39,8 @@ function partsInSaoPaulo(date = new Date()) {
   );
 }
 
-
 function localKey(date = new Date()) {
   const p = partsInSaoPaulo(date);
-
   return `${p.year}-${p.month}-${p.day}`;
 }
 
@@ -59,20 +54,11 @@ function rosterDate(roster) {
     return null;
   }
 
-  const value =
-    roster.dateTime || roster.date;
+  const value = roster.dateTime || roster.date;
 
   if (value?.toDate) {
     return value.toDate();
   }
-
-  /*
-    IMPORTANTE:
-    Datas do site como:
-    2026-09-20T19:00
-
-    representam horário local de São Paulo.
-  */
 
   if (
     typeof value === "string" &&
@@ -81,8 +67,7 @@ function rosterDate(roster) {
     return new Date(`${value}:00-03:00`);
   }
 
-  const parsed =
-    new Date(value);
+  const parsed = new Date(value);
 
   return Number.isNaN(parsed.getTime())
     ? null
@@ -134,40 +119,32 @@ async function sendNotification(
   body,
   type = "roster-reminder"
 ) {
-
-  const tokens =
-    await getUserTokens(uid);
+  const tokens = await getUserTokens(uid);
 
   if (!tokens.length) {
-    console.log(
-      `Sem dispositivo ativo para ${uid}.`
-    );
-
+    console.log(`Sem dispositivo ativo para ${uid}.`);
     return false;
   }
 
-  const response =
-    await messaging.sendEachForMulticast({
+  const response = await messaging.sendEachForMulticast({
+    tokens,
 
-      tokens,
+    notification: {
+      title,
+      body
+    },
 
-      notification: {
-        title,
-        body
-      },
+    data: {
+      type,
+      url: PORTAL_URL
+    },
 
-      data: {
-        type,
-        url: PORTAL_URL
-      },
-
-      webpush: {
-        fcmOptions: {
-          link: PORTAL_URL
-        }
+    webpush: {
+      fcmOptions: {
+        link: PORTAL_URL
       }
-
-    });
+    }
+  });
 
   console.log(
     `Notificação enviada para ${uid}: ` +
@@ -189,7 +166,6 @@ async function sendNotification(
 // ======================================================
 
 function isConfirmedResponse(response = {}) {
-
   if (response.confirmed === true) {
     return true;
   }
@@ -227,17 +203,10 @@ function isConfirmedResponse(response = {}) {
 // ======================================================
 
 async function resolveMemberUid(member) {
-
-  /*
-    Se a escala guardar um objeto:
-    { uid: "...", accountUid: "..." }
-  */
-
   if (
     member &&
     typeof member === "object"
   ) {
-
     const directUid =
       member.accountUid ||
       member.userId ||
@@ -253,21 +222,13 @@ async function resolveMemberUid(member) {
       member.id;
   }
 
-
   if (!member) {
     return null;
   }
 
-  const memberId =
-    String(member);
+  const memberId = String(member);
 
-
-  /*
-    PRIMEIRO:
-    verifica se esse ID já é diretamente
-    um documento da coleção users.
-  */
-
+  // Primeiro verifica se o ID já é um usuário.
   const userDoc = await db
     .collection("users")
     .doc(memberId)
@@ -277,13 +238,7 @@ async function resolveMemberUid(member) {
     return memberId;
   }
 
-
-  /*
-    SEGUNDO:
-    procura o cadastro correspondente
-    na coleção members.
-  */
-
+  // Depois procura o cadastro em members.
   const memberDoc = await db
     .collection("members")
     .doc(memberId)
@@ -297,8 +252,7 @@ async function resolveMemberUid(member) {
     return null;
   }
 
-  const data =
-    memberDoc.data() || {};
+  const data = memberDoc.data() || {};
 
   const uid =
     data.accountUid ||
@@ -324,7 +278,6 @@ async function resolveMemberUid(member) {
 // ======================================================
 
 async function getRosterUsers(roster) {
-
   const members =
     roster.memberIds ||
     roster.members ||
@@ -335,7 +288,6 @@ async function getRosterUsers(roster) {
   const users = [];
 
   for (const member of members) {
-
     const memberId =
       typeof member === "string"
         ? member
@@ -346,18 +298,13 @@ async function getRosterUsers(roster) {
           null
         );
 
-    const uid =
-      await resolveMemberUid(member);
+    const uid = await resolveMemberUid(member);
 
     if (!uid) {
       continue;
     }
 
-    /*
-      Evita duplicação caso a mesma pessoa
-      apareça mais de uma vez.
-    */
-
+    // Evita duplicação.
     if (
       users.some(
         item => item.uid === uid
@@ -385,11 +332,8 @@ async function getConfirmation(
   uid,
   memberId = null
 ) {
-
-  /*
-    Formato atual correto:
-    rosters/{rosterId}/responses/{uid}
-  */
+  // Formato atual:
+  // rosters/{rosterId}/responses/{uid}
 
   let responseDoc = await db
     .collection("rosters")
@@ -410,18 +354,11 @@ async function getConfirmation(
     };
   }
 
-
-  /*
-    Compatibilidade:
-    caso alguma resposta antiga tenha
-    sido gravada usando o memberId.
-  */
-
+  // Compatibilidade com respostas antigas.
   if (
     memberId &&
     memberId !== uid
   ) {
-
     responseDoc = await db
       .collection("rosters")
       .doc(rosterId)
@@ -442,12 +379,7 @@ async function getConfirmation(
     }
   }
 
-
-  /*
-    Última tentativa:
-    procura por userId dentro de responses.
-  */
-
+  // Última tentativa: procura pelo userId.
   const responseQuery = await db
     .collection("rosters")
     .doc(rosterId)
@@ -457,7 +389,6 @@ async function getConfirmation(
     .get();
 
   if (!responseQuery.empty) {
-
     const data =
       responseQuery.docs[0].data();
 
@@ -468,7 +399,6 @@ async function getConfirmation(
       data
     };
   }
-
 
   return {
     exists: false,
@@ -486,7 +416,6 @@ function reminderDue(
   now,
   eventDate
 ) {
-
   const nowP =
     partsInSaoPaulo(now);
 
@@ -503,7 +432,6 @@ function reminderDue(
 
   // ====================================================
   // 1 HORA ANTES
-  // GitHub roda aproximadamente a cada 15 minutos.
   // ====================================================
 
   if (
@@ -551,7 +479,6 @@ function reminderDue(
     return "previous-day";
   }
 
-
   return null;
 }
 
@@ -565,7 +492,6 @@ function messageFor(
   roster,
   eventDate
 ) {
-
   const service =
     roster.service ||
     roster.title ||
@@ -575,11 +501,9 @@ function messageFor(
   const when =
     formatServiceDate(eventDate);
 
-
   if (
     type === "previous-day"
   ) {
-
     return {
       title:
         "🎵 Você está escalado amanhã",
@@ -590,11 +514,9 @@ function messageFor(
     };
   }
 
-
   if (
     type === "morning"
   ) {
-
     return {
       title:
         "☀️ Hoje é dia de culto",
@@ -604,7 +526,6 @@ function messageFor(
         `Confira sua escala.`
     };
   }
-
 
   return {
     title:
@@ -625,13 +546,11 @@ async function savePortalNotification(
   uid,
   data
 ) {
-
   await db
     .collection("users")
     .doc(uid)
     .collection("notifications")
     .add({
-
       ...data,
 
       read: false,
@@ -639,250 +558,7 @@ async function savePortalNotification(
       createdAt:
         admin.firestore.FieldValue
           .serverTimestamp()
-
     });
-}
-
-
-// ======================================================
-// TESTE MANUAL
-// ======================================================
-
-async function runManualTest() {
-
-  console.log(
-    "========================================"
-  );
-
-  console.log(
-    "MODO DE TESTE MANUAL ATIVADO"
-  );
-
-  console.log(
-    "========================================"
-  );
-
-
-  /*
-    Procura todas as escalas futuras.
-  */
-
-  const snapshot =
-    await db
-      .collection("rosters")
-      .get();
-
-  const futureRosters = [];
-
-
-  for (
-    const rosterDoc
-    of snapshot.docs
-  ) {
-
-    const roster =
-      rosterDoc.data();
-
-    const eventDate =
-      rosterDate(roster);
-
-    if (
-      !eventDate ||
-      eventDate.getTime() <= Date.now()
-    ) {
-      continue;
-    }
-
-    futureRosters.push({
-      id: rosterDoc.id,
-      data: roster,
-      date: eventDate
-    });
-  }
-
-
-  futureRosters.sort(
-    (a, b) =>
-      a.date.getTime() -
-      b.date.getTime()
-  );
-
-
-  console.log(
-    `Escalas futuras encontradas: ${futureRosters.length}`
-  );
-
-
-  /*
-    Procura a primeira pessoa realmente
-    escalada + confirmada + com dispositivo.
-  */
-
-  for (
-    const roster
-    of futureRosters
-  ) {
-
-    console.log(
-      `Verificando escala ${roster.id} - ` +
-      `${formatServiceDate(roster.date)}`
-    );
-
-
-    const rosterUsers =
-      await getRosterUsers(
-        roster.data
-      );
-
-
-    console.log(
-      `Pessoas vinculadas à escala: ${rosterUsers.length}`
-    );
-
-
-    for (
-      const person
-      of rosterUsers
-    ) {
-
-      console.log(
-        `Verificando membro ${person.memberId} ` +
-        `→ usuário ${person.uid}`
-      );
-
-
-      const confirmation =
-        await getConfirmation(
-          roster.id,
-          person.uid,
-          person.memberId
-        );
-
-
-      if (!confirmation.exists) {
-        console.log(
-          `Usuário ${person.uid}: sem resposta.`
-        );
-
-        continue;
-      }
-
-
-      if (!confirmation.confirmed) {
-        console.log(
-          `Usuário ${person.uid}: resposta encontrada, ` +
-          `mas presença não confirmada.`
-        );
-
-        continue;
-      }
-
-
-      console.log(
-        `Usuário ${person.uid}: PRESENÇA CONFIRMADA.`
-      );
-
-
-      const tokens =
-        await getUserTokens(
-          person.uid
-        );
-
-
-      if (!tokens.length) {
-        console.log(
-          `Usuário ${person.uid}: ` +
-          `nenhum dispositivo ativo.`
-        );
-
-        continue;
-      }
-
-
-      const service =
-        roster.data.service ||
-        roster.data.title ||
-        roster.data.name ||
-        "Culto";
-
-
-      const when =
-        formatServiceDate(
-          roster.date
-        );
-
-
-      const title =
-        "🔔 Teste de lembrete da escala";
-
-
-      const body =
-        `Teste funcionando! Você está ` +
-        `confirmado(a) para ${service} — ${when}.`;
-
-
-      const delivered =
-        await sendNotification(
-          person.uid,
-          title,
-          body,
-          "roster-reminder-test"
-        );
-
-
-      await savePortalNotification(
-        person.uid,
-        {
-          type:
-            "roster-reminder-test",
-
-          title,
-
-          body,
-
-          rosterId:
-            roster.id
-        }
-      );
-
-
-      console.log(
-        "========================================"
-      );
-
-      console.log(
-        `TESTE CONCLUÍDO`
-      );
-
-      console.log(
-        `Usuário: ${person.uid}`
-      );
-
-      console.log(
-        `Entrega push: ${
-          delivered ? "SIM" : "NÃO"
-        }`
-      );
-
-      console.log(
-        "========================================"
-      );
-
-
-      /*
-        No teste manual envia para apenas
-        UMA pessoa confirmada.
-      */
-
-      return;
-    }
-  }
-
-
-  throw new Error(
-    "Não encontrei nenhuma pessoa escalada, " +
-    "confirmada e com dispositivo ativo para o teste."
-  );
 }
 
 
@@ -891,10 +567,8 @@ async function runManualTest() {
 // ======================================================
 
 async function checkRosters() {
-
   const now =
     new Date();
-
 
   console.log(
     `Iniciando verificação: ${
@@ -902,34 +576,27 @@ async function checkRosters() {
     }`
   );
 
-
   const snapshot =
     await db
       .collection("rosters")
       .get();
 
-
   let sent = 0;
   let checked = 0;
-
 
   for (
     const rosterDoc
     of snapshot.docs
   ) {
-
     const roster =
       rosterDoc.data();
-
 
     const eventDate =
       rosterDate(roster);
 
-
     if (!eventDate) {
       continue;
     }
-
 
     const type =
       reminderDue(
@@ -937,50 +604,34 @@ async function checkRosters() {
         eventDate
       );
 
-
     if (!type) {
       continue;
     }
 
-
     checked++;
-
 
     console.log(
       `Escala dentro da janela de lembrete: ` +
       `${rosterDoc.id} - ${type}`
     );
 
-
-    /*
-      Resolve os IDs da coleção members
-      para os UIDs reais das contas.
-    */
-
     const rosterUsers =
       await getRosterUsers(
         roster
       );
 
-
     console.log(
       `Usuários vinculados: ${rosterUsers.length}`
     );
-
 
     for (
       const person
       of rosterUsers
     ) {
-
       const uid =
         person.uid;
 
-
-      /*
-        Só envia se a pessoa confirmou.
-      */
-
+      // Só envia se a presença estiver confirmada.
       const confirmation =
         await getConfirmation(
           rosterDoc.id,
@@ -988,12 +639,10 @@ async function checkRosters() {
           person.memberId
         );
 
-
       if (
         !confirmation.exists ||
         !confirmation.confirmed
       ) {
-
         console.log(
           `Ignorando ${uid}: ` +
           `presença não confirmada.`
@@ -1002,17 +651,12 @@ async function checkRosters() {
         continue;
       }
 
-
-      /*
-        ID único para impedir duplicação.
-      */
-
+      // ID único para impedir lembrete duplicado.
       const reminderId =
         `${rosterDoc.id}_` +
         `${uid}_` +
         `${type}_` +
         `${localKey(eventDate)}`;
-
 
       const reminderRef =
         db
@@ -1023,20 +667,16 @@ async function checkRosters() {
             reminderId
           );
 
-
       const existing =
         await reminderRef.get();
 
-
       if (existing.exists) {
-
         console.log(
           `Lembrete já processado para ${uid}.`
         );
 
         continue;
       }
-
 
       const {
         title,
@@ -1048,7 +688,6 @@ async function checkRosters() {
           eventDate
         );
 
-
       const delivered =
         await sendNotification(
           uid,
@@ -1056,14 +695,8 @@ async function checkRosters() {
           body
         );
 
-
-      /*
-        Registra o lembrete para
-        não enviar novamente.
-      */
-
+      // Registra para não enviar novamente.
       await reminderRef.set({
-
         rosterId:
           rosterDoc.id,
 
@@ -1085,18 +718,12 @@ async function checkRosters() {
         sentAt:
           admin.firestore.FieldValue
             .serverTimestamp()
-
       });
 
-
-      /*
-        Salva no sino do portal.
-      */
-
+      // Salva também no sino do portal.
       await savePortalNotification(
         uid,
         {
-
           type:
             "roster-reminder",
 
@@ -1109,17 +736,14 @@ async function checkRosters() {
 
           reminderType:
             type
-
         }
       );
-
 
       if (delivered) {
         sent++;
       }
     }
   }
-
 
   console.log(
     "========================================"
@@ -1143,12 +767,4 @@ async function checkRosters() {
 // EXECUÇÃO
 // ======================================================
 
-if (IS_MANUAL_TEST) {
-
-  await runManualTest();
-
-} else {
-
-  await checkRosters();
-
-}
+await checkRosters();
