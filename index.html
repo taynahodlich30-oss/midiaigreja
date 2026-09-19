@@ -711,6 +711,11 @@
             }
           }
           document.getElementById('auth-screen').classList.add('hidden');
+
+          // Corrige automaticamente vínculos antigos antes de carregar as escalas.
+          await autoLinkCurrentMemberAccount();
+          await autoLinkAllExistingAccounts();
+
           initApp();
           subscribeSharedData();
           applyAdminVisibility();
@@ -728,6 +733,149 @@
         }
       });
     });
+
+
+    // --- VINCULAÇÃO AUTOMÁTICA ENTRE CONTAS E MEMBROS ---
+    // Mantém o cadastro existente e apenas preenche accountUid quando encontra
+    // com segurança a conta correspondente. Não altera funções, escalas ou departamentos.
+    function normalizeLinkText(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+    }
+
+    function userDepartmentsForLink(user) {
+      if (Array.isArray(user?.departments) && user.departments.length) {
+        return user.departments.filter(dept => ['louvor', 'midia'].includes(dept));
+      }
+      return user?.department && ['louvor', 'midia'].includes(user.department)
+        ? [user.department]
+        : [];
+    }
+
+    function findSafeMemberMatch(user, members) {
+      const email = normalizeLinkText(user?.email);
+      const phone = cleanPhone(user?.phone);
+      const name = normalizeLinkText(user?.name || user?.displayName);
+      const departments = userDepartmentsForLink(user);
+
+      const available = members.filter(member => !member.accountUid || String(member.accountUid) === String(user.id));
+
+      const unique = list => list.length === 1 ? list[0] : null;
+
+      if (email) {
+        const byEmail = available.filter(member => normalizeLinkText(member.email) === email);
+        const match = unique(byEmail);
+        if (match) return match;
+      }
+
+      if (phone) {
+        const byPhone = available.filter(member => cleanPhone(member.phone) === phone);
+        const match = unique(byPhone);
+        if (match) return match;
+      }
+
+      if (name) {
+        let byName = available.filter(member => normalizeLinkText(member.name) === name);
+        if (departments.length) {
+          const sameDepartment = byName.filter(member => !member.department || departments.includes(member.department));
+          if (sameDepartment.length) byName = sameDepartment;
+        }
+        const match = unique(byName);
+        if (match) return match;
+      }
+
+      return null;
+    }
+
+    async function autoLinkCurrentMemberAccount() {
+      if (!currentUser) return;
+
+      // Membros comuns não têm permissão para editar /members pelas regras atuais.
+      // Novas contas já nascem vinculadas no cadastro. Líder/admin podem corrigir
+      // automaticamente cadastros antigos sem qualquer mudança nas regras do Firestore.
+      const canLink = currentUser.uid === ADMIN_UID || currentUserRole === 'admin' || currentUserRole === 'leader';
+      if (!canLink) return;
+
+      try {
+        const [profileDoc, membersSnap] = await Promise.all([
+          db.collection('users').doc(currentUser.uid).get(),
+          db.collection('members').get()
+        ]);
+
+        if (!profileDoc.exists) return;
+
+        const members = membersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Se esta conta já estiver vinculada, não faz nada.
+        if (members.some(member => String(member.accountUid || '') === String(currentUser.uid))) return;
+
+        const userData = {
+          id: currentUser.uid,
+          ...profileDoc.data(),
+          email: profileDoc.data().email || currentUser.email || '',
+          displayName: currentUser.displayName || ''
+        };
+
+        const member = findSafeMemberMatch(userData, members);
+        if (!member) return;
+
+        await db.collection('members').doc(String(member.id)).set({
+          accountUid: currentUser.uid,
+          accountLinkedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        console.log(`Conta vinculada automaticamente: ${member.name} → ${currentUser.uid}`);
+      } catch (error) {
+        console.warn('Não foi possível vincular automaticamente a conta atual:', error);
+      }
+    }
+
+    async function autoLinkAllExistingAccounts() {
+      const isAdmin = currentUser?.uid === ADMIN_UID || currentUserRole === 'admin';
+      if (!isAdmin) return;
+
+      try {
+        const [usersSnap, membersSnap] = await Promise.all([
+          db.collection('users').get(),
+          db.collection('members').get()
+        ]);
+
+        const users = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const members = membersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const claimedMemberIds = new Set(
+          members.filter(member => member.accountUid).map(member => String(member.id))
+        );
+
+        const updates = [];
+
+        for (const user of users) {
+          if (members.some(member => String(member.accountUid || '') === String(user.id))) continue;
+
+          const candidates = members.filter(member => !claimedMemberIds.has(String(member.id)));
+          const member = findSafeMemberMatch(user, candidates);
+          if (!member) continue;
+
+          claimedMemberIds.add(String(member.id));
+          updates.push(
+            db.collection('members').doc(String(member.id)).set({
+              accountUid: user.id,
+              accountLinkedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true })
+          );
+        }
+
+        if (updates.length) {
+          await Promise.all(updates);
+          console.log(`${updates.length} conta(s) vinculada(s) automaticamente aos membros.`);
+        }
+      } catch (error) {
+        console.warn('Não foi possível revisar as vinculações automáticas:', error);
+      }
+    }
 
     function initApp() {
       const isAdmin = currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID;
