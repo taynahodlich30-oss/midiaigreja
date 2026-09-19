@@ -51,7 +51,8 @@ for (const userDoc of users.docs) {
     .collection('devices')
     .where('enabled', '==', true)
     .get();
-
+console.log(`Dispositivos encontrados: ${devices.size}`);
+  
   const tokens = devices.docs
     .map(d => d.data().token)
     .filter(Boolean);
