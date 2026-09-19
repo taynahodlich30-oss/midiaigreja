@@ -77,7 +77,11 @@ for (const userDoc of users.docs) {
       }
     }
   });
-
+result.responses.forEach((response, index) => {
+  if (!response.success) {
+    console.log(`ERRO NO TOKEN ${index + 1}:`, response.error?.code, response.error?.message);
+  }
+});
   if (result.successCount) {
 
     await userDoc.ref
