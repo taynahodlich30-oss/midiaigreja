@@ -2627,10 +2627,39 @@
       if (!currentUser) return;
       const roster=[...rosterData,...mediaRosterData].find(r=>String(r.id)===String(rosterId));
       const memberId=currentRosterMemberId();
-      if (roster?.memberIds?.length && !roster.memberIds.map(String).includes(String(memberId)) && currentUserRole==='member') return alert('Esta confirmação está disponível apenas para quem está escalado.');
-      const id=`${rosterId}_${currentUser.uid}`;
-      await db.collection('rosterResponses').doc(id).set({rosterId:String(rosterId), userId:currentUser.uid, memberId:String(memberId||''), status, updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-      alert(status==='confirmed'?'Presença confirmada! ✅':'Resposta registrada. A liderança poderá ver que você não poderá participar.');
+      if (roster?.memberIds?.length && !roster.memberIds.map(String).includes(String(memberId)) && currentUserRole==='member') {
+        return alert('Esta confirmação está disponível apenas para quem está escalado.');
+      }
+      try {
+        const payload = {
+          attendance: status,
+          status: status,
+          rosterId: String(rosterId),
+          userId: currentUser.uid,
+          memberId: String(memberId || ''),
+          userName: currentUser.displayName || currentUser.email || 'Membro',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Formato principal usado pela Central e pela liderança.
+        await db.collection('rosters').doc(String(rosterId))
+          .collection('responses').doc(currentUser.uid)
+          .set(payload, { merge: true });
+
+        // Mantém compatibilidade com a tela antiga de confirmações.
+        const legacyId = `${rosterId}_${currentUser.uid}`;
+        await db.collection('rosterResponses').doc(legacyId).set(payload, { merge: true });
+
+        if (typeof allRostersData !== 'undefined') await renderMyNextRoster(allRostersData);
+        if (typeof renderLeaderAttendance === 'function') await renderLeaderAttendance();
+
+        alert(status === 'confirmed'
+          ? 'Presença confirmada! ✅'
+          : 'Resposta registrada. A liderança poderá ver que você não poderá participar.');
+      } catch (error) {
+        console.error('Erro ao confirmar presença:', error);
+        alert('Não foi possível salvar sua confirmação. Atualize a página e tente novamente.');
+      }
     }
     async function viewRosterPresence(rosterId) {
       const snap=await db.collection('rosterResponses').where('rosterId','==',String(rosterId)).get();
