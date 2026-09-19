@@ -590,6 +590,7 @@
     let groupWhatsappLink = '';
     let allRostersData = [];
     let currentDepartment = localStorage.getItem('cep_logged_dept') || 'louvor';
+    let currentUserDepartments = [];
     let currentTab = 'roster';
     let currentMidiaTab = 'roster';
     let calendarCursor = new Date();
@@ -637,7 +638,7 @@
           credential = await auth.createUserWithEmailAndPassword(email, password);
           await credential.user.updateProfile({ displayName: name });
           await credential.user.sendEmailVerification();
-          const profile = { name, email, phone, churchRole, department: dept, role: 'member', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+          const profile = { name, email, phone, churchRole, department: dept, departments: [dept], role: 'member', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
           await db.collection('users').doc(credential.user.uid).set(profile);
           await db.collection('members').doc(credential.user.uid).set({ name, email, phone, role: churchRole, churchRole, department: dept, accountUid: credential.user.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         } else {
@@ -691,9 +692,23 @@
         if (user) {
           if (user.uid === ADMIN_UID) {
             currentUserRole = 'admin';
+            currentUserDepartments = ['louvor', 'midia'];
           } else {
             const profile = await db.collection('users').doc(user.uid).get();
-            currentUserRole = profile.exists ? (profile.data().role || 'member') : 'member';
+            if (profile.exists) {
+              const data = profile.data();
+              currentUserRole = data.role || 'member';
+              if (Array.isArray(data.departments) && data.departments.length) {
+                currentUserDepartments = data.departments.filter(dept => ['louvor', 'midia'].includes(dept));
+              } else if (data.department && ['louvor', 'midia'].includes(data.department)) {
+                currentUserDepartments = [data.department];
+              } else {
+                currentUserDepartments = [];
+              }
+            } else {
+              currentUserRole = 'member';
+              currentUserDepartments = [];
+            }
           }
           document.getElementById('auth-screen').classList.add('hidden');
           initApp();
@@ -715,7 +730,12 @@
     });
 
     function initApp() {
-      switchDepartment(currentDepartment || 'louvor');
+      const isAdmin = currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID;
+      const allowedDepartments = isAdmin ? ['louvor', 'midia'] : currentUserDepartments;
+      const initialDepartment = allowedDepartments.includes(currentDepartment)
+        ? currentDepartment
+        : (allowedDepartments[0] || 'louvor');
+      switchDepartment(initialDepartment);
       renderRoster();
       renderMediaRoster();
       renderEvents();
@@ -952,7 +972,21 @@
 
     // --- DEPARTMENT SWITCHING ---
     function switchDepartment(dept) {
+      const isAdmin = currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID;
+      const allowedDepartments = isAdmin ? ['louvor', 'midia'] : currentUserDepartments;
+
+      if (!allowedDepartments.includes(dept)) {
+        if (allowedDepartments.length > 0) {
+          dept = allowedDepartments[0];
+        } else {
+          alert('Seu usuário ainda não possui um departamento definido. Fale com um líder.');
+          return;
+        }
+      }
+
       currentDepartment = dept;
+      localStorage.setItem('cep_logged_dept', dept);
+
       const louvorView = document.getElementById('view-louvor');
       const midiaView = document.getElementById('view-midia');
       const btnLouvor = document.getElementById('dept-btn-louvor');
@@ -960,11 +994,15 @@
       const deptBadge = document.getElementById('current-dept-badge');
       const headerSub = document.getElementById('header-subtitle');
 
+      if (btnLouvor) btnLouvor.classList.toggle('hidden', !allowedDepartments.includes('louvor'));
+      if (btnMidia) btnMidia.classList.toggle('hidden', !allowedDepartments.includes('midia'));
+
       if (dept === 'louvor') {
         louvorView.classList.remove('hidden');
         midiaView.classList.add('hidden');
         btnLouvor.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition bg-indigo-600 text-white shadow';
         btnMidia.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-slate-400 hover:text-slate-200';
+        if (!allowedDepartments.includes('midia')) btnMidia.classList.add('hidden');
         deptBadge.innerText = 'Louvor & Projeção';
         headerSub.innerText = 'Sistema de Apoio ao Ministério de Louvor, Cifras & Projeção';
       } else {
@@ -972,12 +1010,13 @@
         midiaView.classList.remove('hidden');
         btnMidia.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition bg-indigo-600 text-white shadow';
         btnLouvor.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition text-slate-400 hover:text-slate-200';
+        if (!allowedDepartments.includes('louvor')) btnLouvor.classList.add('hidden');
         deptBadge.innerText = 'Mídia & Transmissão';
         headerSub.innerText = 'Sistema de Apoio ao Ministério de Mídia, Som & Transmissão';
         renderMediaRoster();
         renderEquipment();
       }
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     // --- LOUVOR TABS ---
