@@ -71,6 +71,15 @@
     .cifra-layout-page { position: relative; margin: 0 auto 1rem; background: white; color: #0f172a; box-shadow: 0 18px 45px rgba(0,0,0,.35); transform-origin: top center; }
     .cifra-layout-page span { position: absolute; white-space: pre; line-height: 1.18; font-family: Arial, Helvetica, sans-serif; }
     .cifra-text-view { line-height: 1.9; letter-spacing: .01em; }
+    #live-service-modal.live-projection > header,
+    #live-service-modal.live-projection aside,
+    #live-service-modal.live-projection #live-current-meta,
+    #live-service-modal.live-projection #live-pad-button,
+    #live-service-modal.live-projection #live-metronome-button { display: none; }
+    #live-service-modal.live-projection > div { display: block; }
+    #live-service-modal.live-projection main { height: 100vh; padding: 4rem; }
+    #live-service-modal.live-projection #live-current-song { font-size: clamp(2.5rem, 6vw, 5rem); }
+    #live-service-modal.live-projection #live-song-content { font-size: clamp(1.25rem, 2.3vw, 2.25rem); line-height: 1.65; border: 0; background: transparent; }
     #layout-fullscreen-pages { min-width: max-content; }
     .upload-progress { animation: uploadPulse 1.3s ease-in-out infinite; }
     @keyframes uploadPulse { 50% { opacity: .55; } }
@@ -197,6 +206,8 @@
       </article>
     </section>
 
+    <button id="live-service-banner" onclick="openLiveService()" class="hidden w-full items-center justify-between gap-4 rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-600/25 via-violet-600/20 to-indigo-600/20 p-4 text-left shadow-xl shadow-rose-950/20"><span class="flex items-center gap-3"><span class="relative flex h-4 w-4"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span><span class="relative inline-flex h-4 w-4 rounded-full bg-rose-500"></span></span><span><strong class="block text-white">Culto acontecendo agora</strong><small id="live-service-banner-text" class="text-slate-300">Toque para acompanhar ao vivo</small></span></span><span class="rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white">ENTRAR AO VIVO</span></button>
+
     <section id="email-verification-banner" class="hidden p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl items-center justify-between gap-4 flex-wrap"><div class="flex items-center gap-3"><i data-lucide="mail-warning" class="w-5 h-5 text-amber-300"></i><div><p class="text-sm font-bold text-amber-100">Confirme seu e-mail</p><p class="text-xs text-amber-200/70">Use o link enviado para proteger sua conta.</p></div></div><button onclick="resendVerificationEmail()" class="px-3 py-2 bg-amber-500 text-slate-950 rounded-lg text-xs font-bold">Reenviar e-mail</button></section>
 
     <!-- LOUVOR & PROJEÇÃO DEPARTMENT VIEW -->
@@ -207,6 +218,7 @@
         <button onclick="switchTab('pads')" id="tab-btn-pads" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5"><i data-lucide="waves" class="w-4 h-4 text-indigo-400"></i> Worship Pads</button>
         <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="calendar-days" class="w-4 h-4"></i> Agenda</button>
         <button onclick="switchTab('history')" id="tab-btn-history" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Histórico</button>
+        <button onclick="switchTab('central')" id="tab-btn-central" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Central</button>
         <button onclick="switchTab('team')" id="tab-btn-team" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="users-round" class="w-4 h-4"></i> Equipe</button>
       </nav>
 
@@ -310,6 +322,18 @@
             </div>
             <span class="text-xs text-indigo-400">Contínuo • mínimo de 5 minutos</span>
           </div>
+
+          <section class="mt-6 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 p-4">
+              <div><h3 class="flex items-center gap-2 font-bold text-white"><i data-lucide="timer" class="h-5 w-5 text-amber-400"></i> Metrônomo</h3><p class="mt-1 text-xs text-slate-500">Marcação precisa para ensaios e estudos.</p></div>
+              <div id="metronome-beats" class="flex gap-2"></div>
+            </div>
+            <div class="grid gap-4 p-4 md:grid-cols-[1fr_auto_auto] md:items-end">
+              <div><div class="mb-2 flex items-center justify-between"><label for="metronome-bpm" class="text-xs font-bold uppercase tracking-wider text-slate-400">Velocidade</label><strong id="metronome-bpm-label" class="text-2xl text-white">80 <span class="text-xs font-normal text-slate-500">BPM</span></strong></div><input id="metronome-bpm" type="range" min="40" max="220" value="80" step="1" oninput="setMetronomeBpm(this.value)" class="w-full accent-amber-500"></div>
+              <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Compasso<select id="metronome-signature" onchange="setMetronomeSignature(this.value)" class="mt-2 block w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-white"><option value="4">4/4</option><option value="3">3/4</option><option value="2">2/4</option><option value="6">6/8</option></select></label>
+              <div class="flex gap-2"><button type="button" onclick="tapMetronome()" class="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-bold text-slate-200 hover:bg-slate-700">TAP</button><button id="metronome-toggle" type="button" onclick="toggleMetronome()" class="flex min-w-28 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-amber-400"><i data-lucide="play" class="h-4 w-4"></i> Iniciar</button></div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -333,6 +357,17 @@
 
       <!-- TAB 5: EQUIPE -->
       <div id="tab-history" class="tab-content hidden space-y-6"><div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl"><h2 class="text-xl font-bold text-indigo-400 flex items-center gap-2 mb-5"><i data-lucide="history" class="w-6 h-6"></i> Histórico de escalas</h2><div id="roster-history-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"><p class="text-sm text-slate-500">Nenhuma escala anterior.</p></div></div></div>
+
+      <div id="tab-central" class="tab-content hidden space-y-6">
+        <section class="grid gap-4 md:grid-cols-3">
+          <button onclick="openRehearsalMode()" class="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-600/25 to-violet-600/10 p-5 text-left transition hover:border-indigo-400"><i data-lucide="play-circle" class="h-8 w-8 text-indigo-300"></i><h3 class="mt-4 font-bold text-white">Modo Ensaio</h3><p class="mt-1 text-xs text-slate-400">Cifras da próxima escala em sequência.</p></button>
+          <button onclick="openTuner()" class="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-600/20 to-slate-900 p-5 text-left transition hover:border-emerald-400"><i data-lucide="audio-lines" class="h-8 w-8 text-emerald-300"></i><h3 class="mt-4 font-bold text-white">Afinador</h3><p class="mt-1 text-xs text-slate-400">Afine usando o microfone do aparelho.</p></button>
+          <button onclick="switchTab('pads')" class="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-600/20 to-slate-900 p-5 text-left transition hover:border-amber-400"><i data-lucide="timer" class="h-8 w-8 text-amber-300"></i><h3 class="mt-4 font-bold text-white">Pad + Metrônomo</h3><p class="mt-1 text-xs text-slate-400">Ambiente contínuo e tempo do ensaio.</p></button>
+        </section>
+        <section class="overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-600/20 via-violet-600/10 to-slate-900 p-5"><div class="flex flex-wrap items-center justify-between gap-5"><div class="max-w-2xl"><p class="text-[10px] font-bold uppercase tracking-[.25em] text-rose-300">Experiência sincronizada</p><h2 class="mt-2 text-2xl font-black text-white">Culto Ao Vivo</h2><p class="mt-2 text-sm text-slate-300">O líder controla a sequência e todos os músicos acompanham a mesma música, tom, BPM e momento em tempo real.</p></div><div class="flex flex-wrap gap-2"><button data-leader-only onclick="startLiveService()" class="rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-rose-950/40"><i data-lucide="radio" class="mr-2 inline h-4 w-4"></i> Iniciar culto</button><button onclick="openLiveService()" class="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-bold text-white">Abrir painel</button><button data-leader-only onclick="exportPortalBackup()" class="rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-bold text-slate-200"><i data-lucide="download" class="mr-2 inline h-4 w-4"></i> Backup</button></div></div></section>
+        <section class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h2 class="font-bold text-white">Escala mensal</h2><p class="text-xs text-slate-500">Cultos e equipes organizados por dia.</p></div><div class="flex items-center gap-2"><button onclick="changeCalendarMonth(-1)" class="rounded-lg bg-slate-800 p-2"><i data-lucide="chevron-left" class="h-4 w-4"></i></button><strong id="monthly-calendar-title" class="min-w-36 text-center text-sm text-indigo-200"></strong><button onclick="changeCalendarMonth(1)" class="rounded-lg bg-slate-800 p-2"><i data-lucide="chevron-right" class="h-4 w-4"></i></button></div></div><div id="monthly-calendar" class="grid grid-cols-7 gap-1"></div></section>
+        <section data-leader-only class="grid gap-6 lg:grid-cols-2"><div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><h2 class="mb-4 font-bold text-white">Presença e pedidos de troca</h2><div id="attendance-leader-panel" class="space-y-3 text-sm text-slate-400">Carregando...</div></div><div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><h2 class="mb-4 font-bold text-white">Estatísticas do ministério</h2><div id="ministry-statistics" class="grid grid-cols-2 gap-3"></div><div id="song-history-ranking" class="mt-4 space-y-2"></div></div></section>
+      </div>
 
       <!-- TAB 6: EQUIPE -->
       <div id="tab-team" class="tab-content hidden space-y-6">
@@ -421,6 +456,19 @@
 
   </main>
 
+  <div id="live-service-modal" class="fixed inset-0 z-[110] hidden flex-col bg-slate-950" role="dialog" aria-modal="true">
+    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/95 p-3"><div class="flex items-center gap-3"><span class="relative flex h-3 w-3"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span><span class="relative inline-flex h-3 w-3 rounded-full bg-rose-500"></span></span><div><p class="text-[9px] font-bold uppercase tracking-[.25em] text-rose-400">Ao vivo</p><h2 id="live-service-title" class="font-bold text-white">Culto</h2></div></div><div class="flex items-center gap-2"><strong id="live-service-timer" class="rounded-xl bg-slate-950 px-3 py-2 font-mono text-sm text-emerald-300">00:00:00</strong><button onclick="toggleLiveProjection()" class="rounded-xl bg-slate-800 p-2.5 text-slate-200" title="Modo projeção"><i data-lucide="projector" class="h-5 w-5"></i></button><button onclick="closeLiveService()" class="rounded-xl bg-red-500/15 p-2.5 text-red-300"><i data-lucide="x" class="h-5 w-5"></i></button></div></header>
+    <div class="grid min-h-0 flex-1 lg:grid-cols-[280px_1fr_260px]"><aside id="live-setlist" class="max-h-48 overflow-auto border-b border-slate-800 bg-slate-900/70 p-3 lg:max-h-none lg:border-b-0 lg:border-r"></aside><main class="min-h-0 overflow-auto p-5 sm:p-10"><div class="mx-auto max-w-5xl"><div class="flex flex-wrap items-start justify-between gap-4"><div><span id="live-current-section" class="rounded-full bg-indigo-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-300">Momento</span><h1 id="live-current-song" class="mt-4 text-3xl font-black text-white sm:text-5xl">Aguardando início</h1><p id="live-current-meta" class="mt-2 text-sm text-slate-400"></p></div><div class="flex gap-2"><button id="live-pad-button" onclick="playLiveSongPad()" class="rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white"><i data-lucide="waves" class="mr-2 inline h-4 w-4"></i> Pad</button><button id="live-metronome-button" onclick="playLiveSongMetronome()" class="rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950"><i data-lucide="timer" class="mr-2 inline h-4 w-4"></i> BPM</button></div></div><pre id="live-song-content" class="cifra-text-view mt-6 whitespace-pre-wrap rounded-2xl border border-slate-800 bg-slate-900 p-5 font-mono text-base text-indigo-100 sm:text-lg"></pre></div></main><aside class="border-t border-slate-800 bg-slate-900/70 p-4 lg:border-l lg:border-t-0"><p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Próximo momento</p><div id="live-next-card" class="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-300"></div><div id="live-leader-controls" class="mt-5 space-y-2"><button onclick="changeLiveSong(-1)" class="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-white">← Voltar</button><button onclick="changeLiveSong(1)" class="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white">Próxima música →</button><button onclick="finishLiveService()" class="w-full rounded-xl bg-red-500/15 py-3 text-sm font-bold text-red-300">Encerrar culto</button></div></aside></div>
+  </div>
+
+  <div id="rehearsal-modal" class="fixed inset-0 z-[95] hidden flex-col bg-slate-950" role="dialog" aria-modal="true">
+    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900 p-3"><div><p class="text-[10px] uppercase tracking-widest text-indigo-400">Modo Ensaio</p><h2 id="rehearsal-roster-title" class="font-bold text-white">Repertório</h2></div><div class="flex items-center gap-2"><span id="rehearsal-progress" class="text-xs text-slate-400"></span><button onclick="closeRehearsalMode()" class="rounded-xl bg-red-500/15 p-2.5 text-red-300"><i data-lucide="x" class="h-5 w-5"></i></button></div></header>
+    <div class="grid min-h-0 flex-1 lg:grid-cols-[260px_1fr]"><aside id="rehearsal-song-list" class="max-h-48 overflow-auto border-b border-slate-800 bg-slate-900/70 p-3 lg:max-h-none lg:border-b-0 lg:border-r"></aside><main id="rehearsal-song-content" class="min-h-0 overflow-auto p-4 sm:p-8"></main></div>
+    <footer class="flex items-center justify-between gap-3 border-t border-slate-800 bg-slate-900 p-3"><button onclick="changeRehearsalSong(-1)" class="rounded-xl bg-slate-800 px-4 py-2 text-sm font-bold text-white">← Anterior</button><button onclick="markRehearsalSong()" id="rehearsal-done-button" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">✓ Já ensaiei</button><button onclick="changeRehearsalSong(1)" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white">Próxima →</button></footer>
+  </div>
+
+  <div id="tuner-modal" class="fixed inset-0 z-[96] hidden items-center justify-center bg-slate-950/95 p-4" role="dialog" aria-modal="true"><div class="w-full max-w-md rounded-3xl border border-emerald-500/30 bg-slate-900 p-6 text-center shadow-2xl"><div class="flex justify-end"><button onclick="closeTuner()" class="rounded-xl bg-slate-800 p-2 text-slate-300"><i data-lucide="x" class="h-5 w-5"></i></button></div><i data-lucide="audio-lines" class="mx-auto h-10 w-10 text-emerald-400"></i><h2 class="mt-3 text-xl font-bold text-white">Afinador cromático</h2><p class="mt-1 text-xs text-slate-500">Permita o microfone e toque uma corda por vez.</p><div id="tuner-note" class="mt-8 text-7xl font-black text-white">--</div><div id="tuner-frequency" class="mt-2 text-sm text-slate-400">Aguardando som...</div><div class="relative mt-8 h-3 overflow-hidden rounded-full bg-gradient-to-r from-rose-500 via-emerald-500 to-rose-500"><span id="tuner-needle" class="absolute left-1/2 top-[-6px] h-6 w-1 -translate-x-1/2 rounded bg-white shadow"></span></div><div class="mt-3 flex justify-between text-[10px] uppercase tracking-wider text-slate-500"><span>Baixo</span><span class="text-emerald-400">Afinado</span><span>Alto</span></div><button id="tuner-start-button" onclick="startTuner()" class="mt-7 w-full rounded-xl bg-emerald-600 py-3 font-bold text-white">Ativar microfone</button></div></div>
+
   <!-- FORMULÁRIO PROFISSIONAL REUTILIZÁVEL -->
   <div id="portal-form-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
     <div class="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl shadow-indigo-950/50">
@@ -455,11 +503,14 @@
         <div class="min-w-0"><p class="text-[10px] uppercase tracking-widest text-slate-500">Cifra em PDF</p><h2 id="pdf-fullscreen-title" class="font-bold text-white truncate">Música</h2></div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
+        <button onclick="changePdfFullscreenZoom(-0.2)" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl" title="Diminuir"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+        <span id="pdf-fullscreen-zoom-label" class="hidden w-12 text-center text-xs text-slate-300 sm:block">120%</span>
+        <button onclick="changePdfFullscreenZoom(0.2)" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl" title="Aumentar"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
         <button onclick="requestPdfNativeFullscreen()" class="hidden sm:flex px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold items-center gap-2"><i data-lucide="maximize" class="w-4 h-4"></i> Tela cheia</button>
         <button onclick="closePdfFullscreen()" class="p-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-xl" aria-label="Fechar PDF"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
     </div>
-    <div class="flex-1 min-h-0"><iframe id="pdf-fullscreen-frame" title="Visualizador da cifra em PDF"></iframe></div>
+    <div id="pdf-fullscreen-stage" class="flex-1 min-h-0 overflow-auto bg-slate-800 p-3"><div id="pdf-fullscreen-canvas-pages" class="mx-auto flex w-max min-w-full flex-col items-center gap-4"></div></div>
   </div>
 
   <!-- TELEPROMPTER OVERLAY -->
@@ -509,6 +560,7 @@
     firebase.initializeApp(FIREBASE_CONFIG);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: true }).catch(error => console.warn('Cache offline:', error.code || error.message));
     let messaging = null;
     try { messaging = firebase.messaging(); } catch (error) { console.warn('Notificações push não suportadas:', error); }
     let currentUser = null;
@@ -526,12 +578,24 @@
     let rostersUnsubscribe = null;
     let settingsUnsubscribe = null;
     let announcementsUnsubscribe = null;
+    let equipmentUnsubscribe = null;
+    let liveServiceUnsubscribe = null;
     let myAvailability = [];
     let groupWhatsappLink = '';
     let allRostersData = [];
     let currentDepartment = localStorage.getItem('cep_logged_dept') || 'louvor';
     let currentTab = 'roster';
     let currentMidiaTab = 'roster';
+    let calendarCursor = new Date();
+    let favoriteSongIds = new Set();
+    let rehearsalRoster = null;
+    let rehearsalSongs = [];
+    let rehearsalIndex = 0;
+    let tunerStream = null;
+    let tunerAnimation = null;
+    let tunerAudioContext = null;
+    let liveServiceState = null;
+    let liveServiceTimerInterval = null;
 
     function showAuthError(message) {
       document.getElementById('login-error-text').textContent = message;
@@ -638,6 +702,8 @@
           if (rostersUnsubscribe) rostersUnsubscribe();
           if (settingsUnsubscribe) settingsUnsubscribe();
           if (announcementsUnsubscribe) announcementsUnsubscribe();
+          if (equipmentUnsubscribe) equipmentUnsubscribe();
+          if (liveServiceUnsubscribe) liveServiceUnsubscribe();
         }
       });
     });
@@ -669,6 +735,7 @@
         songsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         selectedSongId = songsData.some(song => song.id === selectedSongId) ? selectedSongId : (songsData[0]?.id || null);
         renderSongsList();
+        loadFavoriteSongs();
       }, error => console.error('Erro ao carregar músicas:', error));
       membersUnsubscribe = db.collection('members').orderBy('name').onSnapshot(snapshot => {
         membersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -685,6 +752,9 @@
         checkRosterReminders(all);
         renderMyNextRoster(all);
         renderRosterHistory(all);
+        renderMonthlyCalendar();
+        renderMinistryStatistics();
+        renderLeaderAttendance();
       }, error => console.error('Erro ao carregar escalas:', error));
       settingsUnsubscribe = db.collection('settings').doc('whatsapp').onSnapshot(doc => {
         groupWhatsappLink = doc.exists ? (doc.data().groupLink || '') : '';
@@ -692,7 +762,34 @@
       announcementsUnsubscribe = db.collection('announcements').orderBy('createdAt', 'desc').limit(10).onSnapshot(snapshot => {
         renderAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       });
+      equipmentUnsubscribe = db.collection('equipment').orderBy('name').onSnapshot(snapshot => {
+        if (!snapshot.empty) equipmentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderEquipment();
+      });
+      liveServiceUnsubscribe = db.collection('settings').doc('liveService').onSnapshot(doc => {
+        liveServiceState = doc.exists ? doc.data() : null;
+        renderLiveServiceBanner();
+        if (!document.getElementById('live-service-modal').classList.contains('hidden')) renderLiveServicePanel();
+      });
       loadMyAvailability();
+    }
+
+    async function loadFavoriteSongs() {
+      if (!currentUser) return;
+      try {
+        const snapshot = await db.collection('privateNotes').doc(currentUser.uid).collection('songs').where('favorite', '==', true).get();
+        favoriteSongIds = new Set(snapshot.docs.map(doc => doc.id));
+        renderSongsList();
+      } catch (_) {}
+    }
+
+    async function toggleSongFavorite(songId) {
+      if (!currentUser) return;
+      const favorite = !favoriteSongIds.has(String(songId));
+      await db.collection('privateNotes').doc(currentUser.uid).collection('songs').doc(String(songId)).set({ favorite, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      favorite ? favoriteSongIds.add(String(songId)) : favoriteSongIds.delete(String(songId));
+      renderSongsList();
+      renderSongDetail(songId);
     }
 
     function subscribeUsersPermissions() {
@@ -895,6 +992,7 @@
       if (tabId === 'pads') initPadsUI();
       if (tabId === 'calendar') renderEvents();
       if (tabId === 'history') renderRosterHistory(allRostersData);
+      if (tabId === 'central') { renderMonthlyCalendar(); renderMinistryStatistics(); renderLeaderAttendance(); }
       if (tabId === 'team') renderMembers();
       lucide.createIcons();
     }
@@ -1016,16 +1114,18 @@
       const availabilityMap = {};
       try { const availability = await db.collection('availability').get(); availability.docs.forEach(doc => { availabilityMap[doc.id] = doc.data().unavailableDates || []; }); } catch (_) {}
       const all = [...rosterData, ...mediaRosterData];
-      const roster = all.find(item => item.id === rosterId) || { department, service: '', dateTime: '', memberIds: [], songIds: [], reminder: 'Ensaie as músicas da escala e chegue com antecedência.' };
+      const roster = all.find(item => item.id === rosterId) || { department, service: '', dateTime: '', memberIds: [], songIds: [], songSections: {}, reminder: 'Ensaie as músicas da escala e chegue com antecedência.' };
       const modal = document.createElement('div');
       modal.id = 'roster-editor-modal';
       modal.className = 'fixed inset-0 z-[80] bg-slate-950/90 backdrop-blur flex items-center justify-center p-3';
-      modal.innerHTML = `<form id="roster-editor-form" class="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 space-y-5 shadow-2xl"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold text-white">${rosterId ? 'Editar escala' : 'Nova escala'}</h2><p class="text-xs text-slate-400">Selecione membros, músicas e horários.</p></div><button type="button" onclick="document.getElementById('roster-editor-modal').remove()" class="p-2 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="grid sm:grid-cols-2 gap-4"><label class="text-xs text-slate-400">Culto ou evento<input id="roster-service" required value="${escapeHtml(roster.service)}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white"></label><label class="text-xs text-slate-400">Data e horário<input id="roster-datetime" type="datetime-local" required value="${roster.dateTime || ''}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white"></label></div><fieldset><legend class="text-sm font-bold text-white mb-2">Membros escalados</legend><div class="grid sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto">${membersData.filter(member => member.department === department || !member.department).map(member => { const unavailable = availabilityMap[member.accountUid || member.id] || []; return `<label class="flex items-center gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200"><input type="checkbox" name="roster-member" value="${member.id}" ${(roster.memberIds || []).includes(String(member.id)) ? 'checked' : ''} class="accent-indigo-500"> <span>${escapeHtml(member.name)} <small class="text-slate-500">${escapeHtml(member.role || '')}</small>${unavailable.length ? `<small class="block text-amber-400 mt-1">Indisponível: ${unavailable.join(', ')}</small>` : ''}</span></label>`; }).join('') || '<p class="text-sm text-slate-500">Cadastre membros primeiro.</p>'}</div></fieldset>${department === 'louvor' ? `<fieldset><legend class="text-sm font-bold text-white mb-2">Músicas para ensaiar</legend><div class="grid sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto">${songsData.map(song => `<label class="flex items-center gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200"><input type="checkbox" name="roster-song" value="${song.id}" ${(roster.songIds || []).includes(String(song.id)) ? 'checked' : ''} class="accent-indigo-500"> ${escapeHtml(song.title)}</label>`).join('') || '<p class="text-sm text-slate-500">Nenhuma música cadastrada.</p>'}</div></fieldset>` : ''}<label class="text-xs text-slate-400">Mensagem do lembrete<textarea id="roster-reminder" rows="3" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">${escapeHtml(roster.reminder || '')}</textarea></label><button class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl">Salvar escala</button></form>`;
+      modal.innerHTML = `<form id="roster-editor-form" class="w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 space-y-5 shadow-2xl"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold text-white">${rosterId ? 'Editar escala' : 'Nova escala'}</h2><p class="text-xs text-slate-400">Selecione membros, repertório e horários.</p></div><button type="button" onclick="document.getElementById('roster-editor-modal').remove()" class="p-2 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="grid sm:grid-cols-2 gap-4"><label class="text-xs text-slate-400">Culto ou evento<input id="roster-service" required value="${escapeHtml(roster.service)}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white"></label><label class="text-xs text-slate-400">Data e horário<input id="roster-datetime" type="datetime-local" required value="${roster.dateTime || ''}" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white"></label></div><fieldset><legend class="text-sm font-bold text-white mb-2">Membros escalados</legend><div class="grid sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto">${membersData.filter(member => member.department === department || !member.department).map(member => { const unavailable = availabilityMap[member.accountUid || member.id] || []; return `<label class="flex items-center gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200"><input type="checkbox" name="roster-member" value="${member.id}" ${(roster.memberIds || []).includes(String(member.id)) ? 'checked' : ''} class="accent-indigo-500"> <span>${escapeHtml(member.name)} <small class="text-slate-500">${escapeHtml(member.role || '')}</small>${unavailable.length ? `<small class="block text-amber-400 mt-1">Indisponível: ${unavailable.join(', ')}</small>` : ''}</span></label>`; }).join('') || '<p class="text-sm text-slate-500">Cadastre membros primeiro.</p>'}</div></fieldset>${department === 'louvor' ? `<fieldset><legend class="text-sm font-bold text-white mb-2">Repertório por momento do culto</legend><div class="space-y-2 max-h-64 overflow-y-auto">${songsData.map(song => `<div class="grid grid-cols-[auto_1fr_auto] items-center gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-200"><input type="checkbox" name="roster-song" value="${song.id}" ${(roster.songIds || []).includes(String(song.id)) ? 'checked' : ''} class="accent-indigo-500"><span>${escapeHtml(song.title)}</span><select name="song-section-${song.id}" class="rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs"><option ${roster.songSections?.[song.id] === 'Abertura' ? 'selected' : ''}>Abertura</option><option ${roster.songSections?.[song.id] === 'Celebração' ? 'selected' : ''}>Celebração</option><option ${roster.songSections?.[song.id] === 'Oferta' ? 'selected' : ''}>Oferta</option><option ${roster.songSections?.[song.id] === 'Ministração' ? 'selected' : ''}>Ministração</option><option ${roster.songSections?.[song.id] === 'Encerramento' ? 'selected' : ''}>Encerramento</option></select></div>`).join('') || '<p class="text-sm text-slate-500">Nenhuma música cadastrada.</p>'}</div></fieldset>` : ''}<label class="text-xs text-slate-400">Mensagem do lembrete<textarea id="roster-reminder" rows="3" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">${escapeHtml(roster.reminder || '')}</textarea></label><button class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl">Salvar escala</button></form>`;
       document.body.appendChild(modal);
       if (window.lucide) lucide.createIcons();
       document.getElementById('roster-editor-form').onsubmit = async event => {
         event.preventDefault();
-        const data = { department, service: document.getElementById('roster-service').value.trim(), dateTime: document.getElementById('roster-datetime').value, memberIds: [...document.querySelectorAll('[name="roster-member"]:checked')].map(input => input.value), songIds: [...document.querySelectorAll('[name="roster-song"]:checked')].map(input => input.value), reminder: document.getElementById('roster-reminder').value.trim(), status: roster.status || 'pending', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        const songIds = [...document.querySelectorAll('[name="roster-song"]:checked')].map(input => input.value);
+        const songSections = Object.fromEntries(songIds.map(songId => [songId, document.querySelector(`[name="song-section-${songId}"]`)?.value || 'Celebração']));
+        const data = { department, service: document.getElementById('roster-service').value.trim(), dateTime: document.getElementById('roster-datetime').value, memberIds: [...document.querySelectorAll('[name="roster-member"]:checked')].map(input => input.value), songIds, songSections, reminder: document.getElementById('roster-reminder').value.trim(), status: roster.status || 'pending', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
         if (rosterId) await db.collection('rosters').doc(String(rosterId)).set(data, { merge: true }); else await db.collection('rosters').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         modal.remove();
       };
@@ -1119,6 +1219,192 @@
       if (!container) return;
       const past = allRosters.filter(roster => roster.dateTime && new Date(roster.dateTime) < new Date()).sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
       container.innerHTML = past.length ? past.map(roster => `<article class="p-4 bg-slate-950/80 border border-slate-800 rounded-xl"><span class="text-[10px] uppercase tracking-wider text-slate-500">${roster.department === 'midia' ? 'Mídia' : 'Louvor'}</span><h3 class="font-bold text-white mt-1">${escapeHtml(roster.service)}</h3><p class="text-xs text-indigo-300 mt-2">${formatRosterDate(roster.dateTime)}</p><p class="text-xs text-slate-500 mt-2">${(roster.memberIds || []).length} membro(s) escalado(s)</p></article>`).join('') : '<p class="text-sm text-slate-500">Nenhuma escala anterior.</p>';
+    }
+
+    function changeCalendarMonth(amount) {
+      calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + amount, 1);
+      renderMonthlyCalendar();
+    }
+
+    function renderMonthlyCalendar() {
+      const container = document.getElementById('monthly-calendar');
+      const title = document.getElementById('monthly-calendar-title');
+      if (!container || !title) return;
+      const year = calendarCursor.getFullYear();
+      const month = calendarCursor.getMonth();
+      title.textContent = new Date(year, month, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      const headers = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => `<div class="p-2 text-center text-[10px] font-bold text-slate-500">${day}</div>`).join('');
+      const firstDay = new Date(year, month, 1).getDay();
+      const days = new Date(year, month + 1, 0).getDate();
+      let cells = Array.from({ length: firstDay }, () => '<div></div>').join('');
+      for (let day = 1; day <= days; day++) {
+        const items = allRostersData.filter(roster => { const date = new Date(roster.dateTime); return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day; });
+        cells += `<div class="min-h-20 rounded-lg border ${items.length ? 'border-indigo-500/30 bg-indigo-500/10' : 'border-slate-800 bg-slate-950/60'} p-2"><span class="text-xs font-bold text-slate-300">${day}</span>${items.slice(0, 2).map(item => `<button onclick='editRoster(${JSON.stringify(item.id)})' class="mt-1 block w-full truncate rounded bg-slate-900 px-1.5 py-1 text-left text-[9px] text-indigo-200">${escapeHtml(item.service)}</button>`).join('')}${items.length > 2 ? `<small class="text-[9px] text-slate-500">+${items.length - 2}</small>` : ''}</div>`;
+      }
+      container.innerHTML = headers + cells;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderMinistryStatistics() {
+      const container = document.getElementById('ministry-statistics');
+      const ranking = document.getElementById('song-history-ranking');
+      if (!container || !ranking) return;
+      const past = allRostersData.filter(roster => roster.dateTime && new Date(roster.dateTime) < new Date());
+      const counts = {};
+      past.forEach(roster => (roster.songIds || []).forEach(id => { counts[id] = (counts[id] || 0) + 1; }));
+      const cards = [{ label: 'Membros', value: membersData.length, icon: 'users' }, { label: 'Cifras', value: songsData.length, icon: 'music' }, { label: 'Cultos realizados', value: past.length, icon: 'calendar-check' }, { label: 'Próximas escalas', value: allRostersData.filter(item => new Date(item.dateTime) >= new Date()).length, icon: 'clock' }];
+      container.innerHTML = cards.map(card => `<div class="rounded-xl border border-slate-800 bg-slate-950 p-3"><i data-lucide="${card.icon}" class="h-4 w-4 text-indigo-400"></i><strong class="mt-2 block text-2xl text-white">${card.value}</strong><span class="text-[10px] text-slate-500">${card.label}</span></div>`).join('');
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      ranking.innerHTML = `<h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Músicas mais tocadas</h3>${top.map(([id, count], index) => { const song = songsData.find(item => String(item.id) === id); return `<div class="flex items-center justify-between rounded-lg bg-slate-950 p-2 text-xs"><span>${index + 1}. ${escapeHtml(song?.title || 'Música removida')}</span><strong class="text-indigo-300">${count}x</strong></div>`; }).join('') || '<p class="text-xs text-slate-500">O ranking aparecerá após as primeiras escalas.</p>'}`;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function renderLeaderAttendance() {
+      const container = document.getElementById('attendance-leader-panel');
+      if (!container || !(currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID)) return;
+      const next = allRostersData.filter(item => item.dateTime && new Date(item.dateTime) >= new Date()).slice(0, 4);
+      const rows = [];
+      for (const roster of next) {
+        const responses = await db.collection('rosters').doc(String(roster.id)).collection('responses').get();
+        const data = responses.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const confirmed = data.filter(item => item.attendance === 'confirmed').length;
+        const swaps = data.filter(item => item.attendance === 'swap').length;
+        rows.push(`<article class="rounded-xl border border-slate-800 bg-slate-950 p-3"><div class="flex items-start justify-between gap-2"><div><strong class="text-white">${escapeHtml(roster.service)}</strong><p class="text-[10px] text-slate-500">${formatRosterDate(roster.dateTime)}</p></div><button onclick='editRoster(${JSON.stringify(roster.id)})' class="rounded-lg bg-indigo-500/15 px-2 py-1 text-[10px] text-indigo-300">Editar</button></div><div class="mt-3 flex gap-2 text-[10px]"><span class="rounded bg-emerald-500/15 px-2 py-1 text-emerald-300">${confirmed} confirmados</span><span class="rounded bg-amber-500/15 px-2 py-1 text-amber-300">${swaps} trocas</span><span class="rounded bg-slate-800 px-2 py-1">${Math.max(0, (roster.memberIds || []).length - data.length)} sem resposta</span></div>${data.filter(item => item.attendance === 'swap').map(item => `<div class="mt-2 flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-xs"><span>${escapeHtml(item.userName || 'Membro')} pediu troca</span><button onclick='approveSwap(${JSON.stringify(roster.id)}, ${JSON.stringify(item.id)})' class="text-emerald-300">Aprovar</button></div>`).join('')}</article>`);
+      }
+      container.innerHTML = rows.join('') || '<p>Nenhuma escala futura.</p>';
+    }
+
+    async function approveSwap(rosterId, userId) {
+      await db.collection('rosters').doc(String(rosterId)).collection('responses').doc(String(userId)).set({ attendance: 'swap-approved', swapApprovedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      await renderLeaderAttendance();
+      alert('Troca aprovada. Agora edite a escala para escolher o substituto.');
+    }
+
+    function openRehearsalMode() {
+      rehearsalRoster = allRostersData.filter(item => item.department !== 'midia' && item.dateTime && new Date(item.dateTime) >= new Date() && (item.songIds || []).length).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))[0];
+      if (!rehearsalRoster) return alert('Crie uma escala futura com músicas para usar o modo ensaio.');
+      rehearsalSongs = (rehearsalRoster.songIds || []).map(id => songsData.find(song => String(song.id) === String(id))).filter(Boolean);
+      rehearsalIndex = 0;
+      document.getElementById('rehearsal-roster-title').textContent = rehearsalRoster.service;
+      document.getElementById('rehearsal-modal').classList.remove('hidden');
+      document.getElementById('rehearsal-modal').classList.add('flex');
+      document.body.style.overflow = 'hidden';
+      renderRehearsalSong();
+    }
+
+    function renderRehearsalSong() {
+      const song = rehearsalSongs[rehearsalIndex];
+      if (!song) return;
+      document.getElementById('rehearsal-progress').textContent = `${rehearsalIndex + 1} de ${rehearsalSongs.length}`;
+      document.getElementById('rehearsal-song-list').innerHTML = rehearsalSongs.map((item, index) => `<button onclick="rehearsalIndex=${index};renderRehearsalSong()" class="mb-2 block w-full rounded-xl p-3 text-left text-sm ${index === rehearsalIndex ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-300'}"><small class="block text-[9px] uppercase opacity-60">${escapeHtml(rehearsalRoster.songSections?.[item.id] || 'Celebração')}</small>${escapeHtml(item.title)}</button>`).join('');
+      document.getElementById('rehearsal-song-content').innerHTML = `<div class="mx-auto max-w-4xl"><div class="mb-4 flex items-center justify-between gap-3"><div><p class="text-xs uppercase tracking-wider text-indigo-400">${escapeHtml(rehearsalRoster.songSections?.[song.id] || 'Celebração')}</p><h2 class="text-2xl font-bold text-white">${escapeHtml(song.title)}</h2></div><button onclick='toggleSongFavorite(${JSON.stringify(song.id)})' class="rounded-xl bg-amber-500/15 p-3 text-amber-300"><i data-lucide="star" class="h-5 w-5 ${favoriteSongIds.has(String(song.id)) ? 'fill-current' : ''}"></i></button></div><pre class="cifra-text-view whitespace-pre-wrap rounded-2xl border border-slate-800 bg-slate-900 p-5 font-mono text-indigo-100">${escapeHtml(song.content || 'Esta música possui apenas o PDF original.')}</pre></div>`;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function changeRehearsalSong(amount) { rehearsalIndex = Math.max(0, Math.min(rehearsalSongs.length - 1, rehearsalIndex + amount)); renderRehearsalSong(); }
+    function closeRehearsalMode() { document.getElementById('rehearsal-modal').classList.add('hidden'); document.getElementById('rehearsal-modal').classList.remove('flex'); document.body.style.overflow = ''; }
+    async function markRehearsalSong() { if (!currentUser || !rehearsalRoster) return; const song = rehearsalSongs[rehearsalIndex]; await db.collection('rosters').doc(String(rehearsalRoster.id)).collection('responses').doc(currentUser.uid).set({ songStatuses: { [song.id]: 'done' }, rehearsal: 'in-progress', userName: currentUser.displayName || currentUser.email, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); document.getElementById('rehearsal-done-button').textContent = '✓ Ensaio salvo'; }
+
+    function autoCorrelate(buffer, sampleRate) {
+      let rms = 0; for (const value of buffer) rms += value * value; rms = Math.sqrt(rms / buffer.length); if (rms < .015) return -1;
+      let bestOffset = -1, bestCorrelation = 0;
+      for (let offset = Math.floor(sampleRate / 1000); offset < Math.min(Math.floor(sampleRate / 60), buffer.length / 2); offset++) { let correlation = 0; for (let i = 0; i < buffer.length - offset; i++) correlation += Math.abs(buffer[i] - buffer[i + offset]); correlation = 1 - correlation / (buffer.length - offset); if (correlation > bestCorrelation) { bestCorrelation = correlation; bestOffset = offset; } }
+      return bestCorrelation > .82 ? sampleRate / bestOffset : -1;
+    }
+
+    function openTuner() { const modal = document.getElementById('tuner-modal'); modal.classList.remove('hidden'); modal.classList.add('flex'); if (window.lucide) lucide.createIcons(); }
+    async function startTuner() {
+      try {
+        tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        tunerAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = tunerAudioContext.createAnalyser(); analyser.fftSize = 2048; tunerAudioContext.createMediaStreamSource(tunerStream).connect(analyser); const buffer = new Float32Array(analyser.fftSize);
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const update = () => { analyser.getFloatTimeDomainData(buffer); const frequency = autoCorrelate(buffer, tunerAudioContext.sampleRate); if (frequency > 0) { const midi = 69 + 12 * Math.log2(frequency / 440); const nearest = Math.round(midi); const cents = Math.round((midi - nearest) * 100); document.getElementById('tuner-note').textContent = notes[(nearest % 12 + 12) % 12]; document.getElementById('tuner-frequency').textContent = `${frequency.toFixed(1)} Hz • ${Math.abs(cents) <= 5 ? 'Afinado!' : cents < 0 ? `${Math.abs(cents)} cents abaixo` : `${cents} cents acima`}`; document.getElementById('tuner-needle').style.left = `${50 + Math.max(-45, Math.min(45, cents * .9))}%`; } tunerAnimation = requestAnimationFrame(update); }; update(); document.getElementById('tuner-start-button').classList.add('hidden');
+      } catch (_) { alert('Não foi possível acessar o microfone. Verifique a permissão do navegador.'); }
+    }
+    function closeTuner() { if (tunerAnimation) cancelAnimationFrame(tunerAnimation); tunerStream?.getTracks().forEach(track => track.stop()); tunerAudioContext?.close(); tunerStream = null; document.getElementById('tuner-modal').classList.add('hidden'); document.getElementById('tuner-modal').classList.remove('flex'); document.getElementById('tuner-start-button').classList.remove('hidden'); }
+
+    function isLeaderAccount() { return currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID; }
+
+    function renderLiveServiceBanner() {
+      const banner = document.getElementById('live-service-banner');
+      if (!banner) return;
+      banner.classList.toggle('hidden', !liveServiceState?.active);
+      banner.classList.toggle('flex', !!liveServiceState?.active);
+      if (liveServiceState?.active) {
+        const roster = allRostersData.find(item => String(item.id) === String(liveServiceState.rosterId));
+        const song = songsData.find(item => String(item.id) === String(roster?.songIds?.[liveServiceState.currentIndex || 0]));
+        document.getElementById('live-service-banner-text').textContent = `${roster?.service || 'Culto'} • ${song?.title || 'Acompanhe a programação'}`;
+      }
+    }
+
+    async function startLiveService() {
+      if (!isLeaderAccount()) return;
+      const roster = allRostersData.filter(item => item.department !== 'midia' && (item.songIds || []).length).sort((a, b) => Math.abs(new Date(a.dateTime) - new Date()) - Math.abs(new Date(b.dateTime) - new Date()))[0];
+      if (!roster) return alert('Crie uma escala com músicas antes de iniciar o culto ao vivo.');
+      await db.collection('settings').doc('liveService').set({ active: true, rosterId: roster.id, currentIndex: 0, startedAt: firebase.firestore.FieldValue.serverTimestamp(), startedBy: currentUser.uid, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      openLiveService();
+    }
+
+    function openLiveService() {
+      if (!liveServiceState?.active) {
+        if (isLeaderAccount()) return startLiveService();
+        return alert('Nenhum culto ao vivo foi iniciado pela liderança.');
+      }
+      const modal = document.getElementById('live-service-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+      renderLiveServicePanel();
+      clearInterval(liveServiceTimerInterval);
+      liveServiceTimerInterval = setInterval(updateLiveServiceTimer, 1000);
+      updateLiveServiceTimer();
+    }
+
+    function closeLiveService() { const modal = document.getElementById('live-service-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); modal.classList.remove('live-projection'); document.body.style.overflow = ''; clearInterval(liveServiceTimerInterval); }
+
+    function updateLiveServiceTimer() {
+      const target = document.getElementById('live-service-timer');
+      if (!target || !liveServiceState?.startedAt) return;
+      const started = liveServiceState.startedAt.toDate ? liveServiceState.startedAt.toDate() : new Date(liveServiceState.startedAt);
+      const seconds = Math.max(0, Math.floor((Date.now() - started.getTime()) / 1000));
+      const h = String(Math.floor(seconds / 3600)).padStart(2, '0'); const m = String(Math.floor(seconds % 3600 / 60)).padStart(2, '0'); const s = String(seconds % 60).padStart(2, '0');
+      target.textContent = `${h}:${m}:${s}`;
+    }
+
+    function renderLiveServicePanel() {
+      if (!liveServiceState?.active) return;
+      const roster = allRostersData.find(item => String(item.id) === String(liveServiceState.rosterId));
+      if (!roster) return;
+      const list = (roster.songIds || []).map(id => songsData.find(song => String(song.id) === String(id))).filter(Boolean);
+      const index = Math.max(0, Math.min(list.length - 1, Number(liveServiceState.currentIndex) || 0));
+      const current = list[index]; const next = list[index + 1];
+      document.getElementById('live-service-title').textContent = roster.service;
+      document.getElementById('live-setlist').innerHTML = list.map((song, itemIndex) => `<button ${isLeaderAccount() ? `onclick="setLiveSong(${itemIndex})"` : ''} class="mb-2 block w-full rounded-xl border p-3 text-left ${itemIndex === index ? 'border-rose-500/40 bg-rose-500/15 text-white' : itemIndex < index ? 'border-emerald-500/20 bg-emerald-500/5 text-slate-500' : 'border-slate-800 bg-slate-950 text-slate-300'}"><small class="block text-[9px] uppercase tracking-wider opacity-60">${escapeHtml(roster.songSections?.[song.id] || 'Celebração')}</small><span class="text-sm font-bold">${itemIndex < index ? '✓ ' : ''}${escapeHtml(song.title)}</span></button>`).join('');
+      document.getElementById('live-current-section').textContent = roster.songSections?.[current?.id] || 'Celebração';
+      document.getElementById('live-current-song').textContent = current?.title || 'Programação concluída';
+      document.getElementById('live-current-meta').textContent = current ? `Tom ${current.currentKey || current.originalKey || 'C'} • ${current.bpm || 80} BPM` : '';
+      document.getElementById('live-song-content').textContent = current?.content || 'Use o PDF original ou a projeção para acompanhar esta música.';
+      document.getElementById('live-next-card').innerHTML = next ? `<small class="text-[9px] uppercase text-indigo-400">${escapeHtml(roster.songSections?.[next.id] || 'Celebração')}</small><strong class="mt-1 block text-white">${escapeHtml(next.title)}</strong><span class="text-xs text-slate-500">Tom ${next.currentKey || next.originalKey || 'C'} • ${next.bpm || 80} BPM</span>` : '<strong class="text-emerald-300">Fim do repertório</strong><p class="mt-1 text-xs text-slate-500">Nenhuma música depois desta.</p>';
+      document.getElementById('live-leader-controls').classList.toggle('hidden', !isLeaderAccount());
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function setLiveSong(index) { if (!isLeaderAccount() || !liveServiceState?.active) return; await db.collection('settings').doc('liveService').update({ currentIndex: index, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+    async function changeLiveSong(amount) { const roster = allRostersData.find(item => String(item.id) === String(liveServiceState?.rosterId)); if (!roster) return; const next = Math.max(0, Math.min((roster.songIds || []).length - 1, (Number(liveServiceState.currentIndex) || 0) + amount)); await setLiveSong(next); }
+    async function finishLiveService() { if (!isLeaderAccount() || !confirm('Encerrar o culto ao vivo para todos?')) return; await db.collection('settings').doc('liveService').set({ active: false, finishedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); closeLiveService(); stopWorshipPad(); if (metronomeRunning) toggleMetronome(); }
+    function currentLiveSong() { const roster = allRostersData.find(item => String(item.id) === String(liveServiceState?.rosterId)); return songsData.find(song => String(song.id) === String(roster?.songIds?.[Number(liveServiceState?.currentIndex) || 0])); }
+    function playLiveSongPad() { const song = currentLiveSong(); if (song) playWorshipPad(song.currentKey || song.originalKey || 'C'); }
+    function playLiveSongMetronome() { const song = currentLiveSong(); setMetronomeBpm(song?.bpm || 80); if (!metronomeRunning) toggleMetronome(); }
+    function toggleLiveProjection() { document.getElementById('live-service-modal').classList.toggle('live-projection'); }
+
+    async function exportPortalBackup() {
+      if (!isLeaderAccount()) return;
+      const collections = ['songs', 'members', 'rosters', 'equipment', 'announcements'];
+      const backup = { portal: 'CEP Pirapozinho', exportedAt: new Date().toISOString(), version: 1, data: {} };
+      for (const name of collections) { const snapshot = await db.collection(name).get(); backup.data[name] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate?.()?.toISOString?.() || null, updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString?.() || null })).map(item => { delete item.layoutPages; return item; }); }
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `backup-portal-cep-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     async function loadMyAvailability() {
@@ -1242,19 +1528,28 @@
               <span class="text-[11px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">${eq.category}</span>
               <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${eq.status}</span>
             </div>
-            <h4 class="text-sm font-bold text-white mb-1">${eq.name}</h4>
+            <h4 class="text-sm font-bold text-white mb-1">${escapeHtml(eq.name)}</h4>
+            <p class="text-[11px] text-slate-500">${eq.nextMaintenance ? `Próxima revisão: ${new Date(eq.nextMaintenance + 'T12:00:00').toLocaleDateString('pt-BR')}` : 'Revisão não agendada'}</p>
+            ${eq.notes ? `<p class="mt-2 text-xs text-slate-400">${escapeHtml(eq.notes)}</p>` : ''}
           </div>
+          ${(currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID) ? `<button onclick='editEquipment(${JSON.stringify(eq.id)})' class="mt-3 rounded-lg bg-indigo-500/15 px-3 py-2 text-xs font-bold text-indigo-300">Editar e registrar manutenção</button>` : ''}
         `;
         container.appendChild(card);
       });
     }
 
     async function openNewEquipmentModal() {
-      const values = await openPortalForm({ title: 'Novo equipamento', subtitle: 'Cadastre um item usado pela equipe.', fields: [{ name: 'name', label: 'Nome do equipamento', placeholder: 'Ex.: Microfone sem fio 01', required: true }, { name: 'category', label: 'Categoria', type: 'select', value: 'Áudio', options: ['Áudio', 'Projeção', 'Vídeo', 'Iluminação', 'Geral'] }] });
+      const values = await openPortalForm({ title: 'Novo equipamento', subtitle: 'Cadastre um item usado pela equipe.', fields: [{ name: 'name', label: 'Nome do equipamento', placeholder: 'Ex.: Microfone sem fio 01', required: true }, { name: 'category', label: 'Categoria', type: 'select', value: 'Áudio', options: ['Áudio', 'Projeção', 'Vídeo', 'Iluminação', 'Geral'] }, { name: 'status', label: 'Estado', type: 'select', value: 'Operacional', options: ['Operacional', 'Precisa de manutenção', 'Em manutenção', 'Indisponível'] }, { name: 'nextMaintenance', label: 'Próxima revisão', type: 'date' }, { name: 'notes', label: 'Observações', type: 'textarea', rows: 3 }] });
       if (!values?.name?.trim()) return;
-      equipmentData.push({ id: Date.now(), name: values.name.trim(), category: values.category || 'Geral', status: 'Operacional' });
-      localStorage.setItem('cep_equipment', JSON.stringify(equipmentData));
-      renderEquipment();
+      await db.collection('equipment').add({ name: values.name.trim(), category: values.category || 'Geral', status: values.status || 'Operacional', nextMaintenance: values.nextMaintenance || '', notes: values.notes?.trim() || '', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+
+    async function editEquipment(id) {
+      const eq = equipmentData.find(item => String(item.id) === String(id));
+      if (!eq) return;
+      const values = await openPortalForm({ title: 'Equipamento e manutenção', subtitle: 'Atualize estado, revisão e observações.', fields: [{ name: 'name', label: 'Nome', value: eq.name, required: true }, { name: 'category', label: 'Categoria', type: 'select', value: eq.category, options: ['Áudio', 'Projeção', 'Vídeo', 'Iluminação', 'Geral'] }, { name: 'status', label: 'Estado', type: 'select', value: eq.status, options: ['Operacional', 'Precisa de manutenção', 'Em manutenção', 'Indisponível'] }, { name: 'nextMaintenance', label: 'Próxima revisão', type: 'date', value: eq.nextMaintenance || '' }, { name: 'notes', label: 'Histórico e observações', type: 'textarea', rows: 4, value: eq.notes || '' }] });
+      if (!values) return;
+      await db.collection('equipment').doc(String(id)).set({ name: values.name.trim(), category: values.category, status: values.status, nextMaintenance: values.nextMaintenance || '', notes: values.notes?.trim() || '', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
     }
 
     // --- MEMBERS ---
@@ -1430,6 +1725,7 @@
           title: file.name.replace(/\.pdf$/i, ''),
           originalKey: 'C',
           currentKey: 'C',
+          bpm: 80,
           type: 'pdf',
           content: extractedText.trim(),
           sourceContent: extractedText.trim(),
@@ -1509,6 +1805,13 @@
       renderSongDetail(id);
     }
 
+    async function updateSongBpm(id, value) {
+      const song = songsData.find(item => item.id === id);
+      if (!song) return;
+      song.bpm = Math.max(40, Math.min(220, Number(value) || 80));
+      if (currentUserRole === 'admin' || currentUserRole === 'leader' || currentUserRole === 'uploader' || currentUser?.uid === ADMIN_UID) await db.collection('songs').doc(String(id)).update({ bpm: song.bpm });
+    }
+
     function changeSongKey(id, key) {
       const song = songsData.find(item => item.id === id);
       if (!song) return;
@@ -1547,17 +1850,13 @@
 
       songsData.forEach(song => {
         const isSelected = song.id === selectedSongId;
-        const btn = document.createElement('button');
-        btn.className = `w-full text-left p-3 rounded-lg border transition flex items-center justify-between ${isSelected ? 'bg-indigo-600/20 border-indigo-500/60 text-white' : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-900'}`;
-        btn.onclick = () => selectSong(song.id);
-        btn.innerHTML = `
-          <div>
+        const row = document.createElement('div');
+        row.className = `w-full rounded-lg border transition flex items-center ${isSelected ? 'bg-indigo-600/20 border-indigo-500/60 text-white' : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-900'}`;
+        row.innerHTML = `<button class="min-w-0 flex-1 p-3 text-left" onclick='selectSong(${JSON.stringify(song.id)})'><div>
             <h4 class="text-sm font-bold">${song.title}</h4>
             <span class="text-[11px] text-slate-400">Tom: ${song.currentKey || song.originalKey} • ${song.type === 'pdf' ? '✨ Cifra importada' : '📝 Cifra'}</span>
-          </div>
-          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500"></i>
-        `;
-        container.appendChild(btn);
+          </div></button><button onclick='toggleSongFavorite(${JSON.stringify(song.id)})' class="m-2 rounded-lg p-2 ${favoriteSongIds.has(String(song.id)) ? 'bg-amber-500/15 text-amber-300' : 'text-slate-600 hover:text-amber-300'}" title="Favorito"><i data-lucide="star" class="h-4 w-4 ${favoriteSongIds.has(String(song.id)) ? 'fill-current' : ''}"></i></button>`;
+        container.appendChild(row);
       });
 
       if (selectedSongId) renderSongDetail(selectedSongId);
@@ -1678,7 +1977,7 @@
       let previewContent = '';
       const pdfUrl = song.type === 'pdf' ? await resolvePdfUrl(song) : '';
       if (song.type === 'pdf' && pdfUrl) {
-        previewContent = `<section class="space-y-3"><div class="flex items-center justify-between gap-3 flex-wrap"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> PDF original — visual fiel</h4><button onclick='openPdfFullscreen(${sid})' class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2"><i data-lucide="maximize" class="w-4 h-4"></i> Tela inteira e zoom</button></div><div class="relative overflow-hidden rounded-xl border border-slate-700 bg-white shadow-2xl"><iframe src="${pdfUrl}" class="w-full h-[560px] bg-white" title="PDF original da música ${escapeHtml(song.title)}"></iframe></div></section>`;
+        previewContent = `<section class="space-y-3"><div class="flex items-center justify-between gap-3 flex-wrap"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> PDF original — visual fiel</h4><button onclick='openPdfFullscreen(${sid})' class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2"><i data-lucide="maximize" class="w-4 h-4"></i> Tela inteira e zoom</button></div><div class="max-h-[650px] overflow-auto rounded-xl border border-slate-700 bg-slate-800 p-2 shadow-2xl"><div id="pdf-inline-canvas-pages" class="mx-auto flex w-max min-w-full flex-col items-center gap-3"><div class="p-8 text-sm text-slate-300">Carregando PDF...</div></div></div></section>`;
       } else if (song.type === 'pdf' && song.layoutPages?.length) {
         const zoom = layoutZoomLevels[song.id] || 100;
         previewContent = `<section class="space-y-3"><div class="flex items-center justify-between gap-3 flex-wrap"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan" class="w-4 h-4 text-emerald-400"></i> Visual parecido com o PDF</h4><div class="flex items-center gap-2"><i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i><input type="range" min="50" max="160" step="10" value="${zoom}" oninput='updateInlineLayoutZoom(${sid}, this.value)' class="w-28 accent-indigo-500"><span id="inline-layout-zoom-label" class="text-xs text-slate-300 w-10">${zoom}%</span><button onclick='openLayoutFullscreen(${sid})' class="p-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white" title="Página inteira"><i data-lucide="maximize" class="w-4 h-4"></i></button></div></div><div class="cifra-layout-stage max-h-[650px]"><div id="inline-layout-pages">${renderLayoutPages(song, zoom)}</div></div></section>`;
@@ -1703,14 +2002,15 @@
               </button>` : ''}
             </div>
           </div>
-          <div class="grid sm:grid-cols-2 gap-3 p-4 bg-slate-900/80 border border-slate-800 rounded-xl">
+          <div class="grid sm:grid-cols-3 gap-3 p-4 bg-slate-900/80 border border-slate-800 rounded-xl">
             <label class="text-xs text-slate-400">Tom original
               <select onchange='updateSongOriginalKey(${sid}, this.value)' ${canUpload ? '' : 'disabled'} class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white disabled:opacity-60">${MUSICAL_KEYS.map(key => `<option value="${key}" ${key === (song.originalKey || 'C') ? 'selected' : ''}>${key}</option>`).join('')}</select>
             </label>
             <label class="text-xs text-slate-400">Tom para tocar
               <select onchange='changeSongKey(${sid}, this.value)' class="mt-1 w-full bg-slate-950 border border-indigo-500/50 rounded-lg p-2 text-white">${MUSICAL_KEYS.map(key => `<option value="${key}" ${key === (song.currentKey || song.originalKey || 'C') ? 'selected' : ''}>${key}</option>`).join('')}</select>
             </label>
-            <p class="sm:col-span-2 text-[11px] text-amber-300/80 flex gap-2"><i data-lucide="info" class="w-4 h-4 shrink-0"></i> A troca de tom acontece na cifra do portal e não altera o tom escolhido por outros usuários.</p>
+            <label class="text-xs text-slate-400">BPM da música<input type="number" min="40" max="220" value="${song.bpm || 80}" onchange='updateSongBpm(${sid}, this.value)' ${canUpload ? '' : 'disabled'} class="mt-1 w-full rounded-lg border border-amber-500/40 bg-slate-950 p-2 text-white disabled:opacity-60"></label>
+            <p class="sm:col-span-3 text-[11px] text-amber-300/80 flex gap-2"><i data-lucide="info" class="w-4 h-4 shrink-0"></i> A troca de tom acontece na cifra do portal e não altera o tom escolhido por outros usuários.</p>
           </div>
           <div>${previewContent}</div>
           ${song.type === 'pdf' ? `<section class="space-y-2"><div class="flex items-center justify-between"><h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="scan-text" class="w-4 h-4 text-indigo-400"></i> Cifra extraída e transponível</h4><span class="text-[10px] px-2 py-1 rounded-full ${song.content ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}">${song.content ? 'Texto extraído' : 'PDF sem texto reconhecível'}</span></div><pre class="cifra-text-view bg-slate-900 p-4 rounded-xl border border-slate-800 font-mono text-sm text-indigo-100 overflow-x-auto whitespace-pre-wrap max-h-[480px]">${song.content || 'Não foi possível extrair texto deste PDF. O arquivo pode ser uma imagem escaneada.'}</pre></section>` : ''}
@@ -1718,15 +2018,16 @@
         </div>
       `;
       lucide.createIcons();
+      if (song.type === 'pdf' && pdfUrl) renderPdfToContainer(pdfUrl, 'pdf-inline-canvas-pages', 1.15);
     }
 
     async function openNewSongModal() {
       if (!(currentUserRole === 'admin' || currentUserRole === 'leader' || currentUserRole === 'uploader' || currentUser?.uid === ADMIN_UID)) return alert('Sua conta não possui permissão para enviar cifras.');
-      const values = await openPortalForm({ title: 'Nova cifra', subtitle: 'Cadastre uma música digitada no portal.', submitLabel: 'Salvar cifra', fields: [{ name: 'title', label: 'Nome da música', placeholder: 'Ex.: Lugar Secreto', required: true }, { name: 'originalKey', label: 'Tom original', type: 'select', value: 'C', options: MUSICAL_KEYS }, { name: 'content', label: 'Cifra e letra', type: 'textarea', rows: 9, placeholder: 'Cole ou digite a cifra completa...', required: true }] });
+      const values = await openPortalForm({ title: 'Nova cifra', subtitle: 'Cadastre uma música digitada no portal.', submitLabel: 'Salvar cifra', fields: [{ name: 'title', label: 'Nome da música', placeholder: 'Ex.: Lugar Secreto', required: true }, { name: 'originalKey', label: 'Tom original', type: 'select', value: 'C', options: MUSICAL_KEYS }, { name: 'bpm', label: 'BPM', type: 'number', value: '80', placeholder: '80' }, { name: 'content', label: 'Cifra e letra', type: 'textarea', rows: 9, placeholder: 'Cole ou digite a cifra completa...', required: true }] });
       if (!values?.title?.trim() || !values?.content?.trim()) return;
       const originalKey = values.originalKey || 'C';
       const content = values.content;
-      const docRef = await db.collection('songs').add({ title: values.title.trim(), originalKey, currentKey: originalKey, type: 'text', content, sourceContent: content, pdfUrl: '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser.uid });
+      const docRef = await db.collection('songs').add({ title: values.title.trim(), originalKey, currentKey: originalKey, bpm: Math.max(40, Math.min(220, Number(values.bpm) || 80)), type: 'text', content, sourceContent: content, pdfUrl: '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser.uid });
       selectedSongId = docRef.id;
     }
 
@@ -1745,22 +2046,67 @@
       await db.collection('songs').doc(String(id)).delete();
     }
 
+    let fullscreenPdfUrl = '';
+    let fullscreenPdfZoom = 1.2;
+    let pdfRenderSequence = 0;
+
+    async function renderPdfToContainer(pdfUrl, containerId, scale = 1.2) {
+      const container = document.getElementById(containerId);
+      if (!container || !window.pdfjsLib) return;
+      const sequence = ++pdfRenderSequence;
+      container.innerHTML = '<div class="p-8 text-sm text-slate-300">Carregando PDF...</div>';
+      try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+        if (sequence !== pdfRenderSequence && containerId === 'pdf-inline-canvas-pages') return;
+        container.innerHTML = '';
+        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+          const page = await pdf.getPage(pageNumber);
+          const viewport = page.getViewport({ scale });
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.floor(viewport.width * ratio);
+          canvas.height = Math.floor(viewport.height * ratio);
+          canvas.style.width = `${viewport.width}px`;
+          canvas.style.height = `${viewport.height}px`;
+          canvas.className = 'block bg-white shadow-2xl';
+          canvas.setAttribute('aria-label', `Página ${pageNumber} do PDF`);
+          container.appendChild(canvas);
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport, transform: ratio === 1 ? null : [ratio, 0, 0, ratio, 0, 0] }).promise;
+        }
+      } catch (error) {
+        console.error('Erro ao abrir PDF:', error);
+        container.innerHTML = '<div class="m-4 rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-sm text-red-200">Não foi possível desenhar este PDF. Tente enviá-lo novamente.</div>';
+      }
+    }
+
     async function openPdfFullscreen(songId) {
       const song = songsData.find(s => s.id === songId);
       if (!song) return;
       const pdfUrl = await resolvePdfUrl(song);
       if (!pdfUrl) return alert('O arquivo PDF não foi encontrado neste dispositivo.');
+      fullscreenPdfUrl = pdfUrl;
+      fullscreenPdfZoom = 1.2;
       document.getElementById('pdf-fullscreen-title').innerText = song.title;
-      document.getElementById('pdf-fullscreen-frame').src = pdfUrl;
+      document.getElementById('pdf-fullscreen-zoom-label').textContent = '120%';
       document.getElementById('pdf-fullscreen-modal').classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+      await renderPdfToContainer(pdfUrl, 'pdf-fullscreen-canvas-pages', fullscreenPdfZoom);
       if (window.lucide) lucide.createIcons();
+    }
+
+    async function changePdfFullscreenZoom(amount) {
+      if (!fullscreenPdfUrl) return;
+      fullscreenPdfZoom = Math.max(.6, Math.min(2.6, fullscreenPdfZoom + amount));
+      document.getElementById('pdf-fullscreen-zoom-label').textContent = `${Math.round(fullscreenPdfZoom * 100)}%`;
+      await renderPdfToContainer(fullscreenPdfUrl, 'pdf-fullscreen-canvas-pages', fullscreenPdfZoom);
     }
 
     function closePdfFullscreen() {
       const modal = document.getElementById('pdf-fullscreen-modal');
       modal.classList.add('hidden');
-      document.getElementById('pdf-fullscreen-frame').src = 'about:blank';
+      document.getElementById('pdf-fullscreen-canvas-pages').innerHTML = '';
+      fullscreenPdfUrl = '';
       document.body.style.overflow = '';
       if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
     }
@@ -1948,6 +2294,88 @@
     function changePadTimbre(timbre) {
       if (activeOscillators.length > 0) playWorshipPad(currentPadKeyNode);
     }
+
+    // --- METRÔNOMO ---
+    let metronomeRunning = false;
+    let metronomeBpm = 80;
+    let metronomeSignature = 4;
+    let metronomeBeat = 0;
+    let metronomeNextTime = 0;
+    let metronomeTimer = null;
+    let metronomeTapTimes = [];
+
+    function renderMetronomeBeats(activeBeat = -1) {
+      const container = document.getElementById('metronome-beats');
+      if (!container) return;
+      container.innerHTML = Array.from({ length: metronomeSignature }, (_, index) => `<span class="h-3 w-3 rounded-full transition ${index === activeBeat ? (index === 0 ? 'scale-125 bg-amber-400 shadow-lg shadow-amber-500/50' : 'scale-110 bg-indigo-400') : 'bg-slate-700'}"></span>`).join('');
+    }
+
+    function setMetronomeBpm(value) {
+      metronomeBpm = Math.max(40, Math.min(220, Number(value) || 80));
+      document.getElementById('metronome-bpm').value = metronomeBpm;
+      document.getElementById('metronome-bpm-label').innerHTML = `${Math.round(metronomeBpm)} <span class="text-xs font-normal text-slate-500">BPM</span>`;
+    }
+
+    function setMetronomeSignature(value) {
+      metronomeSignature = Number(value) || 4;
+      metronomeBeat = 0;
+      renderMetronomeBeats();
+    }
+
+    function scheduleMetronomeClick(beat, time) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(beat === 0 ? 1150 : 760, time);
+      gain.gain.setValueAtTime(beat === 0 ? .32 : .2, time);
+      gain.gain.exponentialRampToValueAtTime(.001, time + .055);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(time);
+      osc.stop(time + .06);
+      const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+      setTimeout(() => renderMetronomeBeats(beat), delay);
+    }
+
+    function runMetronomeScheduler() {
+      while (metronomeNextTime < audioCtx.currentTime + .12) {
+        scheduleMetronomeClick(metronomeBeat, metronomeNextTime);
+        metronomeNextTime += 60 / metronomeBpm;
+        metronomeBeat = (metronomeBeat + 1) % metronomeSignature;
+      }
+    }
+
+    async function toggleMetronome() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      const button = document.getElementById('metronome-toggle');
+      if (metronomeRunning) {
+        metronomeRunning = false;
+        clearInterval(metronomeTimer);
+        metronomeTimer = null;
+        renderMetronomeBeats();
+        button.innerHTML = '<i data-lucide="play" class="h-4 w-4"></i> Iniciar';
+      } else {
+        metronomeRunning = true;
+        metronomeBeat = 0;
+        metronomeNextTime = audioCtx.currentTime + .05;
+        metronomeTimer = setInterval(runMetronomeScheduler, 25);
+        runMetronomeScheduler();
+        button.innerHTML = '<i data-lucide="square" class="h-4 w-4"></i> Parar';
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function tapMetronome() {
+      const now = performance.now();
+      metronomeTapTimes = metronomeTapTimes.filter(time => now - time < 2500);
+      metronomeTapTimes.push(now);
+      if (metronomeTapTimes.length >= 2) {
+        const intervals = metronomeTapTimes.slice(1).map((time, index) => time - metronomeTapTimes[index]);
+        setMetronomeBpm(60000 / (intervals.reduce((sum, value) => sum + value, 0) / intervals.length));
+      }
+    }
+
+    renderMetronomeBeats();
 
     // --- CALENDAR / EVENTS EDITABLE ---
     function renderEvents() {
