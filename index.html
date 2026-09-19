@@ -586,6 +586,7 @@
     let announcementsUnsubscribe = null;
     let equipmentUnsubscribe = null;
     let liveServiceUnsubscribe = null;
+    let notificationUnsubscribe = null;
     let myAvailability = [];
     let groupWhatsappLink = '';
     let allRostersData = [];
@@ -718,6 +719,7 @@
 
           initApp();
           subscribeSharedData();
+          subscribeNotificationCenter();
           applyAdminVisibility();
           updateEmailVerificationBanner();
         } else {
@@ -730,6 +732,8 @@
           if (announcementsUnsubscribe) announcementsUnsubscribe();
           if (equipmentUnsubscribe) equipmentUnsubscribe();
           if (liveServiceUnsubscribe) liveServiceUnsubscribe();
+          if (notificationUnsubscribe) { notificationUnsubscribe(); notificationUnsubscribe = null; }
+          updateNotificationBadge(0);
         }
       });
     });
@@ -2792,17 +2796,196 @@
       document.body.appendChild(modal); lucide.createIcons();
     }
 
+    function updateNotificationBadge(count = 0) {
+      const badge = document.getElementById('notification-count');
+      if (!badge) return;
+      const total = Math.max(0, Number(count) || 0);
+      badge.textContent = total > 99 ? '99+' : String(total);
+      badge.classList.toggle('hidden', total === 0);
+      badge.classList.toggle('flex', total > 0);
+    }
+
+    function subscribeNotificationCenter() {
+      if (notificationUnsubscribe) {
+        notificationUnsubscribe();
+        notificationUnsubscribe = null;
+      }
+      if (!currentUser) {
+        updateNotificationBadge(0);
+        return;
+      }
+
+      notificationUnsubscribe = db
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('notifications')
+        .orderBy('createdAt', 'desc')
+        .limit(100)
+        .onSnapshot(snapshot => {
+          const unread = snapshot.docs.filter(doc => doc.data().read !== true).length;
+          updateNotificationBadge(unread);
+
+          const modal = document.getElementById('notification-center-modal');
+          if (modal) renderNotificationCenter(snapshot.docs);
+        }, error => {
+          console.warn('Não foi possível acompanhar as notificações:', error);
+          updateNotificationBadge(0);
+        });
+    }
+
+    function notificationDateLabel(value) {
+      if (!value) return 'Agora';
+      const date = value?.toDate ? value.toDate() : new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+
+    function notificationIcon(type = '') {
+      if (type === 'verse' || type === 'daily-verse') return 'book-open';
+      if (String(type).includes('roster')) return 'calendar-check';
+      return 'bell';
+    }
+
+    function renderNotificationCenter(docs = []) {
+      const list = document.getElementById('notification-center-list');
+      if (!list) return;
+
+      if (!docs.length) {
+        list.innerHTML = '<div class="py-10 text-center"><i data-lucide="bell-off" class="w-9 h-9 mx-auto mb-3 text-slate-600"></i><p class="text-sm text-slate-500">Nenhuma notificação registrada ainda.</p></div>';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      list.innerHTML = docs.map(doc => {
+        const n = doc.data() || {};
+        const unread = n.read !== true;
+        return `
+          <article class="rounded-2xl border ${unread ? 'border-indigo-500/35 bg-indigo-500/10' : 'border-slate-800 bg-slate-950/70'} p-4 transition">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${unread ? 'bg-indigo-500/15 text-indigo-300' : 'bg-slate-800 text-slate-400'}">
+                <i data-lucide="${notificationIcon(n.type)}" class="w-4 h-4"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-semibold text-white">${escapeHtml(n.title || 'Notificação')}</p>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-300">${escapeHtml(n.body || '')}</p>
+                  </div>
+                  ${unread ? '<span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-indigo-400" title="Não lida"></span>' : ''}
+                </div>
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-[10px] text-slate-500">${escapeHtml(notificationDateLabel(n.createdAt))}</span>
+                  ${unread ? `<button onclick="markNotificationRead('${doc.id}')" class="rounded-lg bg-indigo-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-indigo-200 hover:bg-indigo-500/25">Marcar como lida</button>` : '<span class="text-[10px] font-semibold text-emerald-400">✓ Lida</span>'}
+                </div>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function markNotificationRead(notificationId) {
+      if (!currentUser || !notificationId) return;
+      try {
+        await db.collection('users').doc(currentUser.uid)
+          .collection('notifications').doc(String(notificationId))
+          .set({ read: true, readAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      } catch (error) {
+        console.error('Erro ao marcar notificação:', error);
+        alert('Não foi possível marcar a notificação como lida.');
+      }
+    }
+
+    async function markAllNotificationsRead() {
+      if (!currentUser) return;
+      try {
+        const snap = await db.collection('users').doc(currentUser.uid)
+          .collection('notifications').where('read', '==', false).get();
+
+        if (snap.empty) return;
+
+        const batch = db.batch();
+        snap.docs.forEach(doc => batch.set(doc.ref, {
+          read: true,
+          readAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }));
+        await batch.commit();
+      } catch (error) {
+        console.error('Erro ao marcar todas como lidas:', error);
+        alert('Não foi possível marcar todas como lidas.');
+      }
+    }
+
+    async function clearReadNotifications() {
+      if (!currentUser) return;
+      if (!confirm('Apagar as notificações que já foram lidas?')) return;
+
+      try {
+        const snap = await db.collection('users').doc(currentUser.uid)
+          .collection('notifications').where('read', '==', true).get();
+
+        if (snap.empty) {
+          alert('Não há notificações lidas para limpar.');
+          return;
+        }
+
+        const batch = db.batch();
+        snap.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+      } catch (error) {
+        console.error('Erro ao limpar notificações:', error);
+        alert('Não foi possível limpar as notificações lidas.');
+      }
+    }
+
     async function openNotificationCenter() {
       if (!currentUser) return;
-      const modal = document.createElement('div'); modal.id='notification-center-modal'; modal.className='fixed inset-0 z-[95] bg-slate-950/90 backdrop-blur flex items-center justify-center p-4';
-      modal.innerHTML=`<div class="w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl"><div class="flex justify-between items-center mb-4"><div><h2 class="text-xl font-bold text-white">Central de Notificações</h2><p class="text-xs text-slate-400">Lembretes de escala e versículo do dia.</p></div><button onclick="document.getElementById('notification-center-modal').remove()" class="p-2 text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><button onclick="requestNotificationPermission()" class="mb-4 w-full py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm font-semibold">Ativar notificações neste aparelho</button><div id="notification-center-list" class="space-y-2"><p class="text-sm text-slate-500">Carregando...</p></div></div>`;
-      document.body.appendChild(modal); lucide.createIcons();
+
+      const existing = document.getElementById('notification-center-modal');
+      if (existing) existing.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'notification-center-modal';
+      modal.className = 'fixed inset-0 z-[95] bg-slate-950/90 backdrop-blur flex items-center justify-center p-3 sm:p-4';
+      modal.innerHTML = `
+        <div class="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl">
+          <div class="border-b border-slate-800 p-4 sm:p-5">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-[.2em] text-indigo-400">Portal CEP</p>
+                <h2 class="mt-1 flex items-center gap-2 text-xl font-bold text-white"><i data-lucide="bell" class="w-5 h-5 text-amber-400"></i> Notificações</h2>
+                <p class="mt-1 text-xs text-slate-400">Lembretes de escala, avisos e versículo do dia.</p>
+              </div>
+              <button onclick="document.getElementById('notification-center-modal').remove()" class="rounded-xl bg-slate-800 p-2.5 text-slate-400 hover:text-white" aria-label="Fechar"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <button onclick="requestNotificationPermission()" class="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5 text-xs font-semibold text-amber-200"><i data-lucide="smartphone" class="mr-1 inline w-3.5 h-3.5"></i> Ativar no aparelho</button>
+              <button onclick="markAllNotificationsRead()" class="rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-3 py-2.5 text-xs font-semibold text-indigo-200"><i data-lucide="check-check" class="mr-1 inline w-3.5 h-3.5"></i> Marcar todas</button>
+              <button onclick="clearReadNotifications()" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-xs font-semibold text-slate-300"><i data-lucide="trash-2" class="mr-1 inline w-3.5 h-3.5"></i> Limpar lidas</button>
+            </div>
+          </div>
+          <div id="notification-center-list" class="min-h-0 flex-1 space-y-2 overflow-y-auto p-4 sm:p-5">
+            <p class="py-8 text-center text-sm text-slate-500">Carregando...</p>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      if (window.lucide) lucide.createIcons();
+
       try {
-        const snap=await db.collection('users').doc(currentUser.uid).collection('notifications').orderBy('createdAt','desc').limit(40).get();
-        const list=document.getElementById('notification-center-list');
-        list.innerHTML=snap.empty?'<p class="text-sm text-slate-500 text-center py-8">Nenhuma notificação registrada ainda.</p>':snap.docs.map(d=>{const n=d.data();return `<div class="p-3 rounded-xl border border-slate-800 bg-slate-950"><div class="flex gap-3"><i data-lucide="${n.type==='verse'?'book-open':'bell'}" class="w-4 h-4 mt-0.5 text-indigo-300"></i><div><p class="text-sm font-semibold text-white">${escapeHtml(n.title||'Notificação')}</p><p class="text-xs text-slate-300 mt-1">${escapeHtml(n.body||'')}</p></div></div></div>`}).join('');
-        lucide.createIcons();
-      } catch(e) { document.getElementById('notification-center-list').innerHTML='<p class="text-sm text-red-300">Não foi possível carregar o histórico.</p>'; }
+        const snap = await db.collection('users').doc(currentUser.uid)
+          .collection('notifications').orderBy('createdAt', 'desc').limit(100).get();
+        renderNotificationCenter(snap.docs);
+      } catch (error) {
+        console.error('Erro ao carregar notificações:', error);
+        const list = document.getElementById('notification-center-list');
+        if (list) list.innerHTML = '<p class="py-8 text-center text-sm text-red-300">Não foi possível carregar o histórico de notificações.</p>';
+      }
     }
 
     function currentRosterMemberId() {
