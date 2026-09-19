@@ -2581,6 +2581,44 @@
 
 
 
+    // --- AVISOS MODERNOS DO PORTAL ---
+    function portalToast(message, type = 'auto') {
+      const text = String(message || '');
+      if (type === 'auto') {
+        const lower = text.toLowerCase();
+        if (lower.includes('não foi possível') || lower.includes('erro') || lower.includes('não possui') || lower.includes('apenas para')) type = 'error';
+        else if (lower.includes('salv') || lower.includes('confirm') || lower.includes('ativad') || lower.includes('enviad') || lower.includes('registrad') || lower.includes('copiad') || lower.includes('aprovad')) type = 'success';
+        else type = 'info';
+      }
+      let host = document.getElementById('portal-toast-host');
+      if (!host) {
+        host = document.createElement('div');
+        host.id = 'portal-toast-host';
+        host.className = 'fixed top-4 right-4 z-[200] w-[calc(100%-2rem)] max-w-sm space-y-3 pointer-events-none';
+        document.body.appendChild(host);
+      }
+      const cfg = type === 'success'
+        ? { icon:'circle-check', box:'border-emerald-500/30 bg-slate-900', iconBox:'bg-emerald-500/15 text-emerald-300', title:'Tudo certo' }
+        : type === 'error'
+          ? { icon:'circle-alert', box:'border-red-500/30 bg-slate-900', iconBox:'bg-red-500/15 text-red-300', title:'Algo deu errado' }
+          : { icon:'info', box:'border-indigo-500/30 bg-slate-900', iconBox:'bg-indigo-500/15 text-indigo-300', title:'Aviso' };
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto translate-x-3 opacity-0 transition-all duration-300 rounded-2xl border ${cfg.box} shadow-2xl shadow-black/40 p-4 backdrop-blur`;
+      toast.innerHTML = `<div class="flex gap-3 items-start"><div class="shrink-0 w-9 h-9 rounded-xl ${cfg.iconBox} flex items-center justify-center"><i data-lucide="${cfg.icon}" class="w-5 h-5"></i></div><div class="min-w-0 flex-1"><p class="text-sm font-bold text-white">${cfg.title}</p><p class="mt-0.5 text-sm leading-relaxed text-slate-300 whitespace-pre-line">${escapeHtml(text)}</p></div><button type="button" class="shrink-0 p-1 text-slate-500 hover:text-white transition" aria-label="Fechar"><i data-lucide="x" class="w-4 h-4"></i></button></div>`;
+      host.appendChild(toast);
+      toast.querySelector('button').onclick = () => removeToast();
+      const removeToast = () => {
+        toast.classList.add('translate-x-3','opacity-0');
+        setTimeout(() => toast.remove(), 250);
+      };
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-3','opacity-0');
+        if (window.lucide) lucide.createIcons();
+      });
+      setTimeout(removeToast, type === 'error' ? 6000 : 4200);
+    }
+    window.alert = function(message) { portalToast(message); };
+
     // --- CENTRAL DE NOTIFICAÇÕES, PRESENÇA, BÍBLIA E INSTALAÇÃO PWA ---
     let deferredInstallPrompt = null;
     window.addEventListener('beforeinstallprompt', event => {
@@ -2646,10 +2684,6 @@
           .collection('responses').doc(currentUser.uid)
           .set(payload, { merge: true });
 
-        // Mantém compatibilidade com a tela antiga de confirmações.
-        const legacyId = `${rosterId}_${currentUser.uid}`;
-        await db.collection('rosterResponses').doc(legacyId).set(payload, { merge: true });
-
         if (typeof allRostersData !== 'undefined') await renderMyNextRoster(allRostersData);
         if (typeof renderLeaderAttendance === 'function') await renderLeaderAttendance();
 
@@ -2658,11 +2692,11 @@
           : 'Resposta registrada. A liderança poderá ver que você não poderá participar.');
       } catch (error) {
         console.error('Erro ao confirmar presença:', error);
-        alert('Não foi possível salvar sua confirmação. Atualize a página e tente novamente.');
+        alert('Não foi possível salvar sua confirmação. Tente novamente em alguns instantes.');
       }
     }
     async function viewRosterPresence(rosterId) {
-      const snap=await db.collection('rosterResponses').where('rosterId','==',String(rosterId)).get();
+      const snap=await db.collection('rosters').doc(String(rosterId)).collection('responses').get();
       const rows=snap.docs.map(d=>d.data());
       const nameFor=r=>membersData.find(m=>String(m.id)===String(r.memberId))?.name || 'Membro';
       const modal=document.createElement('div'); modal.id='presence-modal'; modal.className='fixed inset-0 z-[95] bg-slate-950/90 flex items-center justify-center p-4';
