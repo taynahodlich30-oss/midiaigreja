@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <title>CEP Pirapozinho • Portal de Ministérios</title>
+  <title>Portal de Ministérios - CEP Pirapozinho</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -144,243 +144,122 @@
     }
 
   
-    /* ===== APP EXPERIENCE 2026 ===== */
-    html { scroll-behavior: smooth; }
-    body { padding-bottom: env(safe-area-inset-bottom); }
-    .app-bottom-nav { display:none; }
-    .app-bottom-btn { min-width:0; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:9px 4px 8px; color:#94a3b8; font-size:10px; font-weight:700; }
-    .app-bottom-btn i { width:20px; height:20px; }
-    .app-bottom-btn.active, .app-bottom-btn:hover { color:#c7d2fe; }
-    .app-bottom-btn.active i { color:#818cf8; }
-    .app-status-card { border:1px solid rgb(51 65 85); background:rgba(15,23,42,.72); border-radius:16px; padding:14px; }
-    .app-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid rgb(51 65 85); background:rgba(15,23,42,.7); border-radius:999px; padding:7px 10px; font-size:11px; font-weight:700; color:#cbd5e1; }
-    .app-fade-in { animation: appFade .22s ease-out both; }
-    @keyframes appFade { from { opacity:0; transform:translateY(5px) } to { opacity:1; transform:none } }
-    @media (max-width: 767px) {
-      body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-      header > div { gap:10px !important; }
-      main { padding-left:12px !important; padding-right:12px !important; }
-      .app-bottom-nav { display:flex; position:fixed; z-index:70; left:10px; right:10px; bottom:calc(8px + env(safe-area-inset-bottom)); min-height:62px; border:1px solid rgba(71,85,105,.85); border-radius:20px; background:rgba(15,23,42,.94); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:0 18px 50px rgba(0,0,0,.38); overflow:hidden; }
-      #view-louvor > nav, #view-midia > nav { scrollbar-width:none; position:sticky; top:70px; z-index:30; background:rgba(2,6,23,.9); backdrop-filter:blur(14px); padding-top:8px; }
-      #view-louvor > nav::-webkit-scrollbar, #view-midia > nav::-webkit-scrollbar { display:none; }
-      button, a, input, select, textarea { touch-action:manipulation; }
-    }
+/* ===== CEP AURORA FULL — VISUAL ONLY ===== */
+:root{
+  --cep-bg:#050814;
+  --cep-panel:rgba(15,23,42,.76);
+  --cep-border:rgba(148,163,184,.14);
+  --cep-text:#f8fafc;
+  --cep-muted:#94a3b8;
+  --cep-primary:#818cf8;
+  --cep-violet:#a78bfa;
+}
+html{scroll-behavior:smooth;background:#050814}
+body{
+  background:
+    radial-gradient(900px 500px at -8% -5%,rgba(99,102,241,.18),transparent 62%),
+    radial-gradient(760px 460px at 108% 12%,rgba(139,92,246,.13),transparent 60%),
+    linear-gradient(180deg,#070b18,#050814 55%,#040711)!important;
+  background-attachment:fixed!important;color:var(--cep-text);
+}
+body:before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.15;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 75%);
+}
+header{
+  background:rgba(5,8,20,.78)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+  border-color:rgba(148,163,184,.12)!important;
+  box-shadow:0 16px 45px rgba(0,0,0,.16);
+}
+main .bg-slate-900,main .bg-slate-900\/50,main .bg-slate-900\/60,main .bg-slate-900\/70,main .bg-slate-900\/80,
+.modal-card,.notification-sheet{
+  background:linear-gradient(145deg,rgba(18,27,48,.82),rgba(8,13,28,.76))!important;
+  border-color:var(--cep-border)!important;
+  box-shadow:0 18px 52px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.025);
+  backdrop-filter:blur(16px);
+}
+.rounded-2xl,.rounded-xl{transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+button{transition:transform .15s ease,filter .15s ease,background .15s ease,border-color .15s ease}
+button:not(:disabled):active{transform:scale(.975)}
+button.bg-indigo-600,.bg-indigo-600{background:linear-gradient(135deg,#6366f1,#7c3aed)!important;box-shadow:0 10px 26px rgba(99,102,241,.18)}
+button.bg-slate-800,.bg-slate-800{background:rgba(30,41,59,.68)!important}
+input,select,textarea{
+  background:rgba(8,13,27,.78)!important;border-color:rgba(148,163,184,.17)!important;
+  border-radius:14px!important;transition:.18s ease!important;
+}
+input:focus,select:focus,textarea:focus{
+  outline:none!important;border-color:rgba(129,140,248,.58)!important;
+  box-shadow:0 0 0 4px rgba(99,102,241,.10)!important;
+}
+h1,h2,h3{letter-spacing:-.02em}
+.text-slate-400{color:#9ba9bd!important}
+.text-slate-500{color:#7f8da3!important}
+*{scrollbar-width:thin;scrollbar-color:#334155 transparent}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-thumb{background:#334155;border-radius:999px}
+::selection{background:rgba(99,102,241,.38);color:white}
+:focus-visible{outline:2px solid rgba(129,140,248,.75)!important;outline-offset:2px}
+[id$="-modal"]>div,[id$="-modal"]>section{animation:cepPop .18s ease-out both}
+@keyframes cepPop{from{opacity:0;transform:translateY(7px) scale(.988)}to{opacity:1;transform:none}}
+@media(max-width:767px){
+  body{background-attachment:scroll!important}
+  main{padding-left:12px!important;padding-right:12px!important}
+  input,select,textarea{font-size:16px!important}
+  button,a{touch-action:manipulation}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
 
-  
-    /* =========================================================
-       CEP AURORA UI — premium visual layer
-       Mantém a lógica existente e moderniza toda a experiência.
-       ========================================================= */
-    :root{
-      --aurora-bg:#050814;
-      --aurora-panel:rgba(15,23,42,.72);
-      --aurora-panel-strong:rgba(15,23,42,.92);
-      --aurora-border:rgba(148,163,184,.14);
-      --aurora-text:#f8fafc;
-      --aurora-muted:#94a3b8;
-      --aurora-indigo:#818cf8;
-      --aurora-violet:#a78bfa;
-      --aurora-cyan:#22d3ee;
-      --aurora-green:#34d399;
-      --aurora-radius:22px;
-      --aurora-shadow:0 24px 70px rgba(0,0,0,.34);
-    }
 
-    html{background:var(--aurora-bg)}
-    body{
-      color:var(--aurora-text);
-      background:
-        radial-gradient(900px 520px at -8% -8%,rgba(99,102,241,.20),transparent 62%),
-        radial-gradient(760px 460px at 108% 8%,rgba(168,85,247,.14),transparent 60%),
-        radial-gradient(760px 520px at 50% 110%,rgba(6,182,212,.08),transparent 65%),
-        linear-gradient(180deg,#070b18 0%,#050814 55%,#040711 100%) !important;
-      min-height:100vh;
-      background-attachment:fixed !important;
-    }
-    body:before{
-      content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.18;
-      background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
-      background-size:42px 42px;
-      mask-image:linear-gradient(to bottom,black,transparent 70%);
-    }
+/* ===== CEP AURORA PRO UX — ADDITIVE ONLY ===== */
+#cep-ux-tools{
+  position:fixed;right:16px;bottom:18px;z-index:64;display:flex;flex-direction:column;align-items:flex-end;gap:9px;
+}
+#cep-ux-tools .ux-main{
+  width:48px;height:48px;border-radius:16px;border:1px solid rgba(129,140,248,.28);
+  background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 16px 36px rgba(79,70,229,.28);
+}
+#cep-ux-menu{
+  display:none;width:min(310px,calc(100vw - 28px));padding:10px;border-radius:20px;
+  background:rgba(7,11,24,.96);border:1px solid rgba(148,163,184,.16);
+  box-shadow:0 28px 75px rgba(0,0,0,.48);backdrop-filter:blur(24px);
+}
+#cep-ux-menu.open{display:block;animation:cepPop .16s ease-out both}
+.ux-menu-title{padding:5px 8px 9px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#64748b}
+.ux-action{
+  width:100%;display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:13px;text-align:left;color:#cbd5e1;
+}
+.ux-action:hover{background:rgba(99,102,241,.10);color:#fff}
+.ux-action i{width:17px;height:17px;color:#a5b4fc}
+.ux-action small{display:block;color:#64748b;font-size:10px;margin-top:1px}
+#cep-resume-toast{
+  position:fixed;left:50%;bottom:20px;z-index:63;transform:translate(-50%,20px);
+  max-width:min(520px,calc(100vw - 24px));opacity:0;pointer-events:none;
+  padding:10px 13px;border-radius:15px;border:1px solid rgba(148,163,184,.16);
+  background:rgba(7,11,24,.94);box-shadow:0 18px 48px rgba(0,0,0,.36);backdrop-filter:blur(18px);
+  color:#cbd5e1;font-size:11px;font-weight:700;transition:.22s ease;
+}
+#cep-resume-toast.show{opacity:1;transform:translate(-50%,0)}
+.cep-ux-pulse{animation:cepUxPulse .38s ease}
+@keyframes cepUxPulse{50%{box-shadow:0 0 0 5px rgba(99,102,241,.11)}}
+@media(max-width:767px){
+  #cep-ux-tools{right:11px;bottom:11px}
+  #cep-ux-tools .ux-main{width:44px;height:44px;border-radius:15px}
+  #cep-resume-toast{bottom:68px}
+}
+@media(prefers-reduced-motion:reduce){.cep-ux-pulse{animation:none}}
 
-    /* Header */
-    body > header, header.bg-slate-900\/90{
-      background:rgba(5,8,20,.74)!important;
-      border-color:rgba(148,163,184,.12)!important;
-      backdrop-filter:blur(24px) saturate(145%)!important;
-      -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
-      box-shadow:0 1px 0 rgba(255,255,255,.025),0 18px 45px rgba(0,0,0,.16);
-    }
-    header .w-10.h-10.rounded-xl{
-      border-radius:15px!important;
-      background:linear-gradient(135deg,#6366f1,#8b5cf6 58%,#22d3ee)!important;
-      box-shadow:0 12px 32px rgba(99,102,241,.30)!important;
-      border:1px solid rgba(255,255,255,.16);
-    }
-    #current-dept-badge{
-      background:rgba(99,102,241,.13)!important;
-      border-color:rgba(129,140,248,.25)!important;
-      color:#c7d2fe!important;
-    }
+</style>
 
-    /* Panels and cards */
-    .bg-slate-900,.bg-slate-900\/50,.bg-slate-900\/60,.bg-slate-900\/70,.bg-slate-900\/80{
-      border-color:var(--aurora-border);
-    }
-    main section.rounded-2xl, main .rounded-2xl.border, .app-status-card{
-      background:linear-gradient(145deg,rgba(20,29,51,.78),rgba(10,16,32,.66))!important;
-      border-color:rgba(148,163,184,.13)!important;
-      box-shadow:0 16px 45px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.025);
-      backdrop-filter:blur(15px);
-    }
-    .app-status-card{
-      position:relative;overflow:hidden;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
-      min-height:82px;
-    }
-    .app-status-card:before{
-      content:"";position:absolute;width:80px;height:80px;border-radius:999px;right:-35px;top:-40px;
-      background:rgba(129,140,248,.12);filter:blur(2px);
-    }
-    .app-status-card:hover{transform:translateY(-2px);border-color:rgba(129,140,248,.28)!important;box-shadow:0 20px 45px rgba(0,0,0,.24)}
-
-    /* Hero/dashboard */
-    #personal-dashboard{
-      position:relative;overflow:hidden;
-      background:
-        radial-gradient(500px 180px at 8% 0%,rgba(99,102,241,.20),transparent 65%),
-        radial-gradient(430px 200px at 96% 100%,rgba(34,211,238,.08),transparent 65%),
-        linear-gradient(145deg,rgba(17,24,45,.90),rgba(8,13,28,.84))!important;
-      border:1px solid rgba(129,140,248,.15)!important;
-      box-shadow:0 25px 65px rgba(0,0,0,.25)!important;
-    }
-    #personal-dashboard:after{
-      content:"";position:absolute;inset:auto -10% -75% 35%;height:260px;pointer-events:none;
-      background:radial-gradient(circle,rgba(139,92,246,.11),transparent 65%);
-    }
-
-    /* Buttons */
-    button,.btn{transition:transform .16s ease,filter .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
-    button:not(:disabled):active{transform:scale(.975)}
-    button.bg-indigo-600,button.bg-violet-600,.bg-indigo-600{
-      background:linear-gradient(135deg,#6366f1,#7c3aed)!important;
-      box-shadow:0 10px 26px rgba(99,102,241,.20);
-    }
-    button.bg-indigo-600:hover{filter:brightness(1.08)}
-    button.bg-slate-800, .bg-slate-800{
-      background:rgba(30,41,59,.64)!important;
-      border-color:rgba(148,163,184,.13)!important;
-    }
-    button.bg-slate-800:hover{background:rgba(51,65,85,.72)!important;border-color:rgba(129,140,248,.22)!important}
-
-    /* Inputs */
-    input,select,textarea{
-      background:rgba(8,13,27,.72)!important;
-      border-color:rgba(148,163,184,.16)!important;
-      border-radius:14px!important;
-      outline:none!important;
-      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease!important;
-    }
-    input:focus,select:focus,textarea:focus{
-      border-color:rgba(129,140,248,.58)!important;
-      box-shadow:0 0 0 4px rgba(99,102,241,.10)!important;
-      background:rgba(10,16,32,.92)!important;
-    }
-
-    /* Tab navigation */
-    #view-louvor > nav, #view-midia > nav{
-      border-color:rgba(148,163,184,.11)!important;
-    }
-    #view-louvor > nav button, #view-midia > nav button{
-      border-radius:12px!important;
-    }
-
-    /* Scrollbars */
-    *{scrollbar-width:thin;scrollbar-color:#334155 transparent}
-    *::-webkit-scrollbar{width:8px;height:8px}
-    *::-webkit-scrollbar-thumb{background:#334155;border-radius:999px}
-    *::-webkit-scrollbar-track{background:transparent}
-
-    /* Bottom app nav */
-    .app-bottom-nav{
-      background:rgba(7,11,24,.88)!important;
-      border-color:rgba(148,163,184,.16)!important;
-      backdrop-filter:blur(28px) saturate(160%)!important;
-      -webkit-backdrop-filter:blur(28px) saturate(160%)!important;
-      box-shadow:0 20px 55px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.035)!important;
-    }
-    .app-bottom-btn{position:relative}
-    .app-bottom-btn.active{
-      color:#e0e7ff!important;
-      background:linear-gradient(180deg,rgba(99,102,241,.13),rgba(99,102,241,0));
-    }
-    .app-bottom-btn.active:before{
-      content:"";position:absolute;top:0;width:26px;height:2px;border-radius:99px;
-      background:linear-gradient(90deg,#818cf8,#c084fc);
-      box-shadow:0 0 16px rgba(129,140,248,.75);
-    }
-    .app-bottom-btn.active i{filter:drop-shadow(0 0 7px rgba(129,140,248,.55))}
-
-    /* Notification/profile sheets */
-    .notification-sheet,#profile-center-modal section{
-      background:
-        radial-gradient(420px 180px at 20% 0%,rgba(99,102,241,.15),transparent 70%),
-        rgba(8,13,27,.96)!important;
-      border-color:rgba(148,163,184,.15)!important;
-      box-shadow:0 30px 90px rgba(0,0,0,.55)!important;
-      backdrop-filter:blur(26px)!important;
-    }
-    .app-chip{
-      white-space:nowrap;background:rgba(30,41,59,.58)!important;
-      border-color:rgba(148,163,184,.13)!important;
-      transition:.18s ease;
-    }
-    .app-chip:hover{border-color:rgba(129,140,248,.30)!important;color:#e0e7ff}
-
-    /* Toasts */
-    #portal-toast-host > div{
-      border-radius:16px!important;
-      backdrop-filter:blur(18px);
-      box-shadow:0 18px 50px rgba(0,0,0,.35)!important;
-    }
-
-    /* Modal polish */
-    [id$="-modal"] > div, [id$="-modal"] > section{
-      animation:auroraPop .20s cubic-bezier(.2,.8,.2,1) both;
-    }
-    @keyframes auroraPop{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
-    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
-
-    /* Desktop spacing */
-    @media(min-width:1024px){
-      main.max-w-7xl{max-width:1380px!important}
-      #personal-dashboard{padding:24px!important}
-    }
-
-    /* Mobile refinement */
-    @media(max-width:767px){
-      body{background-attachment:scroll!important}
-      header .max-w-7xl{padding-left:12px!important;padding-right:12px!important}
-      header h1{font-size:15px!important}
-      #header-subtitle{display:none}
-      #personal-dashboard{border-radius:24px!important}
-      .app-status-card{min-height:76px;padding:12px!important}
-      .app-bottom-nav{left:8px!important;right:8px!important;bottom:calc(7px + env(safe-area-inset-bottom))!important;border-radius:22px!important}
-      .notification-sheet{border-radius:28px 28px 0 0!important}
-      main{gap:18px!important}
-    }
-
-    /* Selection and focus */
-    ::selection{background:rgba(99,102,241,.38);color:#fff}
-    :focus-visible{outline:2px solid rgba(129,140,248,.75)!important;outline-offset:2px}
-
-  </style>
-
-  <meta name="theme-color" content="#070b18">
-  <meta name="color-scheme" content="dark">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+<meta name="theme-color" content="#050814">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
 
@@ -498,13 +377,6 @@
         <div class="flex items-center justify-between mb-3"><div><p class="text-[10px] uppercase tracking-[.2em] text-amber-300">Comunicados</p><h2 class="font-bold text-white">Mural da liderança</h2></div><button data-leader-only onclick="createAnnouncement()" class="p-2 bg-amber-500/15 text-amber-300 rounded-lg" title="Novo aviso"><i data-lucide="plus" class="w-4 h-4"></i></button></div>
         <div id="announcements-list" class="space-y-2 max-h-48 overflow-y-auto"><p class="text-sm text-slate-500">Nenhum aviso.</p></div>
       </article>
-    </section>
-
-    <section id="app-status-strip" class="grid grid-cols-2 sm:grid-cols-4 gap-3 app-fade-in">
-      <button onclick="goAppHome()" class="app-status-card text-left"><p class="text-[10px] uppercase tracking-wider text-slate-500">Portal</p><p class="mt-1 text-sm font-bold text-white">Início rápido</p></button>
-      <button onclick="goAppRoster()" class="app-status-card text-left"><p class="text-[10px] uppercase tracking-wider text-indigo-300">Escalas</p><p class="mt-1 text-sm font-bold text-white">Ver próximas</p></button>
-      <button onclick="openNotificationCenter()" class="app-status-card text-left"><p class="text-[10px] uppercase tracking-wider text-amber-300">Central</p><p id="app-unread-summary" class="mt-1 text-sm font-bold text-white">Avisos</p></button>
-      <button onclick="openProfileCenter()" class="app-status-card text-left"><p class="text-[10px] uppercase tracking-wider text-emerald-300">Minha conta</p><p id="app-push-summary" class="mt-1 text-sm font-bold text-white">Perfil</p></button>
     </section>
 
     <button id="live-service-banner" onclick="openLiveService()" class="hidden w-full items-center justify-between gap-4 rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-600/25 via-violet-600/20 to-indigo-600/20 p-4 text-left shadow-xl shadow-rose-950/20"><span class="flex items-center gap-3"><span class="relative flex h-4 w-4"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span><span class="relative inline-flex h-4 w-4 rounded-full bg-rose-500"></span></span><span><strong class="block text-white">Culto acontecendo agora</strong><small id="live-service-banner-text" class="text-slate-300">Toque para acompanhar ao vivo</small></span></span><span class="rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white">ENTRAR AO VIVO</span></button>
@@ -1017,7 +889,6 @@
           subscribeNotificationCenter();
           applyAdminVisibility();
           updateEmailVerificationBanner();
-          refreshAppStatus();
         } else {
           document.getElementById('auth-screen').classList.remove('hidden');
           if (songsUnsubscribe) songsUnsubscribe();
@@ -2968,56 +2839,6 @@
       renderEvents();
     }
 
-
-    // --- NAVEGAÇÃO RÁPIDA / PERFIL DO APP ---
-    function setBottomNavActive(name) {
-      ['home','roster','calendar','notifications','profile'].forEach(item => {
-        document.getElementById(`bottom-${item}`)?.classList.toggle('active', item === name);
-      });
-    }
-    function goAppHome() { setBottomNavActive('home'); window.scrollTo({ top:0, behavior:'smooth' }); }
-    function goAppRoster() { setBottomNavActive('roster'); department === 'midia' ? switchMidiaTab('roster') : switchTab('roster'); document.getElementById(department === 'midia' ? 'view-midia' : 'view-louvor')?.scrollIntoView({behavior:'smooth'}); }
-    function goAppCalendar() { setBottomNavActive('calendar'); department === 'midia' ? switchMidiaTab('calendar') : switchTab('calendar'); document.getElementById(department === 'midia' ? 'view-midia' : 'view-louvor')?.scrollIntoView({behavior:'smooth'}); }
-    function notificationPermissionLabel() {
-      if (!('Notification' in window)) return 'Indisponível';
-      if (Notification.permission === 'granted') return 'Ativadas';
-      if (Notification.permission === 'denied') return 'Bloqueadas';
-      return 'Não ativadas';
-    }
-    async function refreshAppStatus() {
-      const push = document.getElementById('app-push-summary');
-      if (push) push.textContent = `Notificações ${notificationPermissionLabel().toLowerCase()}`;
-      if (!currentUser) return;
-      try {
-        const snap = await db.collection('users').doc(currentUser.uid).collection('notifications').orderBy('createdAt','desc').limit(100).get();
-        const unread = snap.docs.filter(doc => doc.data().read !== true).length;
-        const summary = document.getElementById('app-unread-summary');
-        if (summary) summary.textContent = unread ? `${unread} não lida${unread === 1 ? '' : 's'}` : 'Tudo em dia';
-        document.getElementById('bottom-notification-dot')?.classList.toggle('hidden', unread === 0);
-      } catch (_) {}
-    }
-    async function openProfileCenter() {
-      if (!currentUser) return;
-      setBottomNavActive('profile');
-      document.getElementById('profile-center-modal')?.remove();
-      let profile = {};
-      try { const doc = await db.collection('users').doc(currentUser.uid).get(); profile = doc.exists ? (doc.data() || {}) : {}; } catch (_) {}
-      const roleLabel = currentUserRole === 'admin' ? 'Administrador' : currentUserRole === 'leader' ? 'Liderança' : 'Membro';
-      const depts = (currentUserDepartments || []).map(d => d === 'midia' ? 'Mídia' : 'Louvor').join(' • ') || 'Ministério não definido';
-      const modal = document.createElement('div');
-      modal.id = 'profile-center-modal';
-      modal.className = 'fixed inset-0 z-[96] bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4';
-      modal.innerHTML = `<section class="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-700 bg-slate-900 p-5 sm:p-6 shadow-2xl app-fade-in">
-        <div class="sm:hidden mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-600"></div>
-        <div class="flex items-start justify-between gap-3"><div class="flex items-center gap-3"><div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center"><i data-lucide="user-round" class="h-7 w-7 text-white"></i></div><div><p class="text-[10px] uppercase tracking-[.2em] text-indigo-300">Minha conta</p><h2 class="text-xl font-black text-white">${escapeHtml(profile.name || currentUser.displayName || 'Usuário')}</h2><p class="text-xs text-slate-400">${escapeHtml(currentUser.email || '')}</p></div></div><button onclick="document.getElementById('profile-center-modal')?.remove()" class="p-2 rounded-xl bg-slate-800 text-slate-300"><i data-lucide="x" class="h-5 w-5"></i></button></div>
-        <div class="grid grid-cols-2 gap-3 mt-5"><div class="app-status-card"><p class="text-[10px] uppercase text-slate-500">Acesso</p><p class="mt-1 text-sm font-bold text-white">${roleLabel}</p></div><div class="app-status-card"><p class="text-[10px] uppercase text-slate-500">Ministério</p><p class="mt-1 text-sm font-bold text-white">${escapeHtml(depts)}</p></div></div>
-        <div class="mt-3 app-status-card flex items-center justify-between gap-3"><div><p class="text-[10px] uppercase text-slate-500">Notificações neste aparelho</p><p class="mt-1 text-sm font-bold text-white">${notificationPermissionLabel()}</p></div><button onclick="requestNotificationPermission()" class="px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/25 text-xs font-bold text-amber-200">Ativar</button></div>
-        <div class="grid grid-cols-2 gap-2 mt-4"><button onclick="openAvailabilityModal();document.getElementById('profile-center-modal')?.remove()" class="rounded-xl bg-slate-800 p-3 text-xs font-bold text-slate-200"><i data-lucide="calendar-off" class="inline h-4 w-4 mr-1"></i> Disponibilidade</button><button onclick="logoutPortal()" class="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs font-bold text-red-300"><i data-lucide="log-out" class="inline h-4 w-4 mr-1"></i> Sair</button></div>
-      </section>`;
-      document.body.appendChild(modal);
-      if (window.lucide) lucide.createIcons();
-    }
-
     // --- NOTIFICATIONS ---
     async function showPortalNotification(title, options = {}) {
       if (!("Notification" in window) || Notification.permission !== 'granted') return;
@@ -3071,7 +2892,6 @@
           }, { merge: true });
 
         portalToast('Notificações ativadas neste aparelho!', 'success');
-        refreshAppStatus();
 
         try {
           await registration.showNotification('Portal CEP Pirapozinho', {
@@ -3210,25 +3030,7 @@
       return 'bell';
     }
 
-    let notificationCenterDocs = [];
-    function filterNotificationCenter(filter = 'all') {
-      document.querySelectorAll('[data-notification-filter]').forEach(btn => {
-        const active = btn.dataset.notificationFilter === filter;
-        btn.classList.toggle('border-indigo-500/40', active);
-        btn.classList.toggle('text-indigo-200', active);
-      });
-      const filtered = notificationCenterDocs.filter(doc => {
-        const n = doc.data() || {};
-        if (filter === 'roster') return String(n.type || '').includes('roster');
-        if (filter === 'verse') return n.type === 'verse' || n.type === 'daily-verse';
-        if (filter === 'unread') return n.read !== true;
-        return true;
-      });
-      renderNotificationCenter(filtered, false);
-    }
-
-    function renderNotificationCenter(docs = [], remember = true) {
-      if (remember) notificationCenterDocs = docs;
+    function renderNotificationCenter(docs = []) {
       const list = document.getElementById('notification-center-list');
       if (!list) return;
 
@@ -3361,9 +3163,9 @@
             </div>
           </div>
 
-          <div class="shrink-0 px-4 sm:px-5 py-3 border-b border-slate-800 bg-slate-950/40">
-            <div class="flex items-center justify-between gap-3"><span class="text-[10px] font-bold uppercase tracking-[.2em] text-slate-500">Mais recentes</span><span id="notification-sheet-status" class="text-[10px] text-slate-600"></span></div>
-            <div class="mt-3 flex gap-2 overflow-x-auto pb-1"><button onclick="filterNotificationCenter('all')" data-notification-filter="all" class="app-chip border-indigo-500/40 text-indigo-200">Todos</button><button onclick="filterNotificationCenter('roster')" data-notification-filter="roster" class="app-chip">Escalas</button><button onclick="filterNotificationCenter('verse')" data-notification-filter="verse" class="app-chip">Versículos</button><button onclick="filterNotificationCenter('unread')" data-notification-filter="unread" class="app-chip">Não lidas</button></div>
+          <div class="shrink-0 flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-950/40">
+            <span class="text-[10px] font-bold uppercase tracking-[.2em] text-slate-500">Mais recentes</span>
+            <span id="notification-sheet-status" class="text-[10px] text-slate-600"></span>
           </div>
 
           <div id="notification-center-list" class="min-h-0 flex-1 overflow-y-auto space-y-2.5 p-4 sm:p-5">
@@ -3383,7 +3185,6 @@
         renderNotificationCenter(snap.docs);
         const status = document.getElementById('notification-sheet-status');
         if (status) status.textContent = `${snap.size} aviso${snap.size === 1 ? '' : 's'}`;
-        refreshAppStatus();
       } catch (error) {
         console.error('Erro ao carregar central:', error);
         const list = document.getElementById('notification-center-list');
@@ -3448,13 +3249,117 @@
     }
   </script>
 
-  <nav id="app-bottom-nav" class="app-bottom-nav" aria-label="Navegação principal">
-    <button id="bottom-home" onclick="goAppHome()" class="app-bottom-btn active"><i data-lucide="house"></i><span>Início</span></button>
-    <button id="bottom-roster" onclick="goAppRoster()" class="app-bottom-btn"><i data-lucide="calendar-check"></i><span>Escalas</span></button>
-    <button id="bottom-calendar" onclick="goAppCalendar()" class="app-bottom-btn"><i data-lucide="calendar-days"></i><span>Agenda</span></button>
-    <button id="bottom-notifications" onclick="openNotificationCenter()" class="app-bottom-btn relative"><i data-lucide="bell"></i><span>Central</span><span id="bottom-notification-dot" class="hidden absolute top-2 right-[27%] h-2.5 w-2.5 rounded-full bg-red-500"></span></button>
-    <button id="bottom-profile" onclick="openProfileCenter()" class="app-bottom-btn"><i data-lucide="user-round"></i><span>Perfil</span></button>
-  </nav>
+<!-- CEP Aurora Pro UX: atalhos aditivos, sem substituir a interface existente -->
+<div id="cep-ux-tools" aria-label="Atalhos rápidos">
+  <div id="cep-ux-menu">
+    <div class="ux-menu-title">Acesso rápido</div>
+    <button class="ux-action" onclick="cepUxOpenTool('pad')"><i data-lucide="waves"></i><span><b>PAD</b><small>Abrir ferramenta existente</small></span></button>
+    <button class="ux-action" onclick="cepUxOpenTool('metron')"><i data-lucide="timer"></i><span><b>Metrônomo</b><small>Abrir ferramenta existente</small></span></button>
+    <button class="ux-action" onclick="cepUxOpenTool('tuner')"><i data-lucide="gauge"></i><span><b>Afinador</b><small>Abrir ferramenta existente</small></span></button>
+    <button class="ux-action" onclick="cepUxOpenTool('song')"><i data-lucide="music-2"></i><span><b>Cifras / Músicas</b><small>Ir para a área existente</small></span></button>
+    <button class="ux-action" onclick="cepUxOpenTool('roster')"><i data-lucide="calendar-check"></i><span><b>Escalas</b><small>Ir para suas escalas</small></span></button>
+    <button class="ux-action" onclick="cepUxOpenTool('notification')"><i data-lucide="bell"></i><span><b>Central</b><small>Abrir notificações</small></span></button>
+  </div>
+  <button class="ux-main" onclick="cepUxToggleMenu()" aria-label="Abrir atalhos rápidos" title="Atalhos rápidos"><i data-lucide="zap"></i></button>
+</div>
+<div id="cep-resume-toast" role="status" aria-live="polite"></div>
+
+
+<script>
+/* CEP Aurora Pro UX
+   Só chama funções/controles que já existem. Não altera Firebase, Firestore,
+   autenticação, escalas, cifras, PAD, metrônomo, afinador ou notificações. */
+(function(){
+  const STORAGE_KEY='cep_ux_last_place_v1';
+  const safe=(fn)=>{try{return fn()}catch(_){return null}};
+  const visible=(el)=>!!el && !el.classList.contains('hidden') && getComputedStyle(el).display!=='none';
+
+  window.cepUxToggleMenu=function(force){
+    const m=document.getElementById('cep-ux-menu'); if(!m)return;
+    const open=typeof force==='boolean'?force:!m.classList.contains('open');
+    m.classList.toggle('open',open);
+    safe(()=>window.lucide&&lucide.createIcons());
+  };
+
+  function clickByText(words){
+    const list=[...document.querySelectorAll('button,a')].filter(visible);
+    const wanted=words.map(x=>x.toLowerCase());
+    const el=list.find(node=>{
+      const t=(node.innerText||node.getAttribute('title')||node.getAttribute('aria-label')||'').toLowerCase();
+      return wanted.some(w=>t.includes(w));
+    });
+    if(el){el.click(); return true}
+    return false;
+  }
+  function callFirst(names){
+    for(const name of names){
+      if(typeof window[name]==='function'){ window[name](); return true; }
+    }
+    return false;
+  }
+  function pulseTarget(words){
+    const wanted=words.map(x=>x.toLowerCase());
+    const el=[...document.querySelectorAll('button,a')].find(node=>{
+      const t=(node.innerText||node.title||'').toLowerCase();
+      return wanted.some(w=>t.includes(w));
+    });
+    if(el){el.classList.add('cep-ux-pulse');setTimeout(()=>el.classList.remove('cep-ux-pulse'),450)}
+  }
+
+  window.cepUxOpenTool=function(tool){
+    cepUxToggleMenu(false);
+    let ok=false;
+    if(tool==='notification') ok=callFirst(['openNotificationCenter']);
+    else if(tool==='roster') ok=callFirst(['goAppRoster']) || clickByText(['escala','escalas']);
+    else if(tool==='song') ok=clickByText(['músicas','musicas','cifras','repertório','repertorio']);
+    else if(tool==='pad') ok=callFirst(['openPad','openPadModal','togglePad']) || clickByText(['pad']);
+    else if(tool==='metron') ok=callFirst(['openMetronome','openMetronomeModal','toggleMetronome']) || clickByText(['metrônomo','metronomo']);
+    else if(tool==='tuner') ok=callFirst(['openTuner','openTunerModal','toggleTuner']) || clickByText(['afinador']);
+    if(ok) pulseTarget([tool]);
+  };
+
+  // Remember the last main navigation button the user intentionally used.
+  document.addEventListener('click',e=>{
+    const el=e.target.closest('button,a'); if(!el)return;
+    const text=(el.innerText||el.title||el.getAttribute('aria-label')||'').trim();
+    if(!text || text.length>80)return;
+    const keys=['escala','música','musica','cifra','mídia','midia','louvor','agenda','membro','equipamento'];
+    if(keys.some(k=>text.toLowerCase().includes(k))){
+      safe(()=>localStorage.setItem(STORAGE_KEY,JSON.stringify({text,at:Date.now()})));
+    }
+  },{passive:true});
+
+  // A tiny non-invasive hint when returning; no auto-navigation.
+  window.addEventListener('load',()=>{
+    safe(()=>{
+      const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+      if(!saved || Date.now()-saved.at>1000*60*60*24*7)return;
+      const toast=document.getElementById('cep-resume-toast');
+      if(!toast)return;
+      toast.textContent='Último acesso: '+saved.text;
+      toast.classList.add('show');
+      setTimeout(()=>toast.classList.remove('show'),2600);
+    });
+    safe(()=>window.lucide&&lucide.createIcons());
+  });
+
+  // Close quick menu when tapping outside.
+  document.addEventListener('click',e=>{
+    const tools=document.getElementById('cep-ux-tools');
+    if(tools && !tools.contains(e.target)) cepUxToggleMenu(false);
+  },{passive:true});
+
+  // Keyboard shortcuts only when not typing.
+  document.addEventListener('keydown',e=>{
+    if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;
+    if(e.altKey){
+      const k=e.key.toLowerCase();
+      const map={p:'pad',m:'metron',a:'tuner',c:'song',e:'roster',n:'notification'};
+      if(map[k]){e.preventDefault();cepUxOpenTool(map[k]);}
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
