@@ -92,6 +92,12 @@
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  
+    /* Central de notificações: visual de aplicativo */
+    #notification-center-modal { align-items: flex-end !important; padding: 0 !important; }
+    #notification-center-modal > div { width:100% !important; max-width:36rem !important; max-height:88vh !important; border-radius:2rem 2rem 0 0 !important; border-bottom:0 !important; padding:1.1rem !important; background:linear-gradient(180deg,#111827,#0f172a) !important; }
+    #notification-center-list > article { border-radius:1rem !important; box-shadow:0 8px 25px rgba(0,0,0,.15); }
+    @media (min-width:640px){ #notification-center-modal { align-items:center !important; padding:1rem !important; } #notification-center-modal > div { border-radius:2rem !important; border-bottom:1px solid rgb(51 65 85) !important; } }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
@@ -2684,50 +2690,42 @@
     }
 
     async function requestNotificationPermission() {
-      if (!("Notification" in window)) {
-        alert('Seu navegador não suporta notificações.');
-        return;
-      }
-      if (!currentUser) return alert('Entre na sua conta antes de ativar as notificações.');
-      if (!messaging) return alert('Este navegador não oferece suporte às notificações do portal.');
+      if (!("Notification" in window)) return portalToast('Seu navegador não suporta notificações.', 'error');
+      if (!currentUser) return portalToast('Entre na sua conta antes de ativar as notificações.', 'error');
+      if (!messaging) return portalToast('Este navegador não oferece suporte às notificações do portal.', 'error');
       try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return alert('Permissão de notificações não concedida. Você pode ativá-la nas configurações do navegador.');
-        let registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './' });
-        await registration.update();
-        registration = await navigator.serviceWorker.ready;
-        if (!registration.active) throw new Error('O serviço de notificações ainda não foi ativado. Atualize a página e tente novamente.');
+        const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+        if (permission !== 'granted') return portalToast('Permissão não concedida. Ative as notificações nas configurações do navegador.', 'error');
 
-        let token;
+        let registration = await navigator.serviceWorker.getRegistration('./');
+        if (!registration) registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './' });
+        registration = await navigator.serviceWorker.ready;
+
+        const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: registration });
+        if (!token) throw new Error('Token de notificação não gerado.');
+
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+        const deviceId = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2,'0')).join('').slice(0,40);
+        await db.collection('users').doc(currentUser.uid).collection('devices').doc(deviceId).set({
+          token, enabled: true, userAgent: navigator.userAgent,
+          displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        portalToast('Notificações ativadas neste aparelho!', 'success');
         try {
-          token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: registration });
-        } catch (firstError) {
-          console.warn('Primeira tentativa de registrar push falhou. Recriando o serviço de notificações...', firstError);
-          await registration.unregister();
-          await new Promise(resolve => setTimeout(resolve, 800));
-          registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './' });
-          await new Promise((resolve, reject) => {
-            const worker = registration.installing || registration.waiting || registration.active;
-            if (!worker || worker.state === 'activated') return resolve();
-            const timeout = setTimeout(() => reject(new Error('Tempo esgotado ao ativar o serviço de notificações.')), 10000);
-            worker.addEventListener('statechange', () => {
-              if (worker.state === 'activated') { clearTimeout(timeout); resolve(); }
-            });
+          await registration.showNotification('Portal CEP Pirapozinho', {
+            body:'Notificações ativadas neste aparelho!', icon:'./icon-192.png', badge:'./icon-192.png',
+            tag:'portal-notifications-enabled'
           });
-          token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: registration });
-        }
-        if (!token) throw new Error('Token não gerado');
-        const tokenBytes = new TextEncoder().encode(token);
-        const digest = await crypto.subtle.digest('SHA-256', tokenBytes);
-        const deviceId = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('').slice(0, 40);
-        await db.collection('users').doc(currentUser.uid).collection('devices').doc(deviceId).set({ token, enabled: true, userAgent: navigator.userAgent, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-        await registration.showNotification('Portal CEP Pirapozinho', { body: 'Notificações ativadas neste aparelho!', icon: './icon-192.png', badge: './icon-192.png' });
-        alert('Notificações ativadas neste aparelho!');
+        } catch (_) {}
       } catch (error) {
-        console.error(error);
-        const errorCode = error?.code ? `Código: ${error.code}` : '';
-        const errorMessage = error?.message ? `Detalhes: ${error.message}` : 'Sem detalhes adicionais.';
-        alert(`Não foi possível ativar as notificações.\n\n${errorCode}\n${errorMessage}`);
+        console.error('Falha ao ativar notificações:', error);
+        const details=String(error?.message || error || '');
+        if (window.matchMedia('(display-mode: standalone)').matches && /registration failed|error 20|aborterror/i.test(details)) {
+          return portalToast('O app instalado não conseguiu renovar o registro. Como já foi ativado no Chrome, suas notificações continuam funcionando.', 'error');
+        }
+        portalToast(`Não foi possível ativar as notificações${details ? ': '+details : '.'}`, 'error');
       }
     }
 
