@@ -254,6 +254,22 @@ h1,h2,h3{letter-spacing:-.02em}
 }
 @media(prefers-reduced-motion:reduce){.cep-ux-pulse{animation:none}}
 
+
+/* CEP dialogs: substitui caixas nativas do navegador pelo visual do portal */
+#cep-dialog-backdrop{position:fixed;inset:0;z-index:120;background:rgba(2,6,23,.78);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:18px}
+.cep-dialog{width:min(430px,100%);border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(180deg,rgba(15,23,42,.99),rgba(7,11,24,.99));box-shadow:0 30px 90px rgba(0,0,0,.55);padding:22px;color:#e2e8f0}
+.cep-dialog-icon{width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;background:rgba(99,102,241,.14);color:#a5b4fc;margin-bottom:14px}
+.cep-dialog.danger .cep-dialog-icon{background:rgba(239,68,68,.12);color:#fca5a5}
+.cep-dialog h3{margin:0 0 7px;font-size:18px;font-weight:800;color:#fff}
+.cep-dialog p{margin:0;color:#94a3b8;font-size:13px;line-height:1.55;white-space:pre-line}
+.cep-dialog-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:20px}
+.cep-dialog-actions button{border-radius:13px;padding:10px 14px;font-size:12px;font-weight:800}
+.cep-dialog-cancel{background:#1e293b;color:#cbd5e1;border:1px solid #334155}
+.cep-dialog-confirm{background:#4f46e5;color:white}
+.cep-dialog.danger .cep-dialog-confirm{background:#dc2626}
+#cep-ux-tools{z-index:80}
+#cep-ux-menu.cep-open{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;animation:cepPop .16s ease-out both}
+
 </style>
 
 <meta name="theme-color" content="#050814">
@@ -1522,7 +1538,7 @@ h1,h2,h3{letter-spacing:-.02em}
     async function deleteRoster(id) {
       if (!(currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID)) return;
       const roster = [...rosterData, ...mediaRosterData].find(item => String(item.id) === String(id));
-      if (!roster || !confirm(`Excluir a escala de ${roster.service || 'culto'}? Esta ação não pode ser desfeita.`)) return;
+      if (!roster || !(await portalConfirm(`Excluir a escala de ${roster.service || 'culto'}? Esta ação não pode ser desfeita.`, {danger:true, confirmText:'Excluir escala'}))) return;
       await db.collection('rosters').doc(String(id)).delete();
       portalToast('Escala excluída.', 'success');
     }
@@ -1840,7 +1856,7 @@ h1,h2,h3{letter-spacing:-.02em}
 
     async function setLiveSong(index) { if (!isLeaderAccount() || !liveServiceState?.active) return; await db.collection('settings').doc('liveService').update({ currentIndex: index, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
     async function changeLiveSong(amount) { const roster = allRostersData.find(item => String(item.id) === String(liveServiceState?.rosterId)); if (!roster) return; const next = Math.max(0, Math.min((roster.songIds || []).length - 1, (Number(liveServiceState.currentIndex) || 0) + amount)); await setLiveSong(next); }
-    async function finishLiveService() { if (!isLeaderAccount() || !confirm('Encerrar o culto ao vivo para todos?')) return; await db.collection('settings').doc('liveService').set({ active: false, finishedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); closeLiveService(); stopWorshipPad(); if (metronomeRunning) toggleMetronome(); }
+    async function finishLiveService() { if (!isLeaderAccount() || !(await portalConfirm('Encerrar o culto ao vivo para todos?', {danger:true, confirmText:'Encerrar culto'}))) return; await db.collection('settings').doc('liveService').set({ active: false, finishedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); closeLiveService(); stopWorshipPad(); if (metronomeRunning) toggleMetronome(); }
     function currentLiveSong() { const roster = allRostersData.find(item => String(item.id) === String(liveServiceState?.rosterId)); return songsData.find(song => String(song.id) === String(roster?.songIds?.[Number(liveServiceState?.currentIndex) || 0])); }
     function playLiveSongPad() { const song = currentLiveSong(); if (song) playWorshipPad(song.currentKey || song.originalKey || 'C'); }
     function playLiveSongMetronome() { const song = currentLiveSong(); setMetronomeBpm(song?.bpm || 80); if (!metronomeRunning) toggleMetronome(); }
@@ -1883,7 +1899,7 @@ h1,h2,h3{letter-spacing:-.02em}
       await db.collection('announcements').add({ message: values.message.trim(), author: currentUser.displayName || currentUser.email, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
 
-    async function deleteAnnouncement(id) { if (confirm('Excluir este aviso?')) await db.collection('announcements').doc(String(id)).delete(); }
+    async function deleteAnnouncement(id) { if (await portalConfirm('Excluir este aviso?', {danger:true, confirmText:'Excluir aviso'})) await db.collection('announcements').doc(String(id)).delete(); }
 
     function updateEmailVerificationBanner() {
       const banner = document.getElementById('email-verification-banner');
@@ -2054,15 +2070,12 @@ h1,h2,h3{letter-spacing:-.02em}
     async function deleteMember(id) {
       const member = membersData.find(item => String(item.id) === String(id));
       if (!member) return;
-      if (!confirm(`Excluir ${member.name} da equipe?`)) return;
+      if (!(await portalConfirm(`Excluir ${member.name} da equipe?`, {danger:true, confirmText:'Excluir da equipe'}))) return;
 
       const accountUid = member.accountUid ? String(member.accountUid) : '';
       let disableAccess = false;
       if (accountUid && accountUid !== ADMIN_UID) {
-        disableAccess = confirm(`${member.name} possui uma conta no portal.
-
-OK = excluir da equipe E desativar o acesso/permissões.
-Cancelar = excluir somente da equipe.`);
+        disableAccess = await portalConfirm(`${member.name} possui uma conta no portal. Deseja também desativar o acesso e as permissões dessa conta?`, {danger:true, confirmText:'Excluir e desativar', cancelText:'Só excluir da equipe'});
       }
 
       if (disableAccess) {
@@ -2097,7 +2110,7 @@ Cancelar = excluir somente da equipe.`);
       if (!profile.exists) return alert('Este membro ainda não possui uma conta no portal.');
       const isLeader = profile.data().role === 'leader';
       const nextRole = isLeader ? 'member' : 'leader';
-      if (!confirm(`${isLeader ? 'Retirar acesso de líder de' : 'Definir como líder:'} ${name}?`)) return;
+      if (!(await portalConfirm(`${isLeader ? 'Retirar acesso de líder de' : 'Definir como líder:'} ${name}?`, {confirmText:isLeader ? 'Retirar acesso' : 'Definir líder'}))) return;
       await changeUserRole(userId, nextRole);
       alert(isLeader ? 'Acesso de líder retirado.' : 'Líder definido. A pessoa deve sair e entrar novamente.');
     }
@@ -2518,7 +2531,7 @@ Cancelar = excluir somente da equipe.`);
     }
 
     async function deleteSong(id) {
-      if (!confirm('Deseja realmente excluir esta música?')) return;
+      if (!(await portalConfirm('Deseja realmente excluir esta música?', {danger:true, confirmText:'Excluir música'}))) return;
       const chunks = await db.collection('songs').doc(String(id)).collection('pdfChunks').get();
       if (!chunks.empty) {
         const batch = db.batch();
@@ -2899,9 +2912,9 @@ Cancelar = excluir somente da equipe.`);
       renderEvents();
     }
 
-    function deleteEvent(index) {
+    async function deleteEvent(index) {
       if (!(currentUserRole === 'leader' || currentUserRole === 'admin' || currentUser?.uid === ADMIN_UID)) return;
-      if (!confirm('Deseja excluir este evento?')) return;
+      if (!(await portalConfirm('Deseja excluir este evento?', {danger:true, confirmText:'Excluir evento'}))) return;
       eventsData.splice(index, 1);
       localStorage.setItem('cep_events', JSON.stringify(eventsData));
       renderEvents();
@@ -2981,6 +2994,35 @@ Cancelar = excluir somente da equipe.`);
 
 
     // --- AVISOS MODERNOS DO PORTAL ---
+    function portalDialogBase(message, { title = 'Portal CEP', danger = false, confirmText = 'OK', cancelText = null } = {}) {
+      return new Promise(resolve => {
+        document.getElementById('cep-dialog-backdrop')?.remove();
+        const backdrop = document.createElement('div');
+        backdrop.id = 'cep-dialog-backdrop';
+        const box = document.createElement('div');
+        box.className = `cep-dialog${danger ? ' danger' : ''}`;
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-modal', 'true');
+        box.innerHTML = `<div class="cep-dialog-icon"><i data-lucide="${danger ? 'triangle-alert' : 'info'}"></i></div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(String(message || ''))}</p><div class="cep-dialog-actions">${cancelText ? `<button type="button" class="cep-dialog-cancel">${escapeHtml(cancelText)}</button>` : ''}<button type="button" class="cep-dialog-confirm">${escapeHtml(confirmText)}</button></div>`;
+        backdrop.appendChild(box); document.body.appendChild(backdrop);
+        if (window.lucide) lucide.createIcons();
+        const finish = value => { backdrop.remove(); resolve(value); };
+        box.querySelector('.cep-dialog-confirm').onclick = () => finish(true);
+        const cancel = box.querySelector('.cep-dialog-cancel'); if (cancel) cancel.onclick = () => finish(false);
+        backdrop.onclick = e => { if (e.target === backdrop && cancelText) finish(false); };
+        const onKey = e => { if (e.key === 'Escape' && cancelText) { document.removeEventListener('keydown', onKey); finish(false); } };
+        document.addEventListener('keydown', onKey, { once: false });
+      });
+    }
+
+    function portalConfirm(message, options = {}) {
+      return portalDialogBase(message, { title: options.title || 'Confirmar ação', danger: !!options.danger, confirmText: options.confirmText || 'Confirmar', cancelText: options.cancelText || 'Cancelar' });
+    }
+
+    function portalNotice(message, options = {}) {
+      return portalDialogBase(message, { title: options.title || 'Portal CEP', danger: !!options.danger, confirmText: options.confirmText || 'Entendi' });
+    }
+
     function portalToast(message, type = 'auto') {
       const text = String(message || '');
       if (type === 'auto') {
@@ -3171,7 +3213,7 @@ Cancelar = excluir somente da equipe.`);
 
     async function clearReadNotifications() {
       if (!currentUser) return;
-      if (!confirm('Apagar as notificações que já foram lidas?')) return;
+      if (!(await portalConfirm('Apagar as notificações que já foram lidas?', {danger:true, confirmText:'Apagar lidas'}))) return;
 
       try {
         const snap = await db.collection('users').doc(currentUser.uid)
@@ -3317,6 +3359,8 @@ Cancelar = excluir somente da equipe.`);
     }
   </script>
 
+<script>window.alert = function(message){ portalNotice(message); };</script>
+
 <!-- CEP Aurora Pro UX: atalhos aditivos, sem substituir a interface existente -->
 <div id="cep-ux-tools" aria-label="Atalhos rápidos">
   <div id="cep-ux-menu">
@@ -3344,8 +3388,11 @@ Cancelar = excluir somente da equipe.`);
 
   window.cepUxToggleMenu=function(force){
     const m=document.getElementById('cep-ux-menu'); if(!m)return;
-    const open=typeof force==='boolean'?force:!m.classList.contains('open');
+    const isOpen=m.classList.contains('cep-open');
+    const open=typeof force==='boolean'?force:!isOpen;
+    m.classList.toggle('cep-open',open);
     m.classList.toggle('open',open);
+    m.setAttribute('aria-hidden', open ? 'false' : 'true');
     safe(()=>window.lucide&&lucide.createIcons());
   };
 
