@@ -4,7 +4,9 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT não configurado.");
 }
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_SERVICE_ACCOUNT
+);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -41,6 +43,7 @@ function partsInSaoPaulo(date = new Date()) {
 
 function localKey(date = new Date()) {
   const p = partsInSaoPaulo(date);
+
   return `${p.year}-${p.month}-${p.day}`;
 }
 
@@ -54,7 +57,8 @@ function rosterDate(roster) {
     return null;
   }
 
-  const value = roster.dateTime || roster.date;
+  const value =
+    roster.dateTime || roster.date;
 
   if (value?.toDate) {
     return value.toDate();
@@ -119,32 +123,37 @@ async function sendNotification(
   body,
   type = "roster-reminder"
 ) {
-  const tokens = await getUserTokens(uid);
+  const tokens =
+    await getUserTokens(uid);
 
   if (!tokens.length) {
-    console.log(`Sem dispositivo ativo para ${uid}.`);
+    console.log(
+      `Sem dispositivo ativo para ${uid}.`
+    );
+
     return false;
   }
 
-  const response = await messaging.sendEachForMulticast({
-    tokens,
+  const response =
+    await messaging.sendEachForMulticast({
+      tokens,
 
-    notification: {
-      title,
-      body
-    },
+      notification: {
+        title,
+        body
+      },
 
-    data: {
-      type,
-      url: PORTAL_URL
-    },
+      data: {
+        type,
+        url: PORTAL_URL
+      },
 
-    webpush: {
-      fcmOptions: {
-        link: PORTAL_URL
+      webpush: {
+        fcmOptions: {
+          link: PORTAL_URL
+        }
       }
-    }
-  });
+    });
 
   console.log(
     `Notificação enviada para ${uid}: ` +
@@ -162,7 +171,7 @@ async function sendNotification(
 
 
 // ======================================================
-// VERIFICA SE UMA RESPOSTA É CONFIRMADA
+// VERIFICA CONFIRMAÇÃO
 // ======================================================
 
 function isConfirmedResponse(response = {}) {
@@ -176,8 +185,12 @@ function isConfirmedResponse(response = {}) {
     response.response,
     response.answer
   ]
-    .filter(v => v !== undefined && v !== null)
-    .map(v => String(v).toLowerCase());
+    .filter(
+      v => v !== undefined && v !== null
+    )
+    .map(
+      v => String(v).toLowerCase()
+    );
 
   const accepted = [
     "confirmed",
@@ -199,7 +212,7 @@ function isConfirmedResponse(response = {}) {
 
 
 // ======================================================
-// DESCOBRE O UID DA CONTA DE UM MEMBRO
+// DESCOBRE UID DO MEMBRO
 // ======================================================
 
 async function resolveMemberUid(member) {
@@ -226,9 +239,9 @@ async function resolveMemberUid(member) {
     return null;
   }
 
-  const memberId = String(member);
+  const memberId =
+    String(member);
 
-  // Primeiro verifica se o ID já é um usuário.
   const userDoc = await db
     .collection("users")
     .doc(memberId)
@@ -238,7 +251,6 @@ async function resolveMemberUid(member) {
     return memberId;
   }
 
-  // Depois procura o cadastro em members.
   const memberDoc = await db
     .collection("members")
     .doc(memberId)
@@ -246,13 +258,14 @@ async function resolveMemberUid(member) {
 
   if (!memberDoc.exists) {
     console.log(
-      `Membro ${memberId} não encontrado em members nem users.`
+      `Membro ${memberId} não encontrado.`
     );
 
     return null;
   }
 
-  const data = memberDoc.data() || {};
+  const data =
+    memberDoc.data() || {};
 
   const uid =
     data.accountUid ||
@@ -274,7 +287,7 @@ async function resolveMemberUid(member) {
 
 
 // ======================================================
-// RETORNA OS USUÁRIOS ESCALADOS
+// USUÁRIOS DA ESCALA
 // ======================================================
 
 async function getRosterUsers(roster) {
@@ -292,19 +305,19 @@ async function getRosterUsers(roster) {
       typeof member === "string"
         ? member
         : (
-          member.memberId ||
-          member.id ||
-          member.uid ||
-          null
-        );
+            member.memberId ||
+            member.id ||
+            member.uid ||
+            null
+          );
 
-    const uid = await resolveMemberUid(member);
+    const uid =
+      await resolveMemberUid(member);
 
     if (!uid) {
       continue;
     }
 
-    // Evita duplicação.
     if (
       users.some(
         item => item.uid === uid
@@ -324,7 +337,7 @@ async function getRosterUsers(roster) {
 
 
 // ======================================================
-// PROCURA A CONFIRMAÇÃO DO USUÁRIO
+// CONFIRMAÇÃO DA ESCALA
 // ======================================================
 
 async function getConfirmation(
@@ -332,9 +345,6 @@ async function getConfirmation(
   uid,
   memberId = null
 ) {
-  // Formato atual:
-  // rosters/{rosterId}/responses/{uid}
-
   let responseDoc = await db
     .collection("rosters")
     .doc(rosterId)
@@ -345,16 +355,13 @@ async function getConfirmation(
   if (responseDoc.exists) {
     return {
       exists: true,
-      confirmed:
-        isConfirmedResponse(
-          responseDoc.data()
-        ),
-      data:
+      confirmed: isConfirmedResponse(
         responseDoc.data()
+      ),
+      data: responseDoc.data()
     };
   }
 
-  // Compatibilidade com respostas antigas.
   if (
     memberId &&
     memberId !== uid
@@ -369,17 +376,14 @@ async function getConfirmation(
     if (responseDoc.exists) {
       return {
         exists: true,
-        confirmed:
-          isConfirmedResponse(
-            responseDoc.data()
-          ),
-        data:
+        confirmed: isConfirmedResponse(
           responseDoc.data()
+        ),
+        data: responseDoc.data()
       };
     }
   }
 
-  // Última tentativa: procura pelo userId.
   const responseQuery = await db
     .collection("rosters")
     .doc(rosterId)
@@ -430,9 +434,7 @@ function reminderDue(
     ) / 60000;
 
 
-  // ====================================================
   // 1 HORA ANTES
-  // ====================================================
 
   if (
     diffMinutes > 45 &&
@@ -442,10 +444,8 @@ function reminderDue(
   }
 
 
-  // ====================================================
-  // MANHÃ DO DIA DO CULTO
+  // MANHÃ DO CULTO
   // 08:00 até 08:14
-  // ====================================================
 
   if (
     localKey(now) ===
@@ -458,10 +458,8 @@ function reminderDue(
   }
 
 
-  // ====================================================
   // DIA ANTERIOR
   // 15:00 até 15:14
-  // ====================================================
 
   const tomorrow =
     new Date(
@@ -501,9 +499,7 @@ function messageFor(
   const when =
     formatServiceDate(eventDate);
 
-  if (
-    type === "previous-day"
-  ) {
+  if (type === "previous-day") {
     return {
       title:
         "🎵 Você está escalado amanhã",
@@ -514,9 +510,7 @@ function messageFor(
     };
   }
 
-  if (
-    type === "morning"
-  ) {
+  if (type === "morning") {
     return {
       title:
         "☀️ Hoje é dia de culto",
@@ -539,7 +533,7 @@ function messageFor(
 
 
 // ======================================================
-// SALVA NO SINO DO SITE
+// SALVA NA CENTRAL DO SITE
 // ======================================================
 
 async function savePortalNotification(
@@ -631,7 +625,6 @@ async function checkRosters() {
       const uid =
         person.uid;
 
-      // Só envia se a presença estiver confirmada.
       const confirmation =
         await getConfirmation(
           rosterDoc.id,
@@ -644,14 +637,12 @@ async function checkRosters() {
         !confirmation.confirmed
       ) {
         console.log(
-          `Ignorando ${uid}: ` +
-          `presença não confirmada.`
+          `Ignorando ${uid}: presença não confirmada.`
         );
 
         continue;
       }
 
-      // ID único para impedir lembrete duplicado.
       const reminderId =
         `${rosterDoc.id}_` +
         `${uid}_` +
@@ -663,9 +654,7 @@ async function checkRosters() {
           .collection(
             "notificationLogs"
           )
-          .doc(
-            reminderId
-          );
+          .doc(reminderId);
 
       const existing =
         await reminderRef.get();
@@ -695,7 +684,6 @@ async function checkRosters() {
           body
         );
 
-      // Registra para não enviar novamente.
       await reminderRef.set({
         rosterId:
           rosterDoc.id,
@@ -711,16 +699,13 @@ async function checkRosters() {
 
         eventDate:
           admin.firestore.Timestamp
-            .fromDate(
-              eventDate
-            ),
+            .fromDate(eventDate),
 
         sentAt:
           admin.firestore.FieldValue
             .serverTimestamp()
       });
 
-      // Salva também no sino do portal.
       await savePortalNotification(
         uid,
         {
@@ -764,7 +749,74 @@ async function checkRosters() {
 
 
 // ======================================================
+// TESTE MANUAL SOMENTE PARA JEAN
+// ======================================================
+
+const TEST_UID =
+  "v7IIVCiLYlh1ALLn1YplBJZTSFi2";
+
+async function runManualTest() {
+  const title =
+    "🔔 Teste de lembrete de escala";
+
+  const body =
+    "Jean, este é um teste do sistema de lembretes de escala da CEP Pirapozinho.";
+
+  console.log(
+    "========================================"
+  );
+
+  console.log(
+    "MODO DE TESTE MANUAL"
+  );
+
+  console.log(
+    `Usuário do teste: ${TEST_UID}`
+  );
+
+  const delivered =
+    await sendNotification(
+      TEST_UID,
+      title,
+      body,
+      "roster-reminder-test"
+    );
+
+  await savePortalNotification(
+    TEST_UID,
+    {
+      type:
+        "roster-reminder-test",
+
+      title,
+
+      body,
+
+      test: true
+    }
+  );
+
+  console.log(
+    delivered
+      ? "Teste enviado com sucesso."
+      : "O teste não chegou a nenhum dispositivo ativo."
+  );
+
+  console.log(
+    "========================================"
+  );
+}
+
+
+// ======================================================
 // EXECUÇÃO
 // ======================================================
 
-await checkRosters();
+if (
+  process.env.GITHUB_EVENT_NAME ===
+  "workflow_dispatch"
+) {
+  await runManualTest();
+} else {
+  await checkRosters();
+}
