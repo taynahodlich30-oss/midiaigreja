@@ -1,0 +1,28 @@
+name: Versículo Diário
+
+on:
+  schedule:
+    # 09:00 no horário de Brasília = 12:00 UTC
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  send-daily-verse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar arquivos
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar Firebase Admin
+        run: npm install firebase-admin
+
+      - name: Enviar Versículo do Dia
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node .github/scripts/send-daily-verse.mjs
