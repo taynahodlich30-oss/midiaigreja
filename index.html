@@ -98,6 +98,51 @@
     #notification-center-modal > div { width:100% !important; max-width:36rem !important; max-height:88vh !important; border-radius:2rem 2rem 0 0 !important; border-bottom:0 !important; padding:1.1rem !important; background:linear-gradient(180deg,#111827,#0f172a) !important; }
     #notification-center-list > article { border-radius:1rem !important; box-shadow:0 8px 25px rgba(0,0,0,.15); }
     @media (min-width:640px){ #notification-center-modal { align-items:center !important; padding:1rem !important; } #notification-center-modal > div { border-radius:2rem !important; border-bottom:1px solid rgb(51 65 85) !important; } }
+  
+    /* ===== CENTRAL DE NOTIFICAÇÕES — APP ===== */
+    #notification-center-modal {
+      align-items: flex-end !important;
+      padding: 0 !important;
+      background: rgba(2, 6, 23, .82) !important;
+      backdrop-filter: blur(14px);
+    }
+    #notification-center-modal .notification-sheet {
+      width: 100%;
+      max-width: 38rem;
+      height: min(88vh, 760px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(99,102,241,.22);
+      border-bottom: 0;
+      border-radius: 2rem 2rem 0 0;
+      background: linear-gradient(180deg,#111827 0%,#0f172a 50%,#020617 100%);
+      box-shadow: 0 -24px 70px rgba(0,0,0,.48);
+    }
+    .notification-card {
+      border: 1px solid rgba(71,85,105,.48);
+      border-radius: 1.25rem;
+      background: rgba(15,23,42,.86);
+      padding: .95rem;
+      transition: .18s ease;
+    }
+    .notification-card.unread {
+      border-color: rgba(99,102,241,.48);
+      background: linear-gradient(135deg,rgba(79,70,229,.16),rgba(15,23,42,.92));
+    }
+    .notification-action {
+      min-height: 66px;
+      border-radius: 1.1rem;
+    }
+    @media (min-width:640px) {
+      #notification-center-modal { align-items:center !important; padding:1rem !important; }
+      #notification-center-modal .notification-sheet {
+        height:min(82vh,720px);
+        border-bottom:1px solid rgba(99,102,241,.22);
+        border-radius:2rem;
+      }
+    }
+
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
@@ -2693,39 +2738,59 @@
       if (!("Notification" in window)) return portalToast('Seu navegador não suporta notificações.', 'error');
       if (!currentUser) return portalToast('Entre na sua conta antes de ativar as notificações.', 'error');
       if (!messaging) return portalToast('Este navegador não oferece suporte às notificações do portal.', 'error');
-      try {
-        const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
-        if (permission !== 'granted') return portalToast('Permissão não concedida. Ative as notificações nas configurações do navegador.', 'error');
 
-        let registration = await navigator.serviceWorker.getRegistration('./');
-        if (!registration) registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './' });
+      try {
+        const permission = Notification.permission === 'granted'
+          ? 'granted'
+          : await Notification.requestPermission();
+
+        if (permission !== 'granted') {
+          return portalToast('Permissão não concedida. Ative as notificações nas configurações do navegador.', 'error');
+        }
+
+        // O portal já registra o firebase-messaging-sw.js na raiz do próprio GitHub Pages.
+        // Reaproveitamos o registro existente para não gerar Error 20 no PWA.
+        let registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) {
+          registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+        }
         registration = await navigator.serviceWorker.ready;
 
-        const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: registration });
+        const token = await messaging.getToken({
+          vapidKey: FCM_VAPID_KEY,
+          serviceWorkerRegistration: registration
+        });
         if (!token) throw new Error('Token de notificação não gerado.');
 
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
-        const deviceId = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2,'0')).join('').slice(0,40);
-        await db.collection('users').doc(currentUser.uid).collection('devices').doc(deviceId).set({
-          token, enabled: true, userAgent: navigator.userAgent,
-          displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser',
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        const deviceId = [...new Uint8Array(digest)]
+          .map(byte => byte.toString(16).padStart(2, '0')).join('').slice(0, 40);
+
+        await db.collection('users').doc(currentUser.uid)
+          .collection('devices').doc(deviceId).set({
+            token,
+            enabled: true,
+            active: true,
+            userAgent: navigator.userAgent,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
 
         portalToast('Notificações ativadas neste aparelho!', 'success');
+
         try {
           await registration.showNotification('Portal CEP Pirapozinho', {
-            body:'Notificações ativadas neste aparelho!', icon:'./icon-192.png', badge:'./icon-192.png',
-            tag:'portal-notifications-enabled'
+            body: 'Notificações ativadas com sucesso!',
+            icon: './icon-192.png',
+            badge: './icon-192.png',
+            tag: 'cep-notifications-enabled'
           });
-        } catch (_) {}
-      } catch (error) {
-        console.error('Falha ao ativar notificações:', error);
-        const details=String(error?.message || error || '');
-        if (window.matchMedia('(display-mode: standalone)').matches && /registration failed|error 20|aborterror/i.test(details)) {
-          return portalToast('O app instalado não conseguiu renovar o registro. Como já foi ativado no Chrome, suas notificações continuam funcionando.', 'error');
+        } catch (previewError) {
+          console.warn('Token salvo; confirmação visual não exibida:', previewError);
         }
-        portalToast(`Não foi possível ativar as notificações${details ? ': '+details : '.'}`, 'error');
+      } catch (error) {
+        console.error('Erro ao ativar notificações:', error);
+        const details = String(error?.message || error || '');
+        portalToast('Não foi possível ativar as notificações' + (details ? ': ' + details : '.'), 'error');
       }
     }
 
@@ -2904,19 +2969,19 @@
       if (!currentUser) return;
       try {
         const snap = await db.collection('users').doc(currentUser.uid)
-          .collection('notifications').where('read', '==', false).get();
-
-        if (snap.empty) return;
-
+          .collection('notifications').orderBy('createdAt', 'desc').limit(100).get();
+        const unread = snap.docs.filter(doc => doc.data().read !== true);
+        if (!unread.length) return portalToast('Todas já estão lidas.', 'success');
         const batch = db.batch();
-        snap.docs.forEach(doc => batch.set(doc.ref, {
+        unread.forEach(doc => batch.set(doc.ref, {
           read: true,
           readAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true }));
         await batch.commit();
+        portalToast('Todas marcadas como lidas.', 'success');
       } catch (error) {
-        console.error('Erro ao marcar todas como lidas:', error);
-        alert('Não foi possível marcar todas como lidas.');
+        console.error(error);
+        portalToast('Não foi possível marcar as notificações.', 'error');
       }
     }
 
@@ -2944,45 +3009,70 @@
 
     async function openNotificationCenter() {
       if (!currentUser) return;
-
-      const existing = document.getElementById('notification-center-modal');
-      if (existing) existing.remove();
+      document.getElementById('notification-center-modal')?.remove();
 
       const modal = document.createElement('div');
       modal.id = 'notification-center-modal';
-      modal.className = 'fixed inset-0 z-[95] bg-slate-950/90 backdrop-blur flex items-center justify-center p-3 sm:p-4';
+      modal.className = 'fixed inset-0 z-[95] flex justify-center';
       modal.innerHTML = `
-        <div class="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl">
-          <div class="border-b border-slate-800 p-4 sm:p-5">
+        <section class="notification-sheet">
+          <div class="shrink-0 px-5 pt-3 pb-5 border-b border-slate-800 bg-gradient-to-br from-indigo-600/20 via-violet-600/10 to-transparent">
+            <div class="sm:hidden mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-600"></div>
             <div class="flex items-start justify-between gap-3">
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-[.2em] text-indigo-400">Portal CEP</p>
-                <h2 class="mt-1 flex items-center gap-2 text-xl font-bold text-white"><i data-lucide="bell" class="w-5 h-5 text-amber-400"></i> Notificações</h2>
-                <p class="mt-1 text-xs text-slate-400">Lembretes de escala, avisos e versículo do dia.</p>
+              <div class="flex items-center gap-3">
+                <div class="h-12 w-12 rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
+                  <i data-lucide="bell-ring" class="h-6 w-6 text-amber-300"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-[.22em] text-indigo-300">Portal CEP</p>
+                  <h2 class="text-2xl font-black text-white">Notificações</h2>
+                  <p class="text-xs text-slate-400">Escalas, lembretes e versículo do dia</p>
+                </div>
               </div>
-              <button onclick="document.getElementById('notification-center-modal').remove()" class="rounded-xl bg-slate-800 p-2.5 text-slate-400 hover:text-white" aria-label="Fechar"><i data-lucide="x" class="w-5 h-5"></i></button>
+              <button onclick="document.getElementById('notification-center-modal')?.remove()" class="h-10 w-10 shrink-0 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
+                <i data-lucide="x" class="h-5 w-5"></i>
+              </button>
             </div>
-            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <button onclick="requestNotificationPermission()" class="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5 text-xs font-semibold text-amber-200"><i data-lucide="smartphone" class="mr-1 inline w-3.5 h-3.5"></i> Ativar no aparelho</button>
-              <button onclick="markAllNotificationsRead()" class="rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-3 py-2.5 text-xs font-semibold text-indigo-200"><i data-lucide="check-check" class="mr-1 inline w-3.5 h-3.5"></i> Marcar todas</button>
-              <button onclick="clearReadNotifications()" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2.5 text-xs font-semibold text-slate-300"><i data-lucide="trash-2" class="mr-1 inline w-3.5 h-3.5"></i> Limpar lidas</button>
+
+            <div class="grid grid-cols-3 gap-2 mt-5">
+              <button onclick="requestNotificationPermission()" class="notification-action flex flex-col items-center justify-center border border-amber-500/20 bg-amber-500/10 text-amber-100">
+                <i data-lucide="smartphone" class="h-5 w-5 text-amber-300"></i><span class="mt-1 text-[10px] font-bold">ATIVAR</span>
+              </button>
+              <button onclick="markAllNotificationsRead()" class="notification-action flex flex-col items-center justify-center border border-indigo-500/20 bg-indigo-500/10 text-indigo-100">
+                <i data-lucide="check-check" class="h-5 w-5 text-indigo-300"></i><span class="mt-1 text-[10px] font-bold">LER TODAS</span>
+              </button>
+              <button onclick="clearReadNotifications()" class="notification-action flex flex-col items-center justify-center border border-slate-700 bg-slate-800/80 text-slate-200">
+                <i data-lucide="trash-2" class="h-5 w-5"></i><span class="mt-1 text-[10px] font-bold">LIMPAR</span>
+              </button>
             </div>
           </div>
-          <div id="notification-center-list" class="min-h-0 flex-1 space-y-2 overflow-y-auto p-4 sm:p-5">
-            <p class="py-8 text-center text-sm text-slate-500">Carregando...</p>
+
+          <div class="shrink-0 flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-950/40">
+            <span class="text-[10px] font-bold uppercase tracking-[.2em] text-slate-500">Mais recentes</span>
+            <span id="notification-sheet-status" class="text-[10px] text-slate-600"></span>
           </div>
-        </div>`;
+
+          <div id="notification-center-list" class="min-h-0 flex-1 overflow-y-auto space-y-2.5 p-4 sm:p-5">
+            <div class="py-12 text-center">
+              <i data-lucide="loader-circle" class="mx-auto h-7 w-7 animate-spin text-indigo-400"></i>
+              <p class="mt-3 text-xs text-slate-500">Carregando...</p>
+            </div>
+          </div>
+        </section>`;
+
       document.body.appendChild(modal);
-      if (window.lucide) lucide.createIcons();
+      lucide.createIcons();
 
       try {
         const snap = await db.collection('users').doc(currentUser.uid)
-          .collection('notifications').orderBy('createdAt', 'desc').limit(100).get();
+          .collection('notifications').orderBy('createdAt','desc').limit(100).get();
         renderNotificationCenter(snap.docs);
+        const status = document.getElementById('notification-sheet-status');
+        if (status) status.textContent = `${snap.size} aviso${snap.size === 1 ? '' : 's'}`;
       } catch (error) {
-        console.error('Erro ao carregar notificações:', error);
+        console.error('Erro ao carregar central:', error);
         const list = document.getElementById('notification-center-list');
-        if (list) list.innerHTML = '<p class="py-8 text-center text-sm text-red-300">Não foi possível carregar o histórico de notificações.</p>';
+        if (list) list.innerHTML = '<div class="py-12 text-center text-sm text-red-300">Não foi possível carregar as notificações.</div>';
       }
     }
 
