@@ -220,10 +220,13 @@ h1,h2,h3{letter-spacing:-.02em}
   position:fixed;right:16px;bottom:18px;z-index:64;display:flex;flex-direction:column;align-items:flex-end;gap:9px;
 }
 #cep-ux-tools .ux-main{
-  width:48px;height:48px;border-radius:16px;border:1px solid rgba(129,140,248,.28);
+  width:60px;height:60px;min-width:60px;min-height:60px;border-radius:20px;border:1px solid rgba(129,140,248,.34);
   background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 16px 36px rgba(79,70,229,.28);
+  box-shadow:0 18px 42px rgba(79,70,229,.34);cursor:pointer;touch-action:manipulation;pointer-events:auto;
+  -webkit-tap-highlight-color:transparent;user-select:none;
 }
+#cep-ux-tools .ux-main svg{width:25px;height:25px;pointer-events:none}
+#cep-ux-tools .ux-main:active{transform:scale(.94)}
 #cep-ux-menu{
   display:none;width:min(310px,calc(100vw - 28px));padding:10px;border-radius:20px;
   background:rgba(7,11,24,.96);border:1px solid rgba(148,163,184,.16);
@@ -232,7 +235,8 @@ h1,h2,h3{letter-spacing:-.02em}
 #cep-ux-menu.open{display:block;animation:cepPop .16s ease-out both}
 .ux-menu-title{padding:5px 8px 9px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#64748b}
 .ux-action{
-  width:100%;display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:13px;text-align:left;color:#cbd5e1;
+  width:100%;min-height:50px;display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:14px;text-align:left;color:#cbd5e1;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
 }
 .ux-action:hover{background:rgba(99,102,241,.10);color:#fff}
 .ux-action i{width:17px;height:17px;color:#a5b4fc}
@@ -248,9 +252,12 @@ h1,h2,h3{letter-spacing:-.02em}
 .cep-ux-pulse{animation:cepUxPulse .38s ease}
 @keyframes cepUxPulse{50%{box-shadow:0 0 0 5px rgba(99,102,241,.11)}}
 @media(max-width:767px){
-  #cep-ux-tools{right:11px;bottom:11px}
-  #cep-ux-tools .ux-main{width:44px;height:44px;border-radius:15px}
-  #cep-resume-toast{bottom:68px}
+  #cep-ux-tools{right:14px;bottom:18px}
+  #cep-ux-tools .ux-main{width:62px;height:62px;min-width:62px;min-height:62px;border-radius:21px}
+  #cep-ux-tools .ux-main svg{width:27px;height:27px}
+  #cep-ux-menu{width:min(330px,calc(100vw - 24px));padding:12px}
+  .ux-action{min-height:54px;padding:13px 14px}
+  #cep-resume-toast{bottom:86px}
 }
 @media(prefers-reduced-motion:reduce){.cep-ux-pulse{animation:none}}
 
