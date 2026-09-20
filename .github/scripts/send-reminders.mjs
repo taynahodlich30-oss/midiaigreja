@@ -43,7 +43,6 @@ function partsInSaoPaulo(date = new Date()) {
 
 function localKey(date = new Date()) {
   const p = partsInSaoPaulo(date);
-
   return `${p.year}-${p.month}-${p.day}`;
 }
 
@@ -130,7 +129,6 @@ async function sendNotification(
     console.log(
       `Sem dispositivo ativo para ${uid}.`
     );
-
     return false;
   }
 
@@ -260,7 +258,6 @@ async function resolveMemberUid(member) {
     console.log(
       `Membro ${memberId} não encontrado.`
     );
-
     return null;
   }
 
@@ -278,7 +275,6 @@ async function resolveMemberUid(member) {
     console.log(
       `Membro ${memberId} não possui conta vinculada.`
     );
-
     return null;
   }
 
@@ -355,10 +351,12 @@ async function getConfirmation(
   if (responseDoc.exists) {
     return {
       exists: true,
-      confirmed: isConfirmedResponse(
+      confirmed:
+        isConfirmedResponse(
+          responseDoc.data()
+        ),
+      data:
         responseDoc.data()
-      ),
-      data: responseDoc.data()
     };
   }
 
@@ -376,10 +374,12 @@ async function getConfirmation(
     if (responseDoc.exists) {
       return {
         exists: true,
-        confirmed: isConfirmedResponse(
+        confirmed:
+          isConfirmedResponse(
+            responseDoc.data()
+          ),
+        data:
           responseDoc.data()
-        ),
-        data: responseDoc.data()
       };
     }
   }
@@ -637,7 +637,8 @@ async function checkRosters() {
         !confirmation.confirmed
       ) {
         console.log(
-          `Ignorando ${uid}: presença não confirmada.`
+          `Ignorando ${uid}: ` +
+          `presença não confirmada.`
         );
 
         continue;
@@ -749,74 +750,7 @@ async function checkRosters() {
 
 
 // ======================================================
-// TESTE MANUAL SOMENTE PARA JEAN
-// ======================================================
-
-const TEST_UID =
-  "v7IIVCiLYlh1ALLn1YplBJZTSFi2";
-
-async function runManualTest() {
-  const title =
-    "🔔 Teste de lembrete de escala";
-
-  const body =
-    "Jean, este é um teste do sistema de lembretes de escala da CEP Pirapozinho.";
-
-  console.log(
-    "========================================"
-  );
-
-  console.log(
-    "MODO DE TESTE MANUAL"
-  );
-
-  console.log(
-    `Usuário do teste: ${TEST_UID}`
-  );
-
-  const delivered =
-    await sendNotification(
-      TEST_UID,
-      title,
-      body,
-      "roster-reminder-test"
-    );
-
-  await savePortalNotification(
-    TEST_UID,
-    {
-      type:
-        "roster-reminder-test",
-
-      title,
-
-      body,
-
-      test: true
-    }
-  );
-
-  console.log(
-    delivered
-      ? "Teste enviado com sucesso."
-      : "O teste não chegou a nenhum dispositivo ativo."
-  );
-
-  console.log(
-    "========================================"
-  );
-}
-
-
-// ======================================================
 // EXECUÇÃO
 // ======================================================
 
-if (
-  process.env.GITHUB_EVENT_NAME ===
-  "workflow_dispatch"
-) {
-  await runManualTest();
-} else {
-  await checkRosters();
-}
+await checkRosters();
