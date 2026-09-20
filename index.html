@@ -143,6 +143,43 @@
       }
     }
 
+
+    /* ===== POLIMENTO GERAL DO PORTAL — 2026 ===== */
+    :root { color-scheme: dark; }
+    html { scroll-behavior: smooth; }
+    body { overflow-x: hidden; }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+      background: radial-gradient(circle at 50% -10%, rgba(99,102,241,.10), transparent 34rem);
+    }
+    header { border-color: rgba(71,85,105,.42) !important; }
+    header > div { min-height: 68px; }
+    main { animation: portalEnter .28s ease-out; }
+    @keyframes portalEnter { from { opacity:0; transform:translateY(5px) } to { opacity:1; transform:none } }
+    .tab-btn, .midia-tab-btn { transition: transform .16s ease, background .16s ease, box-shadow .16s ease !important; }
+    .tab-btn:hover, .midia-tab-btn:hover { transform: translateY(-1px); }
+    .tab-btn.bg-indigo-600, .midia-tab-btn.bg-indigo-600 { box-shadow: 0 8px 24px rgba(79,70,229,.28); }
+    input, select, textarea { transition: border-color .16s ease, box-shadow .16s ease, background .16s ease; }
+    input:focus, select:focus, textarea:focus { border-color: rgb(99 102 241) !important; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+    button { transition-property: transform, background-color, border-color, color, opacity, box-shadow !important; transition-duration: .16s !important; }
+    button:active { transform: scale(.98); }
+    .tab-content, .midia-tab-content { animation: sectionEnter .22s ease-out; }
+    @keyframes sectionEnter { from { opacity:.35; transform:translateY(4px) } to { opacity:1; transform:none } }
+    #notification-count:not(.hidden) { display:flex !important; box-shadow:0 0 0 3px #0f172a; }
+    .notification-card:hover { transform: translateY(-1px); border-color: rgba(129,140,248,.5); }
+    #portal-toast-host { max-width: min(92vw, 420px); }
+    @media (max-width: 640px) {
+      header > div { gap:.7rem !important; padding-top:.65rem !important; padding-bottom:.65rem !important; }
+      header .flex.items-center.gap-3.flex-wrap { gap:.45rem !important; }
+      main nav { position: sticky; top: 76px; z-index: 30; margin-inline: -.15rem; box-shadow: 0 12px 30px rgba(2,6,23,.38); }
+      .tab-btn, .midia-tab-btn { min-height: 44px; padding-left:.85rem !important; padding-right:.85rem !important; }
+      .login-card { padding:1.4rem !important; border-radius:1.5rem !important; }
+      .notification-action { min-height:58px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+    }
+
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
