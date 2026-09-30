@@ -9,9 +9,9 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>Portal de Ministérios - CEP Pirapozinho</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <link rel="stylesheet" href="./tailwind.css?v=1">
+  <script src="./icons.js?v=1"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
@@ -279,7 +279,7 @@ h1,h2,h3{letter-spacing:-.02em}
 
 </style>
 
-<link rel="stylesheet" href="./portal.css?v=1">
+<link rel="stylesheet" href="./portal.css?v=2">
 <meta name="theme-color" content="#050814">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -409,10 +409,12 @@ h1,h2,h3{letter-spacing:-.02em}
 
     <!-- LOUVOR & PROJEÇÃO DEPARTMENT VIEW -->
     <div id="view-louvor" class="space-y-6">
+      <section id="louvor-overview" class="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Resumo do Louvor"></section>
+
       <nav class="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 text-sm">
-        <button onclick="switchTab('roster')" id="tab-btn-roster" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> Escalas & Presença</button>
+        <button onclick="switchTab('roster')" id="tab-btn-roster" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> Escalas</button>
         <button onclick="switchTab('repertoire')" id="tab-btn-repertoire" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="library" class="w-4 h-4"></i> Músicas & Cifras</button>
-        <button onclick="switchTab('pads')" id="tab-btn-pads" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5"><i data-lucide="waves" class="w-4 h-4 text-indigo-400"></i> Worship Pads</button>
+        <button onclick="switchTab('pads')" id="tab-btn-pads" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5"><i data-lucide="waves" class="w-4 h-4"></i> Pads & Metrônomo</button>
         <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="calendar-days" class="w-4 h-4"></i> Agenda</button>
         <button onclick="switchTab('history')" id="tab-btn-history" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4"></i> Histórico</button>
         <button onclick="switchTab('central')" id="tab-btn-central" class="tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Central</button>
@@ -420,55 +422,43 @@ h1,h2,h3{letter-spacing:-.02em}
       </nav>
 
       <!-- TAB 1: ESCALAS LOUVOR -->
-      <div id="tab-roster" class="tab-content space-y-6">
-        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800 flex-wrap gap-4">
-          <div>
-            <h2 class="text-lg font-bold text-white">Escalas de Cultos, Louvor & Projeção</h2>
-            <p class="text-xs text-slate-400">Confirme sua presença ou solicite troca com antecedência.</p>
-          </div>
-          <div class="flex gap-2"><button data-leader-only onclick="configureWhatsappGroup()" class="px-3 py-1.5 bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Grupo</button><button data-leader-only onclick="openNewRosterModal('louvor')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Novo Culto</button></div>
+      <div id="tab-roster" class="tab-content lv-plain space-y-4">
+        <div class="md-section-head">
+          <div><h2>Escalas do Louvor</h2><p>Quem toca, o que ensaiar e em qual tom. Cada pessoa confirma a própria presença.</p></div>
+          <div class="flex gap-2"><button data-leader-only onclick="configureWhatsappGroup()" class="md-btn md-btn-ghost"><i data-lucide="message-circle" class="w-4 h-4"></i> Grupo</button><button data-leader-only onclick="openNewRosterModal('louvor')" class="md-btn md-btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nova escala</button></div>
         </div>
-        <div id="roster-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="roster-list-container" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+        <div id="roster-list-past"></div>
       </div>
 
       <!-- TAB 2: MÚSICAS & CIFRAS COM PROJEÇÃO -->
-      <div id="tab-repertoire" class="tab-content hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <div>
-              <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
-                <i data-lucide="book-open" class="w-6 h-6"></i> Repertório, Cifras & Projeção de Slides
-              </h2>
-              <p class="text-xs text-slate-400 mt-1">Visualize cifras digitadas, arquivos PDF ou abra o teleprompter para projeção.</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button data-uploader-only onclick="document.getElementById('direct-pdf-upload').click()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition shadow-lg shadow-emerald-950/30">
-                <i data-lucide="upload" class="w-4 h-4"></i> Enviar PDF
-              </button>
-              <input id="direct-pdf-upload" type="file" accept="application/pdf,.pdf" multiple class="hidden" onchange="uploadPdfFiles(this.files); this.value=''">
-              <button data-uploader-only onclick="openNewSongModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
-                <i data-lucide="plus" class="w-4 h-4"></i> Cifra em texto
-              </button>
-            </div>
+      <div id="tab-repertoire" class="tab-content lv-plain hidden space-y-4">
+        <div class="md-section-head">
+          <div><h2>Músicas & Cifras</h2><p>Cifras digitadas ou em PDF, com troca de tom, BPM e projeção.</p></div>
+          <div class="flex flex-wrap gap-2">
+            <button data-uploader-only onclick="document.getElementById('direct-pdf-upload').click()" class="md-btn md-btn-ok"><i data-lucide="upload" class="w-4 h-4"></i> Enviar PDF</button>
+            <input id="direct-pdf-upload" type="file" accept="application/pdf,.pdf" multiple class="hidden" onchange="uploadPdfFiles(this.files); this.value=''">
+            <button data-uploader-only onclick="openNewSongModal()" class="md-btn md-btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Cifra em texto</button>
           </div>
-          <div id="pdf-upload-status" class="hidden mb-5 p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-sm text-indigo-200 items-center gap-3" role="status">
+        </div>
+          <div id="pdf-upload-status" class="hidden p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-sm text-indigo-200 items-center gap-3" role="status">
             <i data-lucide="loader-circle" class="upload-progress w-5 h-5"></i><span id="pdf-upload-status-text">Preparando PDF...</span>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="space-y-3">
-              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Lista de Músicas</label>
-              <div id="songs-list-container" class="space-y-2 max-h-[500px] overflow-y-auto pr-2"></div>
-            </div>
-            <div class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col justify-between">
-              <div id="song-detail-view">
-                <div class="text-center py-16 text-slate-500">
-                  <i data-lucide="music" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
-                  <p class="text-sm">Selecione uma música ao lado para ver a cifra, PDF ou abrir o teleprompter / projeção.</p>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] gap-4 items-start">
+          <aside class="md-card lv-songs-panel">
+            <label class="lv-search"><i data-lucide="search" class="w-4 h-4"></i><input id="lv-song-search" type="search" placeholder="Buscar música..." oninput="lvBuscarMusica(this.value)" autocomplete="off"></label>
+            <div id="lv-song-filters" class="md-filters mt-3" aria-label="Filtrar músicas"></div>
+            <div id="songs-list-container" class="lv-songs-list"></div>
+          </aside>
+          <section class="md-card lv-song-detail min-w-0">
+            <div id="song-detail-view">
+              <div class="text-center py-16 text-slate-500">
+                <i data-lucide="music" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
+                <p class="text-sm">Escolha uma música para ver a cifra, o PDF ou abrir a projeção.</p>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
 
@@ -478,9 +468,9 @@ h1,h2,h3{letter-spacing:-.02em}
           <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
             <div>
               <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
-                <i data-lucide="waves" class="w-6 h-6"></i> Worship Pads / Continuous Ambient Drones
+                <i data-lucide="waves" class="w-6 h-6"></i> Pads de adoração
               </h2>
-              <p class="text-xs text-slate-400 mt-1">Sintetizador Web Audio API para sustentação e ambiente em momentos de oração.</p>
+              <p class="text-xs text-slate-400 mt-1">Som ambiente contínuo para oração, ministração e transições entre músicas.</p>
             </div>
             <button onclick="stopWorshipPad()" class="px-4 py-2 bg-red-600/30 hover:bg-red-600/50 border border-red-500/40 text-red-300 rounded-lg text-sm font-semibold flex items-center gap-2 transition">
               <i data-lucide="square" class="w-4 h-4"></i> Parar Pad
@@ -489,7 +479,7 @@ h1,h2,h3{letter-spacing:-.02em}
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-950/60 p-4 rounded-lg border border-slate-800/80 mb-6">
             <div>
-              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Volume do Ambient Pad</label>
+              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Volume do pad</label>
               <div class="flex items-center gap-3">
                 <i data-lucide="volume-2" class="w-5 h-5 text-indigo-400"></i>
                 <input type="range" id="pad-volume" min="0" max="1" step="0.01" value="0.5" oninput="updatePadVolume(this.value)" class="w-full accent-indigo-500">
@@ -497,7 +487,7 @@ h1,h2,h3{letter-spacing:-.02em}
               </div>
             </div>
             <div>
-              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Timbre / Textura do Pad</label>
+              <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">Timbre do pad</label>
               <select id="pad-timbre" onchange="changePadTimbre(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-sm p-2 text-slate-200">
                 <option value="warm">Warm & Deep (Grave Envolvente)</option>
                 <option value="bright">Celestial & Bright (Brilhante)</option>
@@ -535,25 +525,20 @@ h1,h2,h3{letter-spacing:-.02em}
       </div>
 
       <!-- TAB 4: CALENDAR -->
-      <div id="tab-calendar" class="tab-content hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <div>
-              <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
-                <i data-lucide="calendar" class="w-6 h-6"></i> Agenda de Cultos & Eventos
-              </h2>
-              <p class="text-xs text-slate-400 mt-1">Gerencie a programação e horários.</p>
-            </div>
-            <button data-leader-only onclick="openNewEventModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
-              <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Evento
-            </button>
-          </div>
-          <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      <div id="tab-calendar" class="tab-content lv-plain hidden space-y-4">
+        <div class="md-section-head">
+          <div><h2>Agenda do Louvor</h2><p>Ensaios, eventos especiais e compromissos. Visível para toda a equipe.</p></div>
+          <button data-leader-only onclick="openNewEventModal()" class="md-btn md-btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Novo evento</button>
         </div>
+        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
       <!-- TAB 5: EQUIPE -->
-      <div id="tab-history" class="tab-content hidden space-y-6"><div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl"><h2 class="text-xl font-bold text-indigo-400 flex items-center gap-2 mb-5"><i data-lucide="history" class="w-6 h-6"></i> Histórico de escalas</h2><div id="roster-history-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"><p class="text-sm text-slate-500">Nenhuma escala anterior.</p></div></div></div>
+      <div id="tab-history" class="tab-content lv-plain hidden space-y-4">
+        <div class="md-section-head"><div><h2>Histórico de escalas</h2><p>Cultos que já aconteceram, com a equipe e as músicas de cada um.</p></div></div>
+        <div id="roster-history-filters" class="md-filters" aria-label="Filtrar histórico"></div>
+        <div id="roster-history-list" class="space-y-6"><p class="text-sm text-slate-500">Nenhuma escala anterior.</p></div>
+      </div>
 
       <div id="tab-central" class="tab-content hidden space-y-6">
         <section class="grid gap-4 md:grid-cols-3">
@@ -567,18 +552,16 @@ h1,h2,h3{letter-spacing:-.02em}
       </div>
 
       <!-- TAB 6: EQUIPE -->
-      <div id="tab-team" class="tab-content hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-          <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
-            <div><h2 class="text-xl font-bold text-indigo-400 flex items-center gap-2"><i data-lucide="users-round" class="w-6 h-6"></i> Equipe de Louvor & Projeção</h2><p class="text-xs text-slate-400 mt-1">Cadastre integrantes, funções e WhatsApp.</p></div>
-            <button data-leader-only onclick="addMember('louvor')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Adicionar membro</button>
-          </div>
-          <div id="members-louvor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-          <section data-admin-only class="mt-8 pt-6 border-t border-slate-800">
+      <div id="tab-team" class="tab-content lv-plain hidden space-y-4">
+        <div class="md-section-head">
+          <div><h2>Equipe de Louvor & Projeção</h2><p>Integrantes, funções, WhatsApp e quantas escalas cada um tem no mês.</p></div>
+          <button data-leader-only onclick="addMember('louvor')" class="md-btn md-btn-primary"><i data-lucide="user-plus" class="w-4 h-4"></i> Adicionar pessoa</button>
+        </div>
+        <div id="members-louvor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <section data-admin-only class="md-card">
             <div class="mb-4"><h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i> Permissões das contas</h3><p class="text-xs text-slate-400 mt-1">Escolha quem pode enviar e editar cifras. Somente a administradora altera estas permissões.</p></div>
             <div id="users-permissions-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"><p class="text-sm text-slate-500">Carregando contas...</p></div>
           </section>
-        </div>
       </div>
     </div>
 
@@ -1157,7 +1140,7 @@ h1,h2,h3{letter-spacing:-.02em}
         container.innerHTML = users.length ? users.map(user => {
           const isMainAdmin = user.id === ADMIN_UID;
           const disabled = user.accessDisabled === true;
-          return `<article class="p-4 bg-slate-950/80 border ${disabled ? 'border-red-500/30' : 'border-slate-800'} rounded-xl flex items-center gap-3"><div class="w-10 h-10 rounded-xl ${disabled ? 'bg-red-500/15 text-red-300' : 'bg-emerald-500/15 text-emerald-300'} flex items-center justify-center font-bold">${memberInitials(user.name || user.email || 'U')}</div><div class="min-w-0 flex-1"><p class="text-sm font-bold text-white truncate">${user.name || 'Usuário'}</p><p class="text-xs text-slate-500 truncate">${user.email || ''}</p>${disabled ? '<p class="mt-1 text-[10px] font-bold uppercase tracking-wider text-red-300">Acesso desativado</p>' : ''}</div><select onchange='changeUserRole(${JSON.stringify(user.id)}, this.value)' ${isMainAdmin ? 'disabled' : ''} class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white disabled:opacity-60"><option value="disabled" ${disabled ? 'selected' : ''}>Sem acesso</option><option value="member" ${!disabled && (user.role || 'member') === 'member' ? 'selected' : ''}>Membro</option><option value="uploader" ${!disabled && user.role === 'uploader' ? 'selected' : ''}>Responsável por cifras</option><option value="leader" ${!disabled && user.role === 'leader' ? 'selected' : ''}>Líder</option>${isMainAdmin ? '<option value="admin" selected>Administradora</option>' : ''}</select></article>`;
+          return `<article class="p-4 bg-slate-950/80 border ${disabled ? 'border-red-500/30' : 'border-slate-800'} rounded-xl flex flex-wrap sm:flex-nowrap items-center gap-3"><div class="w-10 h-10 rounded-xl ${disabled ? 'bg-red-500/15 text-red-300' : 'bg-emerald-500/15 text-emerald-300'} flex items-center justify-center font-bold">${memberInitials(user.name || user.email || 'U')}</div><div class="min-w-0 flex-1"><p class="text-sm font-bold text-white truncate">${escapeHtml(user.name || 'Usuário')}</p><p class="text-xs text-slate-500 truncate">${escapeHtml(user.email || '')}</p>${disabled ? '<p class="mt-1 text-[10px] font-bold uppercase tracking-wider text-red-300">Acesso desativado</p>' : ''}</div><select onchange='changeUserRole(${JSON.stringify(user.id)}, this.value)' ${isMainAdmin ? 'disabled' : ''} class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white disabled:opacity-60"><option value="disabled" ${disabled ? 'selected' : ''}>Sem acesso</option><option value="member" ${!disabled && (user.role || 'member') === 'member' ? 'selected' : ''}>Membro</option><option value="uploader" ${!disabled && user.role === 'uploader' ? 'selected' : ''}>Responsável por cifras</option><option value="leader" ${!disabled && user.role === 'leader' ? 'selected' : ''}>Líder</option>${isMainAdmin ? '<option value="admin" selected>Administradora</option>' : ''}</select></article>`;
         }).join('') : '<p class="text-sm text-slate-500">Nenhuma conta cadastrada pelo portal ainda.</p>';
         if (window.lucide) lucide.createIcons();
       }, error => console.error('Erro ao carregar contas:', error));
@@ -1180,57 +1163,21 @@ h1,h2,h3{letter-spacing:-.02em}
     }
 
     // Roster Data (Includes Projection operator in Louvor)
-    let rosterData = JSON.parse(localStorage.getItem('cep_roster')) || [
-      { id: 1, date: 'Domingo, 20 Out - 19:00', service: 'Culto de Celebração', minister: 'Pr. João Pedro', singer: 'Ana & Beatriz', keyboard: 'Mateus Silva', guitar: 'Gabriel', projection: 'Ana Souza', status: 'confirmed' },
-      { id: 2, date: 'Quarta, 23 Out - 19:30', service: 'Culto da Família', minister: 'Pra. Maria', singer: 'Lucas', keyboard: 'João Pedro', guitar: 'Rafael', projection: 'Beatriz Lima', status: 'pending' }
-    ];
+    let rosterData = [];
 
     // Media Roster Data (Audio, Streaming, Cameras)
-    let mediaRosterData = JSON.parse(localStorage.getItem('cep_media_roster')) || [
-      { id: 1, date: 'Domingo, 20 Out - 19:00', service: 'Culto de Celebração', audio: 'Gabriel Rocha', streaming: 'Lucas Oliveira', cameras: 'Carlos & Marcos', status: 'confirmed' },
-      { id: 2, date: 'Quarta, 23 Out - 19:30', service: 'Culto da Família', audio: 'João Pedro', streaming: 'Matheus Silva', cameras: 'João Vitor', status: 'pending' }
-    ];
+    let mediaRosterData = [];
 
     // Equipment Data
-    let equipmentData = JSON.parse(localStorage.getItem('cep_equipment')) || [
-      { id: 1, name: 'Mesa de Som Behringer X32', category: 'Áudio', status: 'Operacional' },
-      { id: 2, name: 'Projetor Principal Epson 4000 Lumens', category: 'Projeção', status: 'Manutenção Preventiva' },
-      { id: 3, name: 'Câmera PTZ Sony 4K (Transmissão)', category: 'Vídeo', status: 'Operacional' }
-    ];
+    let equipmentData = [];
 
     // Events Data
-    let eventsData = JSON.parse(localStorage.getItem('cep_events')) || [
-      { id: 1, title: 'Ensaio Geral do Louvor & Slides', date: 'Sábado, 19 Out - 16:00', desc: 'Passagem de repertório e testes de projeção para o culto de domingo.' },
-      { id: 2, title: 'Treinamento Técnico de Som & Transmissão', date: 'Sexta, 25 Out - 20:00', desc: 'Capacitação para novos operadores.' }
-    ];
+    let eventsData = [];
 
     // Songs Repertoire Data
-    let songsData = JSON.parse(localStorage.getItem('cep_songs')) || [
-      {
-        id: 1,
-        title: 'Maravilhosas Graças (Grace Changes Everything)',
-        originalKey: 'C',
-        type: 'text',
-        content: `[Verso 1]\nC               G\nMinha vida estava perdida\nAm              F\nMas o teu amor me alcançou\n\n[Refrão]\nC       G       Am      F\nOh quão maravilhosa graça\nC       G       C\nQue me salvou na cruz`,
-        pdfUrl: ''
-      },
-      {
-        id: 2,
-        title: 'Lugar Secreto (Cifra com PDF Exemplo)',
-        originalKey: 'D',
-        type: 'pdf',
-        content: '',
-        pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
-      }
-    ];
+    let songsData = [];
 
-    let membersData = JSON.parse(localStorage.getItem('cep_members')) || [
-      { id: 1, department: 'louvor', name: 'Pr. João Pedro', role: 'Ministro de Louvor', phone: '' },
-      { id: 2, department: 'louvor', name: 'Mateus Silva', role: 'Teclado & Piano', phone: '' },
-      { id: 3, department: 'louvor', name: 'Ana Souza', role: 'Projeção & Slides', phone: '' },
-      { id: 4, department: 'midia', name: 'Gabriel Rocha', role: 'Mesa de Som', phone: '' },
-      { id: 5, department: 'midia', name: 'Lucas Oliveira', role: 'Transmissão / Câmeras', phone: '' }
-    ];
+    let membersData = [];
 
     const MUSICAL_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const PDF_DB_NAME = 'cep_portal_files';
@@ -3466,5 +3413,6 @@ h1,h2,h3{letter-spacing:-.02em}
 </script>
 
 <script src="./midia.js?v=1"></script>
+  <script src="./louvor.js?v=1"></script>
 </body>
 </html>
