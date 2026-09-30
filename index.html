@@ -279,6 +279,7 @@ h1,h2,h3{letter-spacing:-.02em}
 
 </style>
 
+<link rel="stylesheet" href="./portal.css?v=1">
 <meta name="theme-color" content="#050814">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -583,6 +584,8 @@ h1,h2,h3{letter-spacing:-.02em}
 
     <!-- MIDIA DEPARTMENT VIEW (ÁUDIO, STREAMING & CÂMERAS) -->
     <div id="view-midia" class="space-y-6 hidden">
+      <section id="midia-overview" class="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Resumo da Mídia"></section>
+
       <nav class="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 text-sm">
         <button onclick="switchMidiaTab('roster')" id="midia-tab-btn-roster" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-indigo-600 text-white flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> Escalas</button>
         <button onclick="switchMidiaTab('equipment')" id="midia-tab-btn-equipment" class="midia-tab-btn px-4 py-2 rounded-lg font-medium whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4"></i> Equipamentos</button>
@@ -591,62 +594,41 @@ h1,h2,h3{letter-spacing:-.02em}
       </nav>
 
       <!-- MIDIA TAB 1: ESCALAS -->
-      <div id="midia-tab-roster" class="midia-tab-content space-y-6">
-        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800 flex-wrap gap-4">
-          <div>
-            <h2 class="text-lg font-bold text-white">Escala Detalhada de Mídia & Transmissão</h2>
-            <p class="text-xs text-slate-400">Operadores de som, transmissão ao vivo, câmeras e cortes.</p>
-          </div>
-          <button data-leader-only onclick="openNewMediaModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
-            <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Escala de Mídia
-          </button>
+      <div id="midia-tab-roster" class="midia-tab-content space-y-4">
+        <div class="md-section-head">
+          <div><h2>Escalas da Mídia</h2><p>Som, transmissão, câmeras e projeção. Cada pessoa confirma a própria presença.</p></div>
+          <button data-leader-only onclick="openNewMediaModal()" class="md-btn md-btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nova escala</button>
         </div>
-        <div id="media-roster-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="media-roster-container" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+        <div id="media-roster-past"></div>
       </div>
 
-      <!-- MIDIA TAB 2: EQUIPMENT INVENTORY -->
-      <div id="midia-tab-equipment" class="midia-tab-content hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-          <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-            <div>
-              <h2 class="text-xl font-bold text-indigo-400 flex items-center gap-2"><i data-lucide="cpu" class="w-6 h-6"></i> Inventário de Equipamentos de Mídia</h2>
-              <p class="text-xs text-slate-400 mt-1">Status de câmeras, mesas de som, computadores e cabos.</p>
-            </div>
-            <button data-leader-only onclick="openNewEquipmentModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2">
-              <i data-lucide="plus" class="w-4 h-4"></i> Novo Item
-            </button>
-          </div>
-          <div id="equipment-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+      <!-- MIDIA TAB 2: EQUIPAMENTOS -->
+      <div id="midia-tab-equipment" class="midia-tab-content hidden space-y-4">
+        <div class="md-section-head">
+          <div><h2>Equipamentos</h2><p>Estado de câmeras, mesas de som, computadores e cabos, com as revisões programadas.</p></div>
+          <button data-leader-only onclick="openNewEquipmentModal()" class="md-btn md-btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Novo equipamento</button>
         </div>
+        <div id="equipment-filters" class="md-filters" aria-label="Filtrar equipamentos"></div>
+        <div id="equipment-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </div>
 
-      <!-- MIDIA TAB 3: CALENDAR -->
-      <div id="midia-tab-calendar" class="midia-tab-content hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <div>
-              <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
-                <i data-lucide="calendar" class="w-6 h-6"></i> Agenda de Transmissões & Treinamentos
-              </h2>
-              <p class="text-xs text-slate-400 mt-1">Eventos técnicos e manutenções.</p>
-            </div>
-            <button data-leader-only onclick="openNewEventModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition">
-              <i data-lucide="plus" class="w-4 h-4"></i> Novo Evento
-            </button>
-          </div>
-          <div id="events-grid-midia" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      <!-- MIDIA TAB 3: AGENDA -->
+      <div id="midia-tab-calendar" class="midia-tab-content hidden space-y-4">
+        <div class="md-section-head">
+          <div><h2>Agenda da Mídia</h2><p>Treinamentos, ensaios técnicos, transmissões especiais e manutenções. Visível para toda a equipe.</p></div>
+          <button data-leader-only onclick="openNewEventModal()" class="md-btn md-btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Novo evento</button>
         </div>
+        <div id="events-grid-midia" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
-      <!-- MIDIA TAB 4: TEAM -->
-      <div id="midia-tab-team" class="midia-tab-content hidden space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-          <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
-            <div><h2 class="text-xl font-bold text-violet-400 flex items-center gap-2"><i data-lucide="users-round" class="w-6 h-6"></i> Equipe de Mídia & Transmissão</h2><p class="text-xs text-slate-400 mt-1">Cadastre integrantes, funções e WhatsApp.</p></div>
-            <button data-leader-only onclick="addMember('midia')" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Adicionar membro</button>
-          </div>
-          <div id="members-midia" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <!-- MIDIA TAB 4: EQUIPE -->
+      <div id="midia-tab-team" class="midia-tab-content hidden space-y-4">
+        <div class="md-section-head">
+          <div><h2>Equipe de Mídia & Transmissão</h2><p>Integrantes, funções e WhatsApp.</p></div>
+          <button data-leader-only onclick="addMember('midia')" class="md-btn md-btn-primary"><i data-lucide="user-plus" class="w-4 h-4"></i> Adicionar pessoa</button>
         </div>
+        <div id="members-midia" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </div>
     </div>
 
@@ -1137,7 +1119,7 @@ h1,h2,h3{letter-spacing:-.02em}
         renderAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       });
       equipmentUnsubscribe = db.collection('equipment').orderBy('name').onSnapshot(snapshot => {
-        if (!snapshot.empty) equipmentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        equipmentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderEquipment();
       });
       liveServiceUnsubscribe = db.collection('settings').doc('liveService').onSnapshot(doc => {
@@ -3483,5 +3465,6 @@ h1,h2,h3{letter-spacing:-.02em}
 })();
 </script>
 
+<script src="./midia.js?v=1"></script>
 </body>
 </html>
