@@ -1,0 +1,8 @@
+{
+  "name": "portal-cep-notificacoes",
+  "private": true,
+  "description": "Envio automático do versículo do dia e dos lembretes de escala (roda no GitHub Actions).",
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
