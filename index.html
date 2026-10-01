@@ -9,8 +9,8 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <title>Portal de Ministérios - CEP Pirapozinho</title>
-  <link rel="stylesheet" href="./tailwind.css?v=2">
-  <script src="./icons.js?v=2"></script>
+  <link rel="stylesheet" href="./tailwind.css?v=3">
+  <script src="./icons.js?v=3"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
@@ -106,7 +106,7 @@
     .cep-dialog.danger .cep-dialog-confirm { background: #e11d48; color: #fff; box-shadow: none; }
   </style>
 
-<link rel="stylesheet" href="./portal.css?v=3">
+<link rel="stylesheet" href="./portal.css?v=4">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -220,7 +220,7 @@
 
     <section id="personal-dashboard" class="grid lg:grid-cols-3 gap-4">
       <article class="lg:col-span-2 bg-gradient-to-br from-indigo-600/20 to-violet-600/10 border border-indigo-500/30 rounded-2xl p-5 shadow-xl">
-        <div class="flex items-center justify-between gap-3 mb-4"><div><p class="text-[10px] uppercase tracking-[.2em] text-indigo-300">Meu painel</p><h2 class="text-xl font-bold text-white">Minha próxima escala</h2></div><button onclick="openAvailabilityModal()" class="px-3 py-2 bg-slate-950/50 border border-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2"><i data-lucide="calendar-off" class="w-4 h-4"></i> Disponibilidade</button></div>
+        <div class="flex items-center justify-between gap-3 mb-4"><div><p class="text-[10px] uppercase tracking-[.2em] text-indigo-300">Meu painel</p><h2 class="text-xl font-bold text-white">Minha próxima escala</h2></div><button onclick="openAvailabilityModal()" class="px-3 py-2 bg-slate-950/50 border border-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2"><i data-lucide="calendar-off" class="w-4 h-4"></i> Dias que não posso</button></div>
         <div id="my-next-roster" class="text-sm text-slate-400">Carregando sua próxima escala...</div>
       </article>
       <article class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
@@ -3238,8 +3238,9 @@
 })();
 </script>
 
-<script src="./midia.js?v=1"></script>
-  <script src="./louvor.js?v=1"></script>
-  <script src="./app.js?v=1"></script>
+<script src="./midia.js?v=2"></script>
+  <script src="./louvor.js?v=2"></script>
+  <script src="./telao.js?v=1"></script>
+  <script src="./app.js?v=2"></script>
 </body>
 </html>

@@ -31,7 +31,7 @@
         louvor: {
             nome: 'Louvor & Projeção',
             principais: [['home', 'Início', 'house'], ['roster', 'Escalas', 'calendar-check'], ['repertoire', 'Músicas', 'library'], ['calendar', 'Agenda', 'calendar-days']],
-            outras: [['pads', 'Pads & Metrônomo', 'waves'], ['history', 'Histórico', 'history'], ['central', 'Central', 'layout-dashboard'], ['team', 'Equipe', 'users-round']]
+            outras: [['pads', 'Pads & Metrônomo', 'waves'], ['history', 'Histórico', 'history'], ['team', 'Equipe', 'users-round'], ['central', 'Painel do líder', 'shield-check', 'lider']]
         },
         midia: {
             nome: 'Mídia & Transmissão',
@@ -42,8 +42,10 @@
     var FERRAMENTAS = [['ensaio', 'Modo ensaio', 'play-circle', ''], ['afinador', 'Afinador', 'audio-lines', 'tone-green'], ['pads', 'Pads', 'waves', 'tone-silver'], ['aovivo', 'Ao vivo', 'radio', 'tone-rose']];
     var ACOES = {
         biblia: 'openBible', disponibilidade: 'openAvailabilityModal', instalar: 'installPortalApp', sair: 'logoutPortal',
-        ensaio: 'openRehearsalMode', afinador: 'openTuner', aovivo: 'openLiveService', notificacoes: 'openNotificationCenter'
+        ensaio: 'openRehearsalMode', afinador: 'openTuner', aovivo: 'openLiveService', notificacoes: 'openNotificationCenter',
+        telao: 'abrirTelao', backup: 'exportPortalBackup'
     };
+    var TELAO = ['telao', 'Telão', 'presentation', 'tone-blue'];
     var telaAtual = 'home';
     var pronto = false;
 
@@ -58,7 +60,10 @@
         });
     }
     function podeInstalar() { var b = document.getElementById('install-app-btn'); return !!(b && !b.classList.contains('hidden')); }
-    function todasTelas() { var c = TELAS[depto()]; return c.principais.concat(c.outras); }
+    function lider() { try { return typeof isLeaderAccount === 'function' && isLeaderAccount(); } catch (e) { return false; } }
+    function outrasTelas() { return TELAS[depto()].outras.filter(function (x) { return x[3] !== 'lider' || lider(); }); }
+    function todasTelas() { return TELAS[depto()].principais.concat(outrasTelas()); }
+    function ferramentasMenu() { return (depto() === 'louvor' ? FERRAMENTAS.filter(function (f) { return f[0] !== 'pads'; }) : []).concat([TELAO]); }
     function nomeTela(t) { var x = todasTelas().filter(function (i) { return i[0] === t; })[0]; return x ? x[1] : 'Início'; }
     function primeiroNome() {
         try {
@@ -92,7 +97,56 @@
                     return '<button type="button" class="app-tool" ' + attr + '><span class="i3d ' + f[3] + '">' + ic(f[2]) + '</span>' + f[1] + '</button>';
                 }).join('') + '</div></section>');
         }
+        var banner = function (id) {
+            return '<button type="button" id="' + id + '" class="app-telao-cta app-home-only" data-app-acao="telao">' +
+                '<span class="i3d tone-blue">' + ic('presentation') + '</span>' +
+                '<span class="cta-txt"><b>Telão</b><small>Projete letras das músicas, versículos e avisos na tela da igreja.</small></span>' +
+                '<span class="cta-go">Abrir' + ic('chevron-right') + '</span></button>';
+        };
+        var atalhos = document.getElementById('louvor-atalhos');
+        if (atalhos && !document.getElementById('louvor-telao')) atalhos.insertAdjacentHTML('beforebegin', banner('louvor-telao'));
+        var visaoMidia = document.getElementById('midia-overview');
+        if (visaoMidia && !document.getElementById('midia-telao')) visaoMidia.insertAdjacentHTML('afterend', banner('midia-telao'));
+        montarPainelLider();
         document.body.classList.add('shell');
+    }
+
+    /* ---------- Painel do líder (antiga Central) ---------- */
+    var CHAVE_BACKUP = 'cep-ultimo-backup';
+    function montarPainelLider() {
+        var aba = document.getElementById('tab-central');
+        if (!aba || document.getElementById('painel-lider-head')) return;
+        aba.insertAdjacentHTML('afterbegin',
+            '<div class="md-section-head" id="painel-lider-head"><div><h2>Painel do líder</h2><p>Presença, pedidos de troca, estatísticas e culto ao vivo. Só a liderança vê esta tela.</p></div></div>' +
+            '<div class="app-backup" id="app-backup"></div>');
+        desenharBackup();
+    }
+    function desenharBackup() {
+        var el = document.getElementById('app-backup');
+        if (!el) return;
+        var data = null;
+        try { data = localStorage.getItem(CHAVE_BACKUP); } catch (e) {}
+        var dias = data ? Math.floor((Date.now() - new Date(data).getTime()) / 864e5) : null;
+        var atrasado = dias === null || dias > 30;
+        el.className = 'app-backup' + (atrasado ? ' is-late' : '');
+        el.innerHTML = '<span class="i3d ' + (atrasado ? 'tone-amber' : 'tone-green') + '">' + ic('hard-drive-download') + '</span>' +
+            '<div class="min-w-0"><b>Cópia de segurança</b><small>' + (data
+                ? 'Último backup feito neste aparelho em ' + new Date(data).toLocaleDateString('pt-BR') + (dias === 0 ? ' (hoje)' : ' (há ' + dias + (dias === 1 ? ' dia' : ' dias') + ')') + '.'
+                : 'Nenhum backup feito neste aparelho ainda.') + (atrasado ? ' Recomendamos baixar um por mês e guardar no Drive.' : '') + '</small></div>' +
+            '<button type="button" class="md-btn ' + (atrasado ? 'md-btn-primary' : 'md-btn-ghost') + '" data-app-acao="backup">' + ic('download') + 'Baixar backup</button>';
+        icones();
+    }
+    if (typeof exportPortalBackup === 'function') {
+        var backupOriginal = exportPortalBackup;
+        exportPortalBackup = async function () {
+            var r = await backupOriginal.apply(this, arguments);
+            if (lider()) {
+                try { localStorage.setItem(CHAVE_BACKUP, new Date().toISOString()); } catch (e) {}
+                desenharBackup();
+                if (typeof portalToast === 'function') portalToast('Backup baixado. Guarde o arquivo em um lugar seguro.');
+            }
+            return r;
+        };
     }
 
     function itemMenu(t, rotulo, icone, extra) {
@@ -103,7 +157,7 @@
     }
 
     function itensConta() {
-        var h = itemMenu(null, 'Disponibilidade', 'calendar-off', { attr: 'data-app-acao="disponibilidade"' });
+        var h = itemMenu(null, 'Dias que não posso', 'calendar-off', { attr: 'data-app-acao="disponibilidade"' });
         h += itemMenu(null, 'Bíblia', 'book-open', { attr: 'data-app-acao="biblia"' });
         if (podeInstalar()) h += itemMenu(null, 'Instalar o app', 'download', { attr: 'data-app-acao="instalar"' });
         h += itemMenu(null, 'Sair', 'log-out', { attr: 'data-app-acao="sair"', classe: 'sb-danger' });
@@ -121,17 +175,15 @@
                 }).join('') + '</div>';
             }
             h += '<div class="sb-scroll"><p class="sb-label">' + cfg.nome + '</p>';
-            h += cfg.principais.concat(cfg.outras).map(function (x) { return itemMenu(x[0], x[1], x[2]); }).join('');
-            if (d === 'louvor') {
-                h += '<p class="sb-label">Ferramentas</p>';
-                h += FERRAMENTAS.filter(function (f) { return f[0] !== 'pads'; }).map(function (f) { return itemMenu(null, f[1], f[2], { attr: 'data-app-acao="' + f[0] + '"' }); }).join('');
-            }
+            h += todasTelas().map(function (x) { return itemMenu(x[0], x[1], x[2]); }).join('');
+            h += '<p class="sb-label">Ferramentas</p>';
+            h += ferramentasMenu().map(function (f) { return itemMenu(null, f[1], f[2], { attr: 'data-app-acao="' + f[0] + '"' }); }).join('');
             h += '</div><div class="sb-foot">' + itensConta() + '</div>';
             sb.innerHTML = h;
         }
         var tb = document.getElementById('app-tabbar');
         if (tb) {
-            var emOutra = cfg.outras.some(function (x) { return x[0] === telaAtual; });
+            var emOutra = outrasTelas().some(function (x) { return x[0] === telaAtual; });
             tb.innerHTML = cfg.principais.map(function (x) {
                 var ativo = telaAtual === x[0];
                 return '<button type="button" class="tb-item' + (ativo ? ' is-active' : '') + '" data-app-go="' + x[0] + '"' + (ativo ? ' aria-current="page"' : '') + '><span class="tb-ic">' + ic(x[2]) + '</span><span>' + x[1] + '</span></button>';
@@ -165,14 +217,10 @@
         if (!abrir) { caixa.classList.remove('open'); return; }
         var d = depto(), cfg = TELAS[d], deptos = permitidos();
         var painel = caixa.querySelector('.more-panel');
-        var tiles = cfg.outras.map(function (x) {
-            return '<button type="button" class="more-tile' + (telaAtual === x[0] ? ' is-active' : '') + '" data-app-go="' + x[0] + '"><span class="i3d">' + ic(x[2]) + '</span>' + x[1] + '</button>';
+        var tiles = outrasTelas().map(function (x) {
+            return '<button type="button" class="more-tile' + (telaAtual === x[0] ? ' is-active' : '') + '" data-app-go="' + x[0] + '"><span class="i3d' + (x[3] === 'lider' ? ' tone-amber' : '') + '">' + ic(x[2]) + '</span>' + x[1] + '</button>';
         });
-        if (d === 'louvor') {
-            tiles = tiles.concat(FERRAMENTAS.filter(function (f) { return f[0] !== 'pads'; }).map(function (f) {
-                return '<button type="button" class="more-tile" data-app-acao="' + f[0] + '"><span class="i3d ' + f[3] + '">' + ic(f[2]) + '</span>' + f[1] + '</button>';
-            }));
-        }
+        tiles.push('<button type="button" class="more-tile" data-app-acao="telao"><span class="i3d tone-blue">' + ic(TELAO[2]) + '</span>' + TELAO[1] + '</button>');
         var h = '<div class="more-grip"></div><p class="app-block-title">' + cfg.nome + '</p><div class="more-grid">' + tiles.join('') + '</div>';
         h += '<p class="app-block-title" style="margin-top:1.1rem">Conta</p><div class="more-list">';
         if (deptos.length > 1) {
@@ -240,10 +288,74 @@
             return r;
         };
     }
+    if (typeof applyAdminVisibility === 'function') {
+        var visibilidade = applyAdminVisibility;
+        applyAdminVisibility = function () {
+            var r = visibilidade.apply(this, arguments);
+            if (pronto) { if (telaAtual === 'central' && !lider()) ir('home'); else renderizarMenu(); }
+            return r;
+        };
+    }
     if (typeof renderMembers === 'function') {
         var membros = renderMembers;
-        renderMembers = function () { var r = membros.apply(this, arguments); atualizarTitulo(); return r; };
+        renderMembers = function () { var r = membros.apply(this, arguments); if (pronto) renderizarMenu(); return r; };
     }
+
+    /* ---------- Dias que não posso servir ---------- */
+    function nomeDia(iso) {
+        var p = iso.split('-').map(Number), d = new Date(p[0], p[1] - 1, p[2]);
+        return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', '');
+    }
+    function hojeIso() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+    window.openAvailabilityModal = function () {
+        if (typeof currentUser === 'undefined' || !currentUser) return;
+        var dias = (typeof myAvailability !== 'undefined' ? myAvailability : []).filter(function (x) { return x >= hojeIso(); }).sort();
+        var velho = document.getElementById('app-dias');
+        if (velho) velho.remove();
+        document.body.insertAdjacentHTML('beforeend',
+            '<div id="app-dias" class="app-dias" role="dialog" aria-modal="true" aria-labelledby="app-dias-t"><div class="app-dias-box">' +
+            '<div class="app-dias-head"><span class="i3d tone-rose">' + ic('calendar-off') + '</span><div><h3 id="app-dias-t">Dias que não posso servir</h3><p>A liderança vê esses dias ao montar as escalas.</p></div></div>' +
+            '<div class="app-dias-add"><input type="date" id="app-dias-data" min="' + hojeIso() + '" aria-label="Escolha o dia"><button type="button" class="md-btn md-btn-primary" id="app-dias-mais">' + ic('plus') + 'Adicionar</button></div>' +
+            '<div id="app-dias-lista" class="app-dias-lista"></div>' +
+            '<div class="app-dias-foot"><button type="button" class="md-btn md-btn-ghost" id="app-dias-cancelar">Cancelar</button><button type="button" class="md-btn md-btn-primary" id="app-dias-salvar">' + ic('check') + 'Salvar</button></div>' +
+            '</div></div>');
+        var caixa = document.getElementById('app-dias');
+        function lista() {
+            document.getElementById('app-dias-lista').innerHTML = dias.length ? dias.map(function (d, i) {
+                return '<span class="app-dia">' + esc(nomeDia(d)) + '<button type="button" data-dia="' + i + '" aria-label="Remover ' + esc(nomeDia(d)) + '">' + ic('x') + '</button></span>';
+            }).join('') : '<p class="app-dias-vazio">Nenhum dia marcado. Você está disponível em todas as datas.</p>';
+            icones();
+        }
+        function fechar() { caixa.remove(); }
+        caixa.addEventListener('click', async function (e) {
+            if (e.target === caixa || e.target.closest('#app-dias-cancelar')) return fechar();
+            var rm = e.target.closest('[data-dia]');
+            if (rm) { dias.splice(Number(rm.getAttribute('data-dia')), 1); return lista(); }
+            if (e.target.closest('#app-dias-mais')) {
+                var v = document.getElementById('app-dias-data').value;
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+                if (dias.indexOf(v) === -1) dias.push(v);
+                dias.sort();
+                return lista();
+            }
+            if (e.target.closest('#app-dias-salvar')) {
+                var campo = document.getElementById('app-dias-data').value;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(campo) && dias.indexOf(campo) === -1) dias.push(campo);
+                try {
+                    await db.collection('availability').doc(currentUser.uid).set({ unavailableDates: dias.slice().sort(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    myAvailability = dias.slice().sort();
+                    fechar();
+                    if (typeof portalToast === 'function') portalToast(dias.length ? 'Dias salvos. A liderança já pode ver.' : 'Pronto: você está disponível em todas as datas.');
+                } catch (err) {
+                    console.error(err);
+                    if (typeof portalToast === 'function') portalToast('Não foi possível salvar agora. Tente de novo.', 'error');
+                }
+            }
+        });
+        caixa.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+        lista();
+        document.getElementById('app-dias-data').focus();
+    };
 
     function iniciar() {
         criarGradientes();

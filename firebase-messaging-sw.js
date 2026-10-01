@@ -11,8 +11,8 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
-const PORTAL_CACHE = 'portal-cep-v10';
-const OFFLINE_FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './tailwind.css?v=2', './icons.js?v=2', './portal.css?v=3', './midia.js?v=1', './louvor.js?v=1', './app.js?v=1'];
+const PORTAL_CACHE = 'portal-cep-v11';
+const OFFLINE_FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './tailwind.css?v=3', './icons.js?v=3', './portal.css?v=4', './midia.js?v=2', './louvor.js?v=2', './telao.js?v=1', './app.js?v=2'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(PORTAL_CACHE).then(cache => cache.addAll(OFFLINE_FILES)).then(() => self.skipWaiting()));

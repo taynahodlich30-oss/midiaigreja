@@ -111,10 +111,10 @@ function lvCartaoEscala(r) {
 
     let acoes = '';
     if (souEscalado) {
-        acoes += '<button onclick=\'lvResponder(' + idJs + ', "confirmed")\' class="md-btn ' + (minha === 'confirmed' ? 'md-btn-ok-solid' : 'md-btn-ok') + '">' + mdIcone('circle-check') + (minha === 'confirmed' ? 'Presença confirmada' : 'Confirmo presença') + '</button>';
-        acoes += '<button onclick=\'lvResponder(' + idJs + ', "declined")\' class="md-btn ' + (minha === 'declined' ? 'md-btn-danger-solid' : 'md-btn-danger') + '">' + mdIcone('circle-x') + 'Não poderei</button>';
+        acoes += mdBotoesResposta(idJs, minha, 'lvResponder');
     }
     if (temMusicas) acoes += '<button onclick=\'lvEnsaiar(' + idJs + ')\' class="md-btn md-btn-ghost">' + mdIcone('play-circle') + 'Ensaiar</button>';
+    if (temMusicas && typeof abrirTelao === 'function') acoes += '<button onclick=\'abrirTelao({ escala: ' + idJs + ' })\' class="md-btn md-btn-ghost">' + mdIcone('presentation') + 'Telão</button>';
     if (lider) {
         if ((r.memberIds || []).length) acoes += '<button onclick=\'notifyRosterMembers(' + idJs + ')\' class="md-btn md-btn-ghost">' + mdIcone('send') + 'WhatsApp</button>';
         acoes += '<button onclick=\'openWhatsappGroup(' + idJs + ')\' class="md-btn md-btn-ghost">' + mdIcone('message-circle') + 'Grupo</button>';
@@ -224,13 +224,12 @@ if (typeof renderMyNextRoster === 'function') {
         const idJs = lvIdJs(next.id);
         const st = resposta.attendance;
         container.innerHTML = '<div class="grid sm:grid-cols-[1fr_auto] gap-4"><div class="flex gap-4">' + mdBlocoData(data) + '<div class="min-w-0">' +
-            '<div class="flex flex-wrap items-center gap-2"><span class="text-xs px-2 py-1 bg-indigo-500/15 border border-indigo-500/20 text-indigo-200 rounded-full">' + mdEsc(next.service) + '</span><span class="md-chip">' + mdQuando(data) + '</span></div>' +
+            '<div class="flex flex-wrap items-center gap-2">' + mdEtiquetaMinisterio(next) + '<span class="text-xs px-2 py-1 bg-indigo-500/15 border border-indigo-500/20 text-indigo-200 rounded-full">' + mdEsc(next.service) + '</span><span class="md-chip">' + mdQuando(data) + '</span></div>' +
             '<h3 class="text-lg font-bold text-white mt-2">' + mdHora(data) + (eu && eu.role ? ' · ' + mdEsc(eu.role) : '') + '</h3>' +
             (musicas.length ? '<div class="lv-mini-setlist">' + musicas.map(function (s) { return '<button type="button" onclick=\'lvAbrirMusica(' + lvIdJs(s.id) + ')\'>' + mdEsc(s.title) + (lvTom(s) ? ' <b>' + mdEsc(lvTom(s)) + '</b>' : '') + '</button>'; }).join('') + '</div>' : '<p class="text-xs text-slate-400 mt-1">Músicas ainda não definidas.</p>') +
             (next.reminder ? '<p class="text-xs text-amber-300 mt-2">' + mdEsc(next.reminder) + '</p>' : '') + '</div></div>' +
             '<div class="flex sm:flex-col gap-2 flex-wrap">' +
-            '<button onclick=\'updateRosterResponse(' + idJs + ', "attendance", "confirmed")\' class="md-btn ' + (st === 'confirmed' ? 'md-btn-ok-solid' : 'md-btn-ok') + '">' + mdIcone('circle-check') + (st === 'confirmed' ? 'Confirmado' : 'Confirmar') + '</button>' +
-            '<button onclick=\'updateRosterResponse(' + idJs + ', "attendance", "swap")\' class="md-btn ' + (st === 'swap' ? 'md-btn-warn-solid' : 'md-btn-warn') + '">' + mdIcone('repeat-2') + 'Pedir troca</button>' +
+            mdBotoesResposta(idJs, st, 'mdResponderInicio') +
             (musicas.length ? '<button onclick=\'lvEnsaiar(' + idJs + ')\' class="md-btn md-btn-ghost">' + mdIcone('play-circle') + 'Ensaiar</button>' : '') +
             '</div></div>';
         mdIcones();
@@ -280,8 +279,8 @@ function lvDesenharListaMusicas() {
         const idJs = lvIdJs(s.id);
         return '<div class="lv-song' + (sel ? ' is-active' : '') + '">' +
             '<button type="button" class="lv-song-main" onclick=\'selectSong(' + idJs + ')\'>' +
-                '<span class="lv-song-icon">' + mdIcone(s.type === 'pdf' ? 'file-text' : 'music-2', 'w-4 h-4') + '</span>' +
-                '<span class="min-w-0 flex-1"><b>' + mdEsc(s.title) + '</b><small>' + (s.type === 'pdf' ? 'PDF' : 'Cifra digitada') + (s.bpm ? ' · ' + mdEsc(s.bpm) + ' BPM' : '') + '</small></span>' +
+                '<span class="lv-song-icon">' + mdIcone(s.type === 'pdf' ? 'file-text' : s.type === 'letra' ? 'type' : 'music-2', 'w-4 h-4') + '</span>' +
+                '<span class="min-w-0 flex-1"><b>' + mdEsc(s.title) + '</b><small>' + (s.type === 'pdf' ? 'PDF' : s.type === 'letra' ? 'Letra para o telão' : 'Cifra digitada') + (s.bpm ? ' · ' + mdEsc(s.bpm) + ' BPM' : '') + '</small></span>' +
                 (lvTom(s) ? '<span class="lv-key">' + mdEsc(lvTom(s)) + '</span>' : '') +
             '</button>' +
             '<button type="button" onclick=\'toggleSongFavorite(' + idJs + ')\' class="lv-star' + (fav ? ' is-on' : '') + '" title="' + (fav ? 'Remover dos favoritos' : 'Favoritar') + '" aria-label="Favoritar">' + mdIcone('star', 'w-4 h-4' + (fav ? ' fill-current' : '')) + '</button>' +
@@ -341,10 +340,11 @@ async function renderSongDetail(id) {
     container.innerHTML = '<div class="space-y-5">' +
         '<div class="flex items-start justify-between gap-3 flex-wrap">' +
             '<div class="min-w-0"><h3 class="text-xl font-extrabold text-white leading-tight">' + mdEsc(song.title) + '</h3>' +
-            '<p class="mt-2 flex flex-wrap gap-1.5"><span class="md-pill md-pill-muted">' + mdIcone(song.type === 'pdf' ? 'file-text' : 'music-2', 'w-3 h-3') + (song.type === 'pdf' ? 'PDF' : 'Cifra digitada') + '</span><span class="md-pill md-pill-ok">Tom ' + mdEsc(atual) + (atual !== original ? ' (original ' + mdEsc(original) + ')' : '') + '</span><span class="md-pill md-pill-warn">' + mdEsc(song.bpm || 80) + ' BPM</span></p></div>' +
+            '<p class="mt-2 flex flex-wrap gap-1.5"><span class="md-pill md-pill-muted">' + mdIcone(song.type === 'pdf' ? 'file-text' : song.type === 'letra' ? 'type' : 'music-2', 'w-3 h-3') + (song.type === 'pdf' ? 'PDF' : song.type === 'letra' ? 'Letra para o telão' : 'Cifra digitada') + '</span><span class="md-pill md-pill-ok">Tom ' + mdEsc(atual) + (atual !== original ? ' (original ' + mdEsc(original) + ')' : '') + '</span><span class="md-pill md-pill-warn">' + mdEsc(song.bpm || 80) + ' BPM</span></p></div>' +
             '<div class="flex items-center gap-2">' +
                 (song.type === 'pdf' && pdfUrl ? '<button onclick=\'openPdfFullscreen(' + sid + ')\' class="md-btn md-btn-ghost">' + mdIcone('scan') + 'Página toda</button>' : '') +
                 '<button onclick=\'openTeleprompter(' + sid + ')\' class="md-btn md-btn-primary">' + mdIcone('monitor') + 'Abrir cifra</button>' +
+                (typeof abrirTelao === 'function' && song.content ? '<button onclick=\'abrirTelao({ musica: ' + sid + ' })\' class="md-btn md-btn-ghost" title="Projetar a letra no telão">' + mdIcone('presentation') + 'Telão</button>' : '') +
                 (lider ? '<button onclick=\'deleteSong(' + sid + ')\' class="md-icon-btn md-icon-danger" title="Excluir música" aria-label="Excluir música">' + mdIcone('trash-2') + '</button>' : '') +
             '</div></div>' +
         '<div class="lv-controls">' +
@@ -454,6 +454,10 @@ function renderMembers() {
 }
 
 /* ---------- Central: presença e trocas (com o ministério indicado) ---------- */
+function lvNomeDaResposta(t) {
+    const m = (membersData || []).find(function (x) { return String(x.id) === String(t.memberId) || (x.accountUid && x.accountUid === t.id); });
+    return m ? m.name : 'Alguém da equipe';
+}
 async function renderLeaderAttendance() {
     const container = document.getElementById('attendance-leader-panel');
     if (!container || !mdLider()) return;
@@ -475,7 +479,7 @@ async function renderLeaderAttendance() {
             '<p class="text-[11px] text-slate-500 mt-0.5">' + mdQuando(data) + ' · ' + mdHora(data) + '</p>' +
             '<div class="mt-2 flex flex-wrap gap-1.5"><span class="md-pill md-pill-ok">' + conf + ' confirmados</span>' + (nao ? '<span class="md-pill md-pill-danger">' + nao + ' não vão</span>' : '') + (trocas.length ? '<span class="md-pill md-pill-warn">' + trocas.length + (trocas.length === 1 ? ' troca' : ' trocas') + '</span>' : '') + '<span class="md-pill md-pill-muted">' + sem + ' sem resposta</span></div></div>' +
             '<button onclick=\'editRoster(' + lvIdJs(r.id) + ')\' class="md-icon-btn shrink-0" title="Editar escala" aria-label="Editar escala">' + mdIcone('pencil') + '</button></div>' +
-            trocas.map(function (t) { return '<div class="lv-swap"><span>' + mdIcone('repeat-2', 'w-3.5 h-3.5') + mdEsc(t.userName || 'Membro') + ' pediu troca</span><button onclick=\'approveSwap(' + lvIdJs(r.id) + ', ' + lvIdJs(t.id) + ')\' class="md-btn md-btn-ok">Aprovar</button></div>'; }).join('') +
+            trocas.map(function (t) { return '<div class="lv-swap"><span>' + mdIcone('repeat-2', 'w-3.5 h-3.5') + mdEsc(t.userName || lvNomeDaResposta(t)) + ' pediu troca</span><button onclick=\'approveSwap(' + lvIdJs(r.id) + ', ' + lvIdJs(t.id) + ')\' class="md-btn md-btn-ok">Aprovar</button></div>'; }).join('') +
             '</article>');
     }
     container.innerHTML = linhas.join('') || '<p class="text-sm text-slate-500">Nenhuma escala futura.</p>';
@@ -522,7 +526,15 @@ async function lvSemJanela(acao) {
 }
 if (typeof respondRosterPresence === 'function') {
     const lvPresencaOriginal = respondRosterPresence;
-    respondRosterPresence = function () { const args = arguments, self = this; return lvSemJanela(function () { return lvPresencaOriginal.apply(self, args); }); };
+    const lvTextoResposta = { confirmed: 'Presença confirmada', declined: 'Resposta registrada: você não poderá servir neste dia.', swap: 'Pedido de troca enviado para a liderança.' };
+    respondRosterPresence = function (rosterId, status) {
+        const args = arguments, self = this;
+        return lvSemJanela(function () {
+            const toastAnterior = window.alert;
+            window.alert = function (msg) { toastAnterior(/Não foi possível|apenas para quem/.test(String(msg)) ? msg : (lvTextoResposta[status] || msg)); };
+            return Promise.resolve(lvPresencaOriginal.apply(self, args)).finally(function () { window.alert = toastAnterior; });
+        });
+    };
 }
 if (typeof updateRosterResponse === 'function') {
     const lvRespostaOriginal = updateRosterResponse;

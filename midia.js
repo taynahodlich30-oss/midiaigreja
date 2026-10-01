@@ -76,6 +76,32 @@ const MD_STATUS_PESSOA = {
     pending: { rotulo: 'Aguardando', classe: 'md-pill-muted', icone: 'hourglass' }
 };
 
+/* Três respostas iguais em todo o app: Confirmo · Não poderei · Pedir troca */
+function mdBotoesResposta(idJs, minha, fn) {
+    const opcoes = [
+        ['confirmed', 'circle-check', minha === 'confirmed' ? 'Confirmado' : 'Confirmo', 'md-btn-ok'],
+        ['declined', 'circle-x', 'Não poderei', 'md-btn-danger'],
+        ['swap', 'repeat-2', minha === 'swap' ? 'Troca pedida' : 'Pedir troca', 'md-btn-warn']
+    ];
+    return opcoes.map(function (o) {
+        return '<button onclick=\'' + fn + '(' + idJs + ', "' + o[0] + '")\' class="md-btn ' + o[3] + (minha === o[0] ? '-solid' : '') + '" aria-pressed="' + (minha === o[0]) + '">' + mdIcone(o[1]) + o[2] + '</button>';
+    }).join('');
+}
+
+function mdEtiquetaMinisterio(r) {
+    const midia = r && r.department === 'midia';
+    return '<span class="app-dept-tag ' + (midia ? 'is-midia' : 'is-louvor') + '">' + mdIcone(midia ? 'video' : 'music-2', 'w-3 h-3') + (midia ? 'Mídia' : 'Louvor') + '</span>';
+}
+
+async function mdResponderInicio(rosterId, status) {
+    if (!currentUser) return;
+    await respondRosterPresence(rosterId, status);
+    mdMinhasRespostas[String(rosterId)] = status;
+    try { await renderMyNextRoster(allRostersData); } catch (e) {}
+    try { if (typeof renderRoster === 'function') renderRoster(); } catch (e) {}
+    try { if (typeof renderMediaRoster === 'function') renderMediaRoster(); } catch (e) {}
+}
+
 async function mdCarregarRespostas(escalas) {
     if (!db || mdCarregandoRespostas) return;
     mdCarregandoRespostas = true;
@@ -124,8 +150,7 @@ function mdCartaoEscala(r) {
 
     let acoes = '';
     if (souEscalado) {
-        acoes += '<button onclick=\'mdResponder(' + idJs + ', "confirmed")\' class="md-btn ' + (minha === 'confirmed' ? 'md-btn-ok-solid' : 'md-btn-ok') + '">' + mdIcone('circle-check') + (minha === 'confirmed' ? 'Presença confirmada' : 'Confirmo presença') + '</button>';
-        acoes += '<button onclick=\'mdResponder(' + idJs + ', "declined")\' class="md-btn ' + (minha === 'declined' ? 'md-btn-danger-solid' : 'md-btn-danger') + '">' + mdIcone('circle-x') + 'Não poderei</button>';
+        acoes += mdBotoesResposta(idJs, minha, 'mdResponder');
     }
     if (lider) {
         if ((r.memberIds || []).length) acoes += '<button onclick=\'notifyRosterMembers(' + idJs + ')\' class="md-btn md-btn-ghost">' + mdIcone('send') + 'WhatsApp escalados</button>';
@@ -409,13 +434,12 @@ if (typeof renderMyNextRoster === 'function') {
         const idJs = JSON.stringify(next.id).replace(/'/g, '&#39;');
         const st = resposta.attendance;
         container.innerHTML = '<div class="grid sm:grid-cols-[1fr_auto] gap-4"><div class="flex gap-4">' + mdBlocoData(data) + '<div class="min-w-0">' +
-            '<div class="flex flex-wrap items-center gap-2"><span class="text-xs px-2 py-1 bg-indigo-500/15 border border-indigo-500/20 text-indigo-200 rounded-full">' + mdEsc(next.service) + '</span><span class="md-chip">' + mdQuando(data) + '</span></div>' +
+            '<div class="flex flex-wrap items-center gap-2">' + mdEtiquetaMinisterio(next) + '<span class="text-xs px-2 py-1 bg-indigo-500/15 border border-indigo-500/20 text-indigo-200 rounded-full">' + mdEsc(next.service) + '</span><span class="md-chip">' + mdQuando(data) + '</span></div>' +
             '<h3 class="text-lg font-bold text-white mt-2">' + mdHora(data) + (eu && eu.role ? ' · ' + mdEsc(eu.role) : '') + '</h3>' +
             '<p class="text-xs text-slate-400 mt-1">' + (colegas.length ? 'Com: ' + colegas.map(function (m) { return mdEsc(m.name.split(' ')[0]) + (m.role ? ' (' + mdEsc(m.role) + ')' : ''); }).join(', ') : 'Só você nesta escala.') + '</p>' +
             (next.reminder ? '<p class="text-xs text-amber-300 mt-2">' + mdEsc(next.reminder) + '</p>' : '') + '</div></div>' +
             '<div class="flex sm:flex-col gap-2 flex-wrap">' +
-            '<button onclick=\'updateRosterResponse(' + idJs + ', "attendance", "confirmed")\' class="md-btn ' + (st === 'confirmed' ? 'md-btn-ok-solid' : 'md-btn-ok') + '">' + mdIcone('circle-check') + (st === 'confirmed' ? 'Confirmado' : 'Confirmar') + '</button>' +
-            '<button onclick=\'updateRosterResponse(' + idJs + ', "attendance", "swap")\' class="md-btn ' + (st === 'swap' ? 'md-btn-warn-solid' : 'md-btn-warn') + '">' + mdIcone('repeat-2') + 'Pedir troca</button>' +
+            mdBotoesResposta(idJs, st, 'mdResponderInicio') +
             '</div></div>';
         mdIcones();
     };
