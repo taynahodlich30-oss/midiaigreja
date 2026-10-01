@@ -74,6 +74,7 @@
         c.addEventListener('click', clique);
         c.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && e.target.id === 'av-msg') { e.preventDefault(); mandarMensagem(); }
+            if (e.key === 'Enter' && e.target.id === 'av-bib') { e.preventDefault(); mandarBiblia(); }
         });
         return c;
     }
@@ -117,6 +118,7 @@
                 return '<button type="button" class="av-modo' + (modo === m[0] ? ' is-on' : '') + '" data-av-acao="' + m[0] + '">' + ic(m[2]) + '<span>' + m[1] + '</span></button>';
             }).join('') + '</div>';
             if (modo === 'abertura') h += '<button type="button" class="md-btn md-btn-ghost av-full" data-av-acao="ab-mais">' + ic('plus') + 'Mais 1 minuto na contagem</button>';
+            h += '<section class="av-sec"><p class="av-titulo">' + ic('book-open', 'w-4 h-4') + 'Bíblia</p><div class="tl-linha"><input id="av-bib" type="text" placeholder="Ex.: jo 3 16 · sl 23 1" autocomplete="off" enterkeyhint="go"><button type="button" class="md-btn md-btn-primary" data-av="bib">' + ic('presentation') + '</button></div><p class="av-dica">Projeta o versículo na hora. Depois é só usar Próximo para seguir o texto.</p></section>';
             if (e.slides && e.slides.length) {
                 h += '<p class="av-titulo">Slides de ' + esc(e.titulo) + '</p><div class="av-slides">' + e.slides.map(function (s, i) {
                     return '<button type="button" class="av-slide' + (i === e.slide && modo === 'normal' ? ' is-live' : '') + '" data-av-ir="' + e.atual + ':' + i + '"><small>' + (i + 1) + (s.rotulo ? ' · ' + esc(s.rotulo) : '') + '</small>' + esc(s.resumo) + '</button>';
@@ -168,12 +170,13 @@
     function desenhar() {
         var c = document.getElementById('cep-aovivo');
         if (!c || !tela) return;
-        var foco = document.activeElement && document.activeElement.id === 'av-msg' ? document.getElementById('av-msg').value : null;
+        var ativo = document.activeElement && (document.activeElement.id === 'av-msg' || document.activeElement.id === 'av-bib') ? document.activeElement.id : null;
+        var foco = ativo ? document.getElementById(ativo).value : null;
         var rolagem = c.querySelector('.av-corpo') ? c.querySelector('.av-corpo').scrollTop : 0;
         c.innerHTML = tela === 'palco' ? htmlPalco() : htmlRemoto();
         var corpo = c.querySelector('.av-corpo');
         if (corpo) corpo.scrollTop = rolagem;
-        if (foco !== null) { var campo = document.getElementById('av-msg'); if (campo) { campo.value = foco; campo.focus(); } }
+        if (foco !== null) { var campo = document.getElementById(ativo); if (campo) { campo.value = foco; campo.focus(); } }
         icones();
         ajustarTexto();
     }
@@ -201,6 +204,13 @@
         if (msg && palco().msgAt && Date.now() - palco().msgAt >= 12000) msg.classList.remove('is-novo');
     }
 
+    function mandarBiblia() {
+        var campo = document.getElementById('av-bib');
+        var ref = String((campo && campo.value) || '').trim();
+        if (!ref) return;
+        enviar('biblia', { ref: ref });
+        if (campo) { campo.value = ''; campo.blur(); }
+    }
     function mandarMensagem(txt) {
         var campo = document.getElementById('av-msg');
         var m = String(txt || (campo && campo.value) || '').trim();
@@ -225,6 +235,7 @@
         if (a === 'fechar') return fechar();
         if (a === 'abrir-palco') return abrir('palco');
         if (a === 'enviar-msg') return mandarMensagem();
+        if (a === 'bib') return mandarBiblia();
         if (a === 'apagar-msg') return salvarPalco({ msg: '', msgAt: 0 });
         if (a === 'timer-parar') return salvarPalco({ timer: { rodando: false } });
         if (a === 'timer-mais') { var t = palco().timer || {}; if (t.rodando) salvarPalco({ timer: { rodando: true, inicio: t.inicio, dur: t.dur + 300000 } }); }

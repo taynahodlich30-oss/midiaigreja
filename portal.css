@@ -715,3 +715,8 @@ body.av-aberto { overflow: hidden; }
   .pc-hora { font-size: 5vmin; }
   .pc-timer b { font-size: 5vmin; }
 }
+.tl-verso.is-live { background: #2a1219; border-color: #e11d48; box-shadow: 0 0 0 1px #e11d48; color: #fff; }
+.tl-verso.is-live b { color: #fda4af; }
+.tl-link-ok { display: inline-flex; align-items: center; gap: .3rem; color: var(--gold-2); }
+.av-sec .tl-linha input[type=text] { flex: 1; min-width: 0; padding: .6rem .75rem; color: #fff; border: 1px solid; }
+.av-dica { font-size: .72rem; color: var(--muted); }
