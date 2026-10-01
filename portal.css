@@ -462,7 +462,7 @@ body.tl-aberto { overflow: hidden; }
 .tl-status.is-on > span { background: var(--ok); box-shadow: 0 0 0 3px rgba(52, 211, 153, .2); }
 .tl-corpo { flex: 1; min-height: 0; display: grid; grid-template-columns: 340px minmax(0, 1fr); }
 .tl-painel { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--bg-2); }
-.tl-abas { display: grid; grid-template-columns: repeat(4, 1fr); gap: .25rem; padding: .6rem; border-bottom: 1px solid var(--line); }
+.tl-abas { display: grid; grid-template-columns: repeat(5, 1fr); gap: .25rem; padding: .6rem; border-bottom: 1px solid var(--line); }
 .tl-abas button { display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .5rem .2rem; border-radius: 12px; font-size: .7rem; font-weight: 700; color: var(--muted); }
 .tl-abas button svg { width: 1.15rem; height: 1.15rem; }
 .tl-abas button:hover { color: #fff; background: var(--surface); }
@@ -514,7 +514,32 @@ body.tl-aberto { overflow: hidden; }
 .tl-fundo span.tl-fundo-anim { position: relative; display: block; overflow: hidden; }
 .tl-fundo-up { display: grid; place-items: center; background: var(--surface-2); color: var(--gold-2); }
 .tl-fundo-up svg { width: 1.1rem; height: 1.1rem; }
-.tl-seg { display: flex; gap: .35rem; }
+.tl-enviar .tl-fundo-up { border-style: dashed; border-color: var(--gold-line); }
+.tl-midia-item { position: relative; }
+.tl-midia-usar { width: 100%; display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+.tl-fundo span.tl-midia-thumb { position: relative; display: block; overflow: hidden; background: #000; }
+.tl-midia-thumb video, .tl-midia-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tl-play { position: absolute; left: .25rem; bottom: .25rem; display: grid; place-items: center; width: 1.1rem; height: 1.1rem; border-radius: 999px; background: rgba(0, 0, 0, .65); color: #fff; }
+.tl-play svg { width: .6rem; height: .6rem; }
+.tl-midia-item small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-midia-apagar { position: absolute; top: -.35rem; right: -.35rem; display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 999px; background: #2a2a31; border: 1px solid var(--line-2); color: var(--text-2); opacity: 0; transition: opacity .15s; }
+.tl-midia-item:hover .tl-midia-apagar, .tl-midia-apagar:focus-visible { opacity: 1; }
+@media (hover: none) { .tl-midia-apagar { opacity: 1; } }
+.tl-midia-apagar svg { width: .75rem; height: .75rem; }
+.tl-midia-apagar:hover { background: #e11d48; color: #fff; }
+.tl-ab-iniciar { width: 100%; justify-content: center; min-height: 3rem; font-size: .95rem; }
+.tl-ab-painel { display: flex; flex-direction: column; gap: .6rem; padding: .85rem; border-radius: 14px; background: #1a1812; border: 1px solid var(--gold-line); }
+.tl-ab-painel > b { font-size: 1.35rem; font-weight: 800; color: var(--gold-hi); font-variant-numeric: tabular-nums; }
+.tl-conteudo input[type=time] { width: 100%; padding: .6rem .75rem; color: #fff; border: 1px solid; color-scheme: dark; }
+.tl-musicas { display: flex; flex-direction: column; gap: .35rem; }
+.tl-musica-linha { position: relative; display: flex; }
+.tl-musica { flex: 1; min-width: 0; display: flex; align-items: center; gap: .55rem; padding: .55rem 2.2rem .55rem .7rem; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface); font-size: .82rem; font-weight: 700; color: var(--text-2); text-align: left; }
+.tl-musica span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-musica svg { width: 1rem; height: 1rem; flex: none; }
+.tl-musica.is-on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); color: var(--gold-hi); }
+.tl-midia-apagar.tl-musica-apagar { top: 50%; right: .45rem; transform: translateY(-50%); opacity: .7; }
+.tl-musicas .tl-arquivo { justify-content: center; }
+.tl-seg { display: flex; flex-wrap: wrap; gap: .35rem; }
 .tl-seg button { flex: 1; padding: .5rem .4rem; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface); font-size: .8rem; font-weight: 700; color: var(--text-2); }
 .tl-toggles { gap: .2rem; }
 .tl-toggle { display: flex; align-items: center; gap: .65rem; padding: .45rem 0; font-size: .85rem; color: var(--text-2); cursor: pointer; }

@@ -53,10 +53,14 @@
         return '<div class="tl-anim">' + h + '</div>';
     }
 
-    var PADRAO = { fonte: 'montserrat', fundo: 'luzes', tamanho: 1, maiusculas: false, sombra: true, contorno: false, posicao: 'centro', titulo: true, linhas: 4 };
+    var PADRAO = { fonte: 'montserrat', fundo: 'luzes', tamanho: 1, maiusculas: false, sombra: true, contorno: false, posicao: 'centro', titulo: true, linhas: 4,
+        midiaId: '', abModo: 'minutos', abMin: 5, abHora: '19:00', abTitulo: 'O culto começa em', abSub: 'Silencie o celular e prepare o coração', abFim: 'Seja bem-vindo!', abMusica: '', abVolume: 0.6 };
 
     var tema = carregarTema();
-    var midiaFundo = { tipo: '', url: '' };   // imagem ou vídeo escolhido neste aparelho
+    var midiaFundo = { tipo: '', url: '', id: '' };   // imagem ou vídeo escolhido neste aparelho
+    var galeria = [];                          // vídeos, imagens e músicas salvos neste computador
+    var galeriaCarregada = false;
+    var ab = { alvo: 0, timer: null, fim: false, audio: null, fade: null };
     var fila = [];                             // itens do culto
     var atual = -1, slide = 0;
     var modo = 'normal';                       // normal | preto | logo | limpo
@@ -87,6 +91,165 @@
         var l = doc.createElement('link');
         l.id = 'telao-fontes'; l.rel = 'stylesheet'; l.href = URL_FONTES;
         doc.head.appendChild(l);
+    }
+
+    /* ---------- Galeria: arquivos guardados neste computador (IndexedDB) ---------- */
+    var BANCO = 'cep-telao', LOJA = 'midias';
+    function banco() {
+        return new Promise(function (ok, erro) {
+            if (!window.indexedDB) return erro(new Error('Este navegador não guarda arquivos.'));
+            var r = indexedDB.open(BANCO, 1);
+            r.onupgradeneeded = function () { if (!r.result.objectStoreNames.contains(LOJA)) r.result.createObjectStore(LOJA, { keyPath: 'id' }); };
+            r.onsuccess = function () { ok(r.result); };
+            r.onerror = function () { erro(r.error); };
+        });
+    }
+    function naLoja(tipoTx, acao) {
+        return banco().then(function (db) {
+            return new Promise(function (ok, erro) {
+                var tx = db.transaction(LOJA, tipoTx), pedido = acao(tx.objectStore(LOJA));
+                tx.oncomplete = function () { ok(pedido ? pedido.result : undefined); db.close(); };
+                tx.onerror = tx.onabort = function () { erro(tx.error); db.close(); };
+            });
+        });
+    }
+    function tipoArquivo(f) { return /^video\//.test(f.type) ? 'video' : /^audio\//.test(f.type) ? 'audio' : 'imagem'; }
+    function semExtensao(n) { return String(n || '').replace(/\.[^.]+$/, ''); }
+    function carregarGaleria() {
+        if (galeriaCarregada) return Promise.resolve();
+        galeriaCarregada = true;
+        return naLoja('readonly', function (st) { return st.getAll(); }).then(function (itens) {
+            galeria = (itens || []).sort(function (a, b) { return b.criado - a.criado; }).map(function (it) {
+                return { id: it.id, nome: it.nome, tipo: it.tipo, tamanho: it.tamanho, url: URL.createObjectURL(it.blob) };
+            });
+            if (tema.fundo === 'midia' && tema.midiaId) {
+                var m = itemGaleria(tema.midiaId);
+                if (m) midiaFundo = { tipo: m.tipo, url: m.url, id: m.id }; else tema.fundo = 'luzes';
+            }
+            desenhar(); transmitir();
+        }).catch(function (e) { console.warn('Galeria do telão indisponível', e); });
+    }
+    function itemGaleria(id) { return galeria.filter(function (m) { return m.id === id; })[0]; }
+    async function enviarArquivos(arquivos, quer) {
+        if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
+        var primeiro = null;
+        for (var i = 0; i < arquivos.length; i++) {
+            var f = arquivos[i];
+            if (!/^(video|image|audio)\//.test(f.type)) { aviso('"' + f.name + '" não é vídeo, imagem nem música.', 'error'); continue; }
+            var tipo = tipoArquivo(f);
+            var item = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), nome: f.name, tipo: tipo, tamanho: f.size, blob: f, criado: Date.now() };
+            var mem = { id: item.id, nome: item.nome, tipo: tipo, tamanho: f.size, url: URL.createObjectURL(f) };
+            try {
+                await naLoja('readwrite', function (st) { return st.put(item); });
+                aviso('"' + f.name + '" ficou salvo neste computador.');
+            } catch (e) {
+                console.error(e);
+                aviso('Sem espaço para guardar "' + f.name + '". Ele funciona só até fechar o portal.', 'error');
+            }
+            galeria.unshift(mem);
+            if (!primeiro && (quer === 'audio' ? tipo === 'audio' : tipo !== 'audio')) primeiro = mem;
+        }
+        if (primeiro && quer === 'audio') { tema.abMusica = primeiro.id; salvarTema(); desenhar(); }
+        else if (primeiro) usarMidia(primeiro.id);
+        else desenhar();
+    }
+    function usarMidia(id) {
+        var m = itemGaleria(id);
+        if (!m) return;
+        midiaFundo = { tipo: m.tipo, url: m.url, id: m.id };
+        tema.fundo = 'midia'; tema.midiaId = m.id;
+        salvarTema(); desenhar();
+    }
+    async function apagarMidia(id) {
+        var m = itemGaleria(id);
+        if (!m) return;
+        var ok = typeof portalConfirm === 'function' ? await portalConfirm('Apagar "' + m.nome + '" deste computador?', { danger: true, confirmText: 'Apagar' }) : true;
+        if (!ok) return;
+        try { await naLoja('readwrite', function (st) { return st.delete(id); }); } catch (e) {}
+        galeria = galeria.filter(function (x) { return x.id !== id; });
+        if (midiaFundo.id === id) { midiaFundo = { tipo: '', url: '', id: '' }; tema.fundo = 'luzes'; tema.midiaId = ''; }
+        if (tema.abMusica === id) tema.abMusica = '';
+        salvarTema();
+        setTimeout(function () { URL.revokeObjectURL(m.url); }, 1000);
+        desenhar();
+    }
+
+    /* ---------- Abertura: contagem regressiva para o início do culto ---------- */
+    function abRestante() { return Math.max(0, ab.alvo - Date.now()); }
+    function doisDig(n) { return (n < 10 ? '0' : '') + n; }
+    function relogio(ms) {
+        var t = Math.ceil(ms / 1000), h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), x = t % 60;
+        return (h ? h + ':' + doisDig(m) : doisDig(m)) + ':' + doisDig(x);
+    }
+    function alvoDaAbertura() {
+        if (tema.abModo === 'horario') {
+            var p = String(tema.abHora || '').split(':'), d = new Date();
+            d.setHours(Number(p[0]) || 0, Number(p[1]) || 0, 0, 0);
+            return d.getTime();
+        }
+        return Date.now() + Math.max(1, Number(tema.abMin) || 5) * 60000;
+    }
+    function iniciarAbertura() {
+        var alvo = alvoDaAbertura();
+        if (alvo <= Date.now()) return aviso('Esse horário já passou. Escolha outro ou conte por minutos.', 'error');
+        ab.alvo = alvo; ab.fim = false;
+        modo = 'abertura';
+        clearInterval(ab.timer);
+        ab.timer = setInterval(tique, 250);
+        tocarMusica();
+        desenhar();
+    }
+    function pararAbertura(silencioso) {
+        clearInterval(ab.timer); ab.timer = null;
+        pararMusica();
+        if (modo === 'abertura') modo = 'normal';
+        if (!silencioso) desenhar();
+        else if (aba === 'abertura') setTimeout(desenhar, 0);
+    }
+    function maisUmMinuto() {
+        if (modo !== 'abertura') return;
+        if (ab.fim) { ab.alvo = Date.now() + 60000; ab.fim = false; tocarMusica(); transmitir(); }
+        else ab.alvo += 60000;
+        tique();
+    }
+    function alvosPalco() {
+        var l = [document.getElementById('tl-preview')];
+        if (cheia) l.push(cheia.querySelector('.tl-cheia-raiz'));
+        if (saida && !saida.closed) { try { l.push(saida.document.getElementById('tl-raiz')); } catch (e) {} }
+        return l.filter(Boolean);
+    }
+    function tique() {
+        if (modo !== 'abertura') return;
+        var r = abRestante(), txt = relogio(r);
+        alvosPalco().forEach(function (a) { var el = a.querySelector('.tl-relogio'); if (el && el.textContent !== txt) el.textContent = txt; });
+        var op = document.getElementById('tl-ab-restante');
+        if (op) op.textContent = ab.fim ? 'Contagem terminada' : 'Faltam ' + txt;
+        if (r <= 0 && !ab.fim) {
+            ab.fim = true;
+            transmitir();
+            if (aba === 'abertura') desenhar();
+            setTimeout(function () { if (ab.fim) pararMusica(); }, 9000);
+        }
+    }
+    function tocarMusica() {
+        pararMusica(true);
+        var m = tema.abMusica && itemGaleria(tema.abMusica);
+        if (!m) return;
+        ab.audio = new Audio(m.url);
+        ab.audio.loop = true;
+        ab.audio.volume = Math.min(1, Math.max(0, Number(tema.abVolume)));
+        ab.audio.play().catch(function () { aviso('O navegador não deixou tocar a música. Clique em Iniciar de novo.', 'error'); });
+    }
+    function pararMusica(agora) {
+        var a = ab.audio;
+        clearInterval(ab.fade);
+        if (!a) return;
+        ab.audio = null;
+        if (agora) { a.pause(); return; }
+        ab.fade = setInterval(function () {
+            a.volume = Math.max(0, a.volume - 0.04);
+            if (a.volume <= 0.01) { clearInterval(ab.fade); a.pause(); }
+        }, 120);
     }
 
     /* ---------- Letras: cifra -> slides ---------- */
@@ -211,6 +374,13 @@
     }
     var LOGO_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="url(#tlg)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="tlg" x1="0" y1="2" x2="0" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#d4ae52"/><stop offset="1" stop-color="#a88227"/></linearGradient></defs><path d="M10 9h4"/><path d="M12 7v5"/><path d="M14 22v-4a2 2 0 0 0-4 0v4"/><path d="M18 22V5.618a1 1 0 0 0-.553-.894l-4.553-2.277a2 2 0 0 0-1.788 0L6.553 4.724A1 1 0 0 0 6 5.618V22"/><path d="m18 7 3.447 1.724a1 1 0 0 1 .553.894V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.618a1 1 0 0 1 .553-.894L6 7"/></svg>';
     function conteudoPalco() {
+        if (modo === 'abertura') {
+            var fonte = (FONTES[tema.fonte] || FONTES.montserrat)[1];
+            var corpo = ab.fim
+                ? '<div class="tl-ab-fim" style="font-family:' + fonte.replace(/"/g, '&quot;') + '">' + esc(tema.abFim || 'Seja bem-vindo!') + '</div>'
+                : '<div class="tl-ab-titulo">' + esc(tema.abTitulo || '') + '</div><div class="tl-relogio">' + relogio(abRestante()) + '</div>' + (tema.abSub ? '<div class="tl-ab-sub">' + esc(tema.abSub) + '</div>' : '');
+            return '<div class="tl-ab' + (ab.fim ? ' is-fim' : '') + '"><div class="tl-ab-logo">' + LOGO_SVG + '</div>' + corpo + '<div class="tl-ab-igreja">CEP Pirapozinho</div></div>';
+        }
         if (modo === 'logo') return '<div class="tl-logo">' + LOGO_SVG + '<b>CEP Pirapozinho</b></div>';
         var s = slideAtual(), h = '';
         if (modo !== 'limpo' && s) {
@@ -239,6 +409,13 @@
         '@keyframes tlGira{to{transform:rotate(360deg)}}' +
         '@keyframes tlSobe{0%{transform:translateY(0);opacity:0}10%{opacity:1}85%{opacity:.8}100%{transform:translateY(-110cqh);opacity:0}}' +
         '@media (prefers-reduced-motion:reduce){.tl-anim i{animation-duration:200s !important}}' +
+        '.tl-ab{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.4cqmin;padding:0 6%;animation:tlEntra .5s ease-out}' +
+        '.tl-ab-logo svg{width:10cqmin;height:10cqmin;filter:drop-shadow(0 .5cqmin 1.2cqmin rgba(0,0,0,.6))}' +
+        '.tl-ab-titulo{margin-top:1cqmin;font:700 4cqmin Montserrat,Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.82);text-shadow:0 .3cqmin 1cqmin rgba(0,0,0,.6)}' +
+        '.tl-relogio{font:800 25cqmin Montserrat,Inter,sans-serif;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em;background:linear-gradient(180deg,#ffffff 0%,#f6e6b4 55%,#d4ae52 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .8cqmin 2cqmin rgba(0,0,0,.55))}' +
+        '.tl-ab-sub{font:500 3.1cqmin Inter,system-ui,sans-serif;color:rgba(255,255,255,.78);text-shadow:0 .3cqmin 1cqmin rgba(0,0,0,.6)}' +
+        '.tl-ab-fim{font-weight:800;font-size:10cqmin;line-height:1.1;background:linear-gradient(180deg,#ffffff 0%,#f6e6b4 55%,#d4ae52 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .8cqmin 2cqmin rgba(0,0,0,.55));animation:tlEntra .8s ease-out}' +
+        '.tl-ab-igreja{margin-top:2.4cqmin;font:700 2.3cqmin Inter,system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:rgba(230,200,114,.9)}' +
         '.tl-midia{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}' +
         '.tl-veu{position:absolute;inset:0;background:rgba(0,0,0,.38)}' +
         '.tl-texto{position:relative;z-index:1;width:88%;text-align:center;line-height:1.28;overflow-wrap:break-word;animation:tlEntra .28s ease-out}' +
@@ -265,6 +442,7 @@
         palco.classList.toggle('is-preto', modo === 'preto');
     }
     function transmitir() {
+        if (modo !== 'abertura' && ab.timer) pararAbertura(true);
         if (saida && !saida.closed) {
             try { pintar(saida.document.getElementById('tl-raiz')); saida.document.title = 'Telão · ' + (fila[atual] ? fila[atual].titulo : 'CEP Pirapozinho'); } catch (e) { saida = null; }
         } else saida = null;
@@ -277,6 +455,7 @@
             st.innerHTML = '<span></span>' + (online ? 'Telão aberto' : 'Telão fechado');
         }
         document.querySelectorAll('[data-tl-modo]').forEach(function (b) { b.classList.toggle('is-on', b.getAttribute('data-tl-modo') === modo); });
+        document.querySelectorAll('[data-tl-ab-btn]').forEach(function (b) { b.classList.toggle('is-on', modo === 'abertura'); });
     }
 
     /* ---------- Navegação dos slides ---------- */
@@ -385,6 +564,7 @@
                             '<button type="button" class="tl-ctl" data-tl-modo="preto" title="Tela preta (B)">' + ic('square') + '<span>Preto</span></button>' +
                             '<button type="button" class="tl-ctl" data-tl-modo="logo" title="Logo da igreja (L)">' + ic('church') + '<span>Logo</span></button>' +
                             '<button type="button" class="tl-ctl" data-tl-modo="limpo" title="Só o fundo (C)">' + ic('eraser') + '<span>Limpar</span></button>' +
+                            '<button type="button" class="tl-ctl" data-tl="abertura" data-tl-ab-btn title="Contagem para o início do culto">' + ic('timer') + '<span>Abertura</span></button>' +
                         '</div><p class="tl-atalhos">' + ic('keyboard', 'w-3.5 h-3.5') + 'Setas ou espaço avançam · B preto · L logo · C limpar</p></div>' +
                     '<section class="tl-slides-box"><div class="tl-slides-head" id="tl-slides-head"></div><div id="tl-slides" class="tl-slides"></div></section>' +
                 '</main>' +
@@ -397,7 +577,7 @@
     }
     function aberto() { var op = document.getElementById('telao-op'); return op && !op.classList.contains('hidden'); }
 
-    var ABAS = [['culto', 'Culto', 'list-music'], ['biblioteca', 'Músicas', 'library'], ['texto', 'Texto', 'type'], ['estilo', 'Estilo', 'palette']];
+    var ABAS = [['culto', 'Culto', 'list-music'], ['biblioteca', 'Músicas', 'library'], ['texto', 'Texto', 'type'], ['abertura', 'Abertura', 'timer'], ['estilo', 'Estilo', 'palette']];
     function desenhar() {
         if (!montado) return;
         var abas = document.querySelector('#telao-op .tl-abas');
@@ -406,6 +586,7 @@
         if (aba === 'culto') c.innerHTML = abaCulto();
         else if (aba === 'biblioteca') c.innerHTML = abaBiblioteca();
         else if (aba === 'texto') c.innerHTML = abaTexto();
+        else if (aba === 'abertura') c.innerHTML = abaAbertura();
         else c.innerHTML = abaEstilo();
         desenharSlides();
         icones();
@@ -467,18 +648,61 @@
             '<p class="tl-dica-txt">' + ic('book-open', 'w-3.5 h-3.5') + 'Para versículos, copie da sua Bíblia (app ou site) e cole aqui com a referência.</p>' +
             '<div class="tl-linha tl-linha-2"><button type="button" class="md-btn md-btn-primary" data-tl="texto-agora">' + ic('presentation') + 'Projetar agora</button><button type="button" class="md-btn md-btn-ghost" data-tl="texto-fila">' + ic('list-plus') + 'Pôr na ordem</button></div></div>';
     }
-    function abaEstilo() {
-        var h = '<div class="tl-bloco"><label class="tl-label">Fonte</label><div class="tl-fontes">' + Object.keys(FONTES).map(function (k) {
-            var f = FONTES[k];
-            return '<button type="button" class="tl-opc' + (tema.fonte === k ? ' is-on' : '') + '" data-tl-tema="fonte:' + k + '" style="font-family:' + f[1].replace(/"/g, '&quot;') + ';font-weight:' + f[2] + '">' + esc(f[0]) + '</button>';
-        }).join('') + '</div></div>';
-        h += '<div class="tl-bloco"><label class="tl-label">Fundos em movimento</label><div class="tl-fundos">' + Object.keys(ANIMADOS).map(function (k) {
+    function blocoFundos() {
+        var h = '<div class="tl-bloco"><label class="tl-label">Fundos em movimento</label><div class="tl-fundos">' + Object.keys(ANIMADOS).map(function (k) {
             return '<button type="button" class="tl-fundo' + (tema.fundo === k ? ' is-on' : '') + '" data-tl-tema="fundo:' + k + '" title="' + esc(ANIMADOS[k][0]) + '"><span class="tl-fundo-anim" style="background:' + ANIMADOS[k][1] + '">' + animInterno(k) + '</span><small>' + esc(ANIMADOS[k][0]) + '</small></button>';
         }).join('') + '</div></div>';
         h += '<div class="tl-bloco"><label class="tl-label">Fundos parados</label><div class="tl-fundos">' + Object.keys(FUNDOS).map(function (k) {
             return '<button type="button" class="tl-fundo' + (tema.fundo === k ? ' is-on' : '') + '" data-tl-tema="fundo:' + k + '" title="' + esc(FUNDOS[k][0]) + '"><span style="background:' + FUNDOS[k][1] + '"></span><small>' + esc(FUNDOS[k][0]) + '</small></button>';
-        }).join('') +
-            '<label class="tl-fundo' + (tema.fundo === 'midia' ? ' is-on' : '') + '" title="Imagem ou vídeo deste aparelho"><span class="tl-fundo-up">' + ic('image') + '</span><small>' + (midiaFundo.url ? (midiaFundo.tipo === 'video' ? 'Meu vídeo' : 'Minha imagem') : 'Meu vídeo ou imagem') + '</small><input id="tl-fundo-arquivo" type="file" accept="image/*,video/*" hidden></label></div></div>';
+        }).join('') + '</div></div>';
+        return h;
+    }
+    function blocoGaleria() {
+        var lista = galeria.filter(function (m) { return m.tipo !== 'audio'; });
+        var h = '<div class="tl-bloco"><label class="tl-label">Meus vídeos e imagens</label><div class="tl-fundos">';
+        h += '<label class="tl-fundo tl-enviar" title="Enviar vídeo ou imagem deste computador"><span class="tl-fundo-up">' + ic('upload') + '</span><small>Enviar vídeo ou imagem</small><input id="tl-fundo-arquivo" type="file" accept="video/*,image/*" multiple hidden></label>';
+        h += lista.map(function (m) {
+            var on = tema.fundo === 'midia' && midiaFundo.id === m.id;
+            var miniatura = m.tipo === 'video'
+                ? '<video src="' + m.url + '#t=1" muted preload="metadata" playsinline></video><b class="tl-play">' + ic('play') + '</b>'
+                : '<img src="' + m.url + '" alt="">';
+            return '<div class="tl-fundo tl-midia-item' + (on ? ' is-on' : '') + '"><button type="button" class="tl-midia-usar" data-tl-usar="' + esc(m.id) + '" title="' + esc(m.nome) + '"><span class="tl-midia-thumb">' + miniatura + '</span><small>' + esc(semExtensao(m.nome)) + '</small></button>' +
+                '<button type="button" class="tl-midia-apagar" data-tl-apagar="' + esc(m.id) + '" aria-label="Apagar ' + esc(m.nome) + '" title="Apagar">' + ic('x') + '</button></div>';
+        }).join('');
+        h += '</div><p class="tl-dica-txt">' + ic('hard-drive-download', 'w-3.5 h-3.5') + 'Fica guardado neste computador e aparece aqui nos próximos cultos. O vídeo roda sem som, repetindo.</p></div>';
+        return h;
+    }
+    function abaAbertura() {
+        var rodando = modo === 'abertura';
+        var lista = galeria.filter(function (m) { return m.tipo === 'audio'; });
+        var h = '<div class="tl-bloco">';
+        if (rodando) {
+            h += '<div class="tl-ab-painel"><b id="tl-ab-restante">' + (ab.fim ? 'Contagem terminada' : 'Faltam ' + relogio(abRestante())) + '</b>' +
+                '<div class="tl-linha tl-linha-2"><button type="button" class="md-btn md-btn-ghost" data-tl="ab-mais">' + ic('plus') + '1 minuto</button><button type="button" class="md-btn md-btn-danger" data-tl="ab-parar">' + ic('square') + 'Parar</button></div>' +
+                '<p class="tl-dica-txt">' + ic('info', 'w-3.5 h-3.5') + 'Quando o louvor começar, aperte → (ou Próximo) para ir à primeira música.</p></div>';
+        } else {
+            h += '<button type="button" class="md-btn md-btn-primary tl-ab-iniciar" data-tl="ab-iniciar">' + ic('timer') + 'Iniciar contagem</button>';
+        }
+        h += '</div><div class="tl-bloco"><label class="tl-label">Contar</label><div class="tl-seg"><button type="button" class="' + (tema.abModo !== 'horario' ? 'is-on' : '') + '" data-tl-tema="abModo:minutos">Por minutos</button><button type="button" class="' + (tema.abModo === 'horario' ? 'is-on' : '') + '" data-tl-tema="abModo:horario">Até um horário</button></div>';
+        if (tema.abModo === 'horario') h += '<input type="time" data-tl-ab="abHora" value="' + esc(tema.abHora) + '" aria-label="Horário do culto">';
+        else h += '<div class="tl-seg">' + [2, 3, 5, 10, 15].map(function (n) { return '<button type="button" class="' + (Number(tema.abMin) === n ? 'is-on' : '') + '" data-tl-tema="abMin:' + n + '">' + n + ' min</button>'; }).join('') + '</div>';
+        h += '</div><div class="tl-bloco"><label class="tl-label" for="tl-ab-t">Texto de cima</label><input id="tl-ab-t" type="text" data-tl-ab="abTitulo" value="' + esc(tema.abTitulo) + '" maxlength="60">' +
+            '<label class="tl-label" for="tl-ab-s">Frase embaixo do relógio</label><input id="tl-ab-s" type="text" data-tl-ab="abSub" value="' + esc(tema.abSub) + '" maxlength="90" placeholder="Opcional">' +
+            '<label class="tl-label" for="tl-ab-f">Quando zerar, mostrar</label><input id="tl-ab-f" type="text" data-tl-ab="abFim" value="' + esc(tema.abFim) + '" maxlength="60"></div>';
+        h += '<div class="tl-bloco"><label class="tl-label">Música de fundo (opcional)</label><div class="tl-musicas">' +
+            '<button type="button" class="tl-musica' + (!tema.abMusica ? ' is-on' : '') + '" data-tl-tema="abMusica:">' + ic('x') + '<span>Sem música</span></button>' +
+            lista.map(function (m) { return '<div class="tl-musica-linha"><button type="button" class="tl-musica' + (tema.abMusica === m.id ? ' is-on' : '') + '" data-tl-tema="abMusica:' + esc(m.id) + '">' + ic('music') + '<span>' + esc(semExtensao(m.nome)) + '</span></button><button type="button" class="tl-midia-apagar tl-musica-apagar" data-tl-apagar="' + esc(m.id) + '" aria-label="Apagar ' + esc(m.nome) + '">' + ic('x') + '</button></div>'; }).join('') +
+            '<label class="md-btn md-btn-ghost tl-arquivo">' + ic('upload') + 'Enviar música (MP3)<input id="tl-ab-audio" type="file" accept="audio/*" multiple hidden></label></div>' +
+            '<label class="tl-label" for="tl-ab-vol">Volume da música</label><input id="tl-ab-vol" type="range" min="0" max="1" step="0.05" value="' + tema.abVolume + '"></div>';
+        h += '<p class="tl-dica-txt">' + ic('palette', 'w-3.5 h-3.5') + 'O fundo e a fonte são os mesmos escolhidos na aba Estilo.</p>';
+        return h;
+    }
+    function abaEstilo() {
+        var h = blocoGaleria() + blocoFundos();
+        h += '<div class="tl-bloco"><label class="tl-label">Fonte</label><div class="tl-fontes">' + Object.keys(FONTES).map(function (k) {
+            var f = FONTES[k];
+            return '<button type="button" class="tl-opc' + (tema.fonte === k ? ' is-on' : '') + '" data-tl-tema="fonte:' + k + '" style="font-family:' + f[1].replace(/"/g, '&quot;') + ';font-weight:' + f[2] + '">' + esc(f[0]) + '</button>';
+        }).join('') + '</div></div>';
         h += '<div class="tl-bloco"><label class="tl-label" for="tl-tamanho">Tamanho da letra</label><input id="tl-tamanho" type="range" min="0.6" max="1.6" step="0.05" value="' + tema.tamanho + '"></div>';
         h += '<div class="tl-bloco"><label class="tl-label">Linhas por slide</label><div class="tl-seg">' + [2, 3, 4, 6].map(function (n) { return '<button type="button" class="' + (Number(tema.linhas) === n ? 'is-on' : '') + '" data-tl-tema="linhas:' + n + '">' + n + '</button>'; }).join('') + '</div></div>';
         h += '<div class="tl-bloco"><label class="tl-label">Posição</label><div class="tl-seg"><button type="button" class="' + (tema.posicao !== 'baixo' ? 'is-on' : '') + '" data-tl-tema="posicao:centro">Centro</button><button type="button" class="' + (tema.posicao === 'baixo' ? 'is-on' : '') + '" data-tl-tema="posicao:baixo">Embaixo (live)</button></div></div>';
@@ -520,9 +744,13 @@
             desenhar();
             return aviso('"' + s.title + '" entrou no fim da ordem.');
         }
+        if (b.hasAttribute('data-tl-usar')) return usarMidia(b.getAttribute('data-tl-usar'));
+        if (b.hasAttribute('data-tl-apagar')) return apagarMidia(b.getAttribute('data-tl-apagar'));
         if (b.hasAttribute('data-tl-tema')) {
             var kv = b.getAttribute('data-tl-tema').split(':');
-            tema[kv[0]] = kv[0] === 'linhas' ? Number(kv[1]) : kv[1];
+            var chaveT = kv.shift(), valorT = kv.join(':');
+            tema[chaveT] = (chaveT === 'linhas' || chaveT === 'abMin') ? Number(valorT) : valorT;
+            kv = [chaveT];
             if (kv[0] === 'linhas') refazerSlides();
             salvarTema();
             return desenhar();
@@ -545,6 +773,10 @@
             return aviso('Texto colocado na ordem do culto.');
         }
         if (acao === 'nova-letra') return novaLetra();
+        if (acao === 'abertura') { if (modo === 'abertura') return pararAbertura(); aba = 'abertura'; return iniciarAbertura(); }
+        if (acao === 'ab-iniciar') return iniciarAbertura();
+        if (acao === 'ab-parar') return pararAbertura();
+        if (acao === 'ab-mais') return maisUmMinuto();
     }
     var tempoBusca = null;
     function digitar(e) {
@@ -557,6 +789,14 @@
                 var campo = document.getElementById('tl-busca');
                 if (campo) { campo.focus(); try { campo.setSelectionRange(pos, pos); } catch (x) {} }
             }, 160);
+        } else if (e.target.hasAttribute('data-tl-ab')) {
+            tema[e.target.getAttribute('data-tl-ab')] = e.target.value;
+            salvarTema();
+            if (modo === 'abertura') transmitir();
+        } else if (e.target.id === 'tl-ab-vol') {
+            tema.abVolume = Number(e.target.value);
+            salvarTema();
+            if (ab.audio) ab.audio.volume = tema.abVolume;
         } else if (e.target.id === 'tl-tamanho') {
             tema.tamanho = Number(e.target.value) || 1;
             salvarTema(); transmitir();
@@ -565,14 +805,8 @@
     function mudar(e) {
         var el = e.target;
         if (el.hasAttribute('data-tl-bool')) { tema[el.getAttribute('data-tl-bool')] = el.checked; salvarTema(); return transmitir(); }
-        if (el.id === 'tl-fundo-arquivo' && el.files && el.files[0]) {
-            var f = el.files[0];
-            if (midiaFundo.url && midiaFundo.url.indexOf('blob:') === 0) URL.revokeObjectURL(midiaFundo.url);
-            midiaFundo = { tipo: /^video\//.test(f.type) ? 'video' : 'imagem', url: URL.createObjectURL(f) };
-            tema.fundo = 'midia';
-            salvarTema();
-            return desenhar();
-        }
+        if (el.id === 'tl-fundo-arquivo' && el.files && el.files.length) return enviarArquivos(Array.prototype.slice.call(el.files), 'visual');
+        if (el.id === 'tl-ab-audio' && el.files && el.files.length) return enviarArquivos(Array.prototype.slice.call(el.files), 'audio');
         if (el.id === 'tl-txt' && el.files && el.files.length) return importarTxt(Array.prototype.slice.call(el.files));
     }
 
@@ -629,6 +863,7 @@
             var r = escalaPadrao();
             if (r) carregarEscala(r.id);
         }
+        carregarGaleria();
         var el = document.getElementById('telao-op');
         el.classList.remove('hidden');
         document.body.classList.add('tl-aberto');
