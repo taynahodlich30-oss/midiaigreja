@@ -3114,7 +3114,7 @@
 
     if (messaging) {
       messaging.onMessage(payload => {
-        const title = payload.notification?.title || 'Portal CEP Pirapozinho';
+        const title = payload.notification?.title || payload.data?.title || 'Portal CEP Pirapozinho';
         const body = payload.notification?.body || payload.data?.body || 'Você tem um novo lembrete.';
         if (Notification.permission === 'granted') showPortalNotification(title, { body });
       });

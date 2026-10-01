@@ -11,7 +11,7 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
-const PORTAL_CACHE = 'portal-cep-v15';
+const PORTAL_CACHE = 'portal-cep-v16';
 const OFFLINE_FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './tailwind.css?v=3', './icons.js?v=3', './portal.css?v=8', './midia.js?v=2', './louvor.js?v=2', './telao.js?v=5', './palco.js?v=2', './app.js?v=3'];
 
 self.addEventListener('install', event => {
@@ -32,14 +32,17 @@ self.addEventListener('fetch', event => {
 });
 
 messaging.onBackgroundMessage(payload => {
-  const title = payload.notification?.title || 'Portal CEP Pirapozinho';
-  const options = {
-    body: payload.notification?.body || payload.data?.body || 'Você tem um lembrete de escala.',
+  // Mensagens com "notification" já são mostradas pelo próprio Firebase; aqui tratamos as só de dados
+  if (payload.notification) return;
+  const d = payload.data || {};
+  self.registration.showNotification(d.title || 'Portal CEP Pirapozinho', {
+    body: d.body || 'Você tem um lembrete de escala.',
     icon: './icon-192.png',
     badge: './icon-192.png',
-    data: { url: payload.data?.url || 'https://taynahodlich30-oss.github.io/midiaigreja/' }
-  };
-  self.registration.showNotification(title, options);
+    tag: d.tag || undefined,
+    renotify: !!d.tag,
+    data: { url: d.url || 'https://taynahodlich30-oss.github.io/midiaigreja/' }
+  });
 });
 
 self.addEventListener('notificationclick', event => {
