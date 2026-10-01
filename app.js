@@ -43,9 +43,11 @@
     var ACOES = {
         biblia: 'openBible', disponibilidade: 'openAvailabilityModal', instalar: 'installPortalApp', sair: 'logoutPortal',
         ensaio: 'openRehearsalMode', afinador: 'openTuner', aovivo: 'openLiveService', notificacoes: 'openNotificationCenter',
-        telao: 'abrirTelao', backup: 'exportPortalBackup'
+        telao: 'abrirTelao', backup: 'exportPortalBackup', remoto: 'abrirControleRemoto', palco: 'abrirTelaPalco'
     };
     var TELAO = ['telao', 'Telão', 'presentation', 'tone-blue'];
+    var REMOTO = ['remoto', 'Controle remoto', 'smartphone', 'tone-amber'];
+    var PALCO = ['palco', 'Tela do palco', 'monitor', 'tone-green'];
     var telaAtual = 'home';
     var pronto = false;
 
@@ -63,7 +65,7 @@
     function lider() { try { return typeof isLeaderAccount === 'function' && isLeaderAccount(); } catch (e) { return false; } }
     function outrasTelas() { return TELAS[depto()].outras.filter(function (x) { return x[3] !== 'lider' || lider(); }); }
     function todasTelas() { return TELAS[depto()].principais.concat(outrasTelas()); }
-    function ferramentasMenu() { return (depto() === 'louvor' ? FERRAMENTAS.filter(function (f) { return f[0] !== 'pads'; }) : []).concat([TELAO]); }
+    function ferramentasMenu() { return (depto() === 'louvor' ? FERRAMENTAS.filter(function (f) { return f[0] !== 'pads'; }) : []).concat([TELAO, REMOTO, PALCO]); }
     function nomeTela(t) { var x = todasTelas().filter(function (i) { return i[0] === t; })[0]; return x ? x[1] : 'Início'; }
     function primeiroNome() {
         try {
@@ -101,7 +103,10 @@
             return '<button type="button" id="' + id + '" class="app-telao-cta app-home-only" data-app-acao="telao">' +
                 '<span class="i3d tone-blue">' + ic('presentation') + '</span>' +
                 '<span class="cta-txt"><b>Telão</b><small>Projete letras das músicas, versículos e avisos na tela da igreja.</small></span>' +
-                '<span class="cta-go">Abrir' + ic('chevron-right') + '</span></button>';
+                '<span class="cta-go">Abrir' + ic('chevron-right') + '</span></button>' +
+                '<div class="app-telao-mini app-home-only">' +
+                '<button type="button" data-app-acao="remoto"><span class="i3d tone-amber">' + ic('smartphone') + '</span><span><b>Controle remoto</b><small>Passe os slides pelo celular</small></span></button>' +
+                '<button type="button" data-app-acao="palco"><span class="i3d tone-green">' + ic('monitor') + '</span><span><b>Tela do palco</b><small>Retorno para músicos e pregador</small></span></button></div>';
         };
         var atalhos = document.getElementById('louvor-atalhos');
         if (atalhos && !document.getElementById('louvor-telao')) atalhos.insertAdjacentHTML('beforebegin', banner('louvor-telao'));
@@ -220,7 +225,7 @@
         var tiles = outrasTelas().map(function (x) {
             return '<button type="button" class="more-tile' + (telaAtual === x[0] ? ' is-active' : '') + '" data-app-go="' + x[0] + '"><span class="i3d' + (x[3] === 'lider' ? ' tone-amber' : '') + '">' + ic(x[2]) + '</span>' + x[1] + '</button>';
         });
-        tiles.push('<button type="button" class="more-tile" data-app-acao="telao"><span class="i3d tone-blue">' + ic(TELAO[2]) + '</span>' + TELAO[1] + '</button>');
+        [TELAO, REMOTO, PALCO].forEach(function (f) { tiles.push('<button type="button" class="more-tile" data-app-acao="' + f[0] + '"><span class="i3d ' + f[3] + '">' + ic(f[2]) + '</span>' + f[1] + '</button>'); });
         var h = '<div class="more-grip"></div><p class="app-block-title">' + cfg.nome + '</p><div class="more-grid">' + tiles.join('') + '</div>';
         h += '<p class="app-block-title" style="margin-top:1.1rem">Conta</p><div class="more-list">';
         if (deptos.length > 1) {

@@ -252,6 +252,177 @@
         }, 120);
     }
 
+    /* ---------- Bíblia (Almeida, domínio público, via bible-api.com) ---------- */
+    var LIVROS = [
+        ['GEN', 'Gênesis', 'gn', 50], ['EXO', 'Êxodo', 'ex', 40], ['LEV', 'Levítico', 'lv', 27], ['NUM', 'Números', 'nm', 36], ['DEU', 'Deuteronômio', 'dt', 34],
+        ['JOS', 'Josué', 'js', 24], ['JDG', 'Juízes', 'jz', 21], ['RUT', 'Rute', 'rt', 4], ['1SA', '1 Samuel', '1sm', 31], ['2SA', '2 Samuel', '2sm', 24],
+        ['1KI', '1 Reis', '1rs', 22], ['2KI', '2 Reis', '2rs', 25], ['1CH', '1 Crônicas', '1cr', 29], ['2CH', '2 Crônicas', '2cr', 36], ['EZR', 'Esdras', 'ed', 10],
+        ['NEH', 'Neemias', 'ne', 13], ['EST', 'Ester', 'et', 10], ['JOB', 'Jó', 'jó', 42], ['PSA', 'Salmos', 'sl', 150], ['PRO', 'Provérbios', 'pv', 31],
+        ['ECC', 'Eclesiastes', 'ec', 12], ['SNG', 'Cânticos', 'ct', 8], ['ISA', 'Isaías', 'is', 66], ['JER', 'Jeremias', 'jr', 52], ['LAM', 'Lamentações', 'lm', 5],
+        ['EZK', 'Ezequiel', 'ez', 48], ['DAN', 'Daniel', 'dn', 12], ['HOS', 'Oseias', 'os', 14], ['JOL', 'Joel', 'jl', 3], ['AMO', 'Amós', 'am', 9],
+        ['OBA', 'Obadias', 'ob', 1], ['JON', 'Jonas', 'jn', 4], ['MIC', 'Miqueias', 'mq', 7], ['NAM', 'Naum', 'na', 3], ['HAB', 'Habacuque', 'hc', 3],
+        ['ZEP', 'Sofonias', 'sf', 3], ['HAG', 'Ageu', 'ag', 2], ['ZEC', 'Zacarias', 'zc', 14], ['MAL', 'Malaquias', 'ml', 4],
+        ['MAT', 'Mateus', 'mt', 28], ['MRK', 'Marcos', 'mc', 16], ['LUK', 'Lucas', 'lc', 24], ['JHN', 'João', 'jo', 21], ['ACT', 'Atos', 'at', 28],
+        ['ROM', 'Romanos', 'rm', 16], ['1CO', '1 Coríntios', '1co', 16], ['2CO', '2 Coríntios', '2co', 13], ['GAL', 'Gálatas', 'gl', 6], ['EPH', 'Efésios', 'ef', 6],
+        ['PHP', 'Filipenses', 'fp', 4], ['COL', 'Colossenses', 'cl', 4], ['1TH', '1 Tessalonicenses', '1ts', 5], ['2TH', '2 Tessalonicenses', '2ts', 3], ['1TI', '1 Timóteo', '1tm', 6],
+        ['2TI', '2 Timóteo', '2tm', 4], ['TIT', 'Tito', 'tt', 3], ['PHM', 'Filemom', 'fm', 1], ['HEB', 'Hebreus', 'hb', 13], ['JAS', 'Tiago', 'tg', 5],
+        ['1PE', '1 Pedro', '1pe', 5], ['2PE', '2 Pedro', '2pe', 3], ['1JN', '1 João', '1jo', 5], ['2JN', '2 João', '2jo', 1], ['3JN', '3 João', '3jo', 1],
+        ['JUD', 'Judas', 'jd', 1], ['REV', 'Apocalipse', 'ap', 22]
+    ];
+    var bib = { livro: 'JHN', cap: 3, versos: [], sel: [], carregando: false, erro: '' };
+    function semAcento(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+    function livroPorId(id) { return LIVROS.filter(function (l) { return l[0] === id; })[0]; }
+    function acharLivro(nome) {
+        var bruto = String(nome || '').toLowerCase().replace(/[\s.]/g, '');
+        var limpo = semAcento(bruto);
+        if (!limpo) return null;
+        var exato = LIVROS.filter(function (l) { return l[2] === bruto; })[0] || LIVROS.filter(function (l) { return semAcento(l[2]) === limpo && l[0] !== 'JOB'; })[0];
+        if (exato) return exato;
+        return LIVROS.filter(function (l) { return semAcento(l[1]).replace(/\s/g, '').indexOf(limpo) === 0; })[0] || null;
+    }
+    function lerReferencia(t) {
+        var m = String(t || '').trim().match(/^([1-3]?\s*[a-zA-ZÀ-ÿ.]+)\s*(\d{1,3})(?:\s*[:.,\s]\s*(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?)?\s*$/);
+        if (!m) return null;
+        var l = acharLivro(m[1]);
+        if (!l) return null;
+        var cap = Math.min(Number(m[2]), l[3]);
+        var de = m[3] ? Number(m[3]) : 0, ate = m[4] ? Number(m[4]) : de;
+        return { livro: l[0], cap: cap, de: de, ate: Math.max(de, ate) };
+    }
+    function buscarCapitulo(livro, cap) {
+        var chave = 'cep-biblia-' + livro + '-' + cap;
+        try { var c = JSON.parse(localStorage.getItem(chave) || 'null'); if (c && c.length) return Promise.resolve(c); } catch (e) {}
+        return fetch('https://bible-api.com/data/almeida/' + livro + '/' + cap).then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        }).then(function (d) {
+            var v = (d.verses || []).map(function (x) { return { n: x.verse, t: String(x.text || '').replace(/\s+/g, ' ').trim() }; });
+            try { localStorage.setItem(chave, JSON.stringify(v)); } catch (e) {}
+            return v;
+        });
+    }
+    function abrirCapitulo(livro, cap, de, ate) {
+        bib.livro = livro; bib.cap = cap; bib.carregando = true; bib.erro = ''; bib.versos = []; bib.sel = [];
+        desenhar();
+        buscarCapitulo(livro, cap).then(function (v) {
+            bib.versos = v; bib.carregando = false;
+            if (de) for (var i = de; i <= (ate || de); i++) if (v.some(function (x) { return x.n === i; })) bib.sel.push(i);
+            desenhar();
+            var alvo = document.querySelector('#tl-conteudo .tl-verso.is-sel');
+            if (alvo && alvo.scrollIntoView) alvo.scrollIntoView({ block: 'center' });
+        }).catch(function (e) {
+            console.error(e);
+            bib.carregando = false;
+            bib.erro = 'Não consegui buscar a Bíblia agora. Confira a internet e tente de novo.';
+            desenhar();
+        });
+    }
+    function referenciaSel() {
+        var l = livroPorId(bib.livro), s = bib.sel.slice().sort(function (a, b) { return a - b; });
+        if (!s.length) return l[1] + ' ' + bib.cap;
+        var faixa = s.length > 1 && s[s.length - 1] - s[0] === s.length - 1 ? s[0] + '-' + s[s.length - 1] : s.join(',');
+        return l[1] + ' ' + bib.cap + ':' + faixa;
+    }
+    function itemDaBiblia() {
+        var l = livroPorId(bib.livro), slides = [];
+        bib.sel.slice().sort(function (a, b) { return a - b; }).forEach(function (n) {
+            var v = bib.versos.filter(function (x) { return x.n === n; })[0];
+            if (!v) return;
+            var ref = l[1] + ' ' + bib.cap + ':' + n;
+            var partes = quebrarLonga(v.t);
+            partes.forEach(function (pt, i) { slides.push({ rotulo: ref + (partes.length > 1 ? ' (' + (i + 1) + '/' + partes.length + ')' : ''), linhas: [pt], ref: ref.toUpperCase() }); });
+        });
+        return { chave: 'b:' + Date.now() + Math.random(), tipo: 'biblia', titulo: referenciaSel(), texto: '', slides: slides };
+    }
+    function abaBiblia() {
+        var l = livroPorId(bib.livro);
+        var h = '<div class="tl-bloco"><label class="tl-label" for="tl-ref">Procurar versículo</label><div class="tl-linha"><input id="tl-ref" type="text" placeholder="Ex.: Jo 3:16-18 · Sl 23 · Rm 8:28" autocomplete="off"><button type="button" class="md-btn md-btn-primary" data-tl="bib-ir">' + ic('search') + '</button></div>' +
+            '<div class="tl-linha"><select id="tl-bib-livro" aria-label="Livro">' + LIVROS.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === bib.livro ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select>' +
+            '<select id="tl-bib-cap" aria-label="Capítulo">' + Array.apply(null, { length: l[3] }).map(function (_, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === bib.cap ? ' selected' : '') + '>' + (i + 1) + '</option>'; }).join('') + '</select></div></div>';
+        h += '<div class="tl-bloco">';
+        if (bib.carregando) h += '<p class="tl-dica-txt">' + ic('loader-circle', 'w-3.5 h-3.5') + 'Buscando ' + esc(l[1]) + ' ' + bib.cap + '…</p>';
+        else if (bib.erro) h += '<p class="tl-dica-txt tl-erro">' + ic('circle-alert', 'w-3.5 h-3.5') + esc(bib.erro) + '</p>';
+        else if (bib.versos.length) {
+            h += '<div class="tl-fila-head"><label class="tl-label">' + esc(l[1]) + ' ' + bib.cap + '</label>' + (bib.sel.length ? '<button type="button" class="tl-link" data-tl="bib-limpar">Limpar seleção</button>' : '') + '</div>' +
+                '<p class="tl-dica-txt">Toque nos versículos para escolher. Cada versículo vira um slide.</p><ol class="tl-versos">' + bib.versos.map(function (v) {
+                    return '<li><button type="button" class="tl-verso' + (bib.sel.indexOf(v.n) !== -1 ? ' is-sel' : '') + '" data-tl-verso="' + v.n + '"><b>' + v.n + '</b>' + esc(v.t) + '</button></li>';
+                }).join('') + '</ol>';
+        } else h += '<p class="tl-dica-txt">' + ic('book-open', 'w-3.5 h-3.5') + 'Tradução João Ferreira de Almeida (domínio público). Precisa de internet na primeira vez; depois o capítulo fica guardado.</p>';
+        h += '</div>';
+        if (bib.sel.length) h += '<div class="tl-bloco tl-bib-acoes"><b>' + esc(referenciaSel()) + '</b><div class="tl-linha tl-linha-2"><button type="button" class="md-btn md-btn-primary" data-tl="bib-projetar">' + ic('presentation') + 'Projetar</button><button type="button" class="md-btn md-btn-ghost" data-tl="bib-fila">' + ic('list-plus') + 'Pôr na ordem</button></div></div>';
+        return h;
+    }
+
+    /* ---------- Controle pelo celular e tela do palco (Firestore: settings/telao) ---------- */
+    var REMOTO = { ativo: false, hostId: 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), cancelar: null, ultimoCmd: null, ultimoEnvio: '', espera: null, batida: null, avisou: false, assumido: true };
+    function docAoVivo() { try { return (typeof db !== 'undefined' && db && typeof currentUser !== 'undefined' && currentUser) ? db.collection('settings').doc('telao') : null; } catch (e) { return null; } }
+    function proximoSlide() {
+        var it = fila[atual];
+        if (it && it.slides[slide + 1]) return { linhas: it.slides[slide + 1].linhas, titulo: it.titulo, ref: it.slides[slide + 1].ref || '' };
+        var prox = fila[atual + 1];
+        if (prox && prox.slides[0]) return { linhas: prox.slides[0].linhas, titulo: prox.titulo, ref: prox.slides[0].ref || '', novoItem: true };
+        return null;
+    }
+    function estadoAoVivo() {
+        var it = fila[atual], s = slideAtual();
+        return {
+            hostId: REMOTO.hostId, modo: modo, atual: atual, slide: slide,
+            titulo: it ? it.titulo : '', tipo: it ? it.tipo : '',
+            linhas: s ? s.linhas : [], ref: s && s.ref ? s.ref : '',
+            proximo: proximoSlide(),
+            fila: fila.map(function (x) { return { titulo: x.titulo, tipo: x.tipo, n: x.slides.length }; }),
+            slides: it ? it.slides.map(function (x) { return { rotulo: x.rotulo || '', resumo: x.linhas.join(' / ').slice(0, 80) }; }) : [],
+            abertura: modo === 'abertura' ? { alvo: ab.alvo, fim: ab.fim, titulo: tema.abTitulo || '', sub: tema.abSub || '', txtFim: tema.abFim || '' } : null
+        };
+    }
+    function publicar(forcar) {
+        if (!REMOTO.ativo || !REMOTO.assumido) return;
+        clearTimeout(REMOTO.espera);
+        REMOTO.espera = setTimeout(function () {
+            var doc = docAoVivo();
+            if (!doc) return;
+            var est = estadoAoVivo(), json = JSON.stringify(est);
+            if (!forcar && json === REMOTO.ultimoEnvio) return;
+            REMOTO.ultimoEnvio = json;
+            est.at = Date.now();
+            doc.set({ estado: est }, { merge: true }).catch(function (e) {
+                console.error('Telão ao vivo:', e);
+                if (!REMOTO.avisou) { REMOTO.avisou = true; aviso('O celular e a tela do palco não conseguiram se conectar (permissão do Firebase).', 'error'); }
+            });
+        }, 120);
+    }
+    function executarComando(c) {
+        var a = c.acao;
+        if (a === 'prox') proximo();
+        else if (a === 'ant') anterior();
+        else if (a === 'preto' || a === 'logo' || a === 'limpo') alternarModo(a);
+        else if (a === 'abertura') { if (modo === 'abertura') pararAbertura(); else iniciarAbertura(); }
+        else if (a === 'ab-mais') maisUmMinuto();
+        else if (a === 'ir' && fila[c.item]) { atual = c.item; slide = Math.min(Math.max(0, c.slide || 0), Math.max(0, fila[atual].slides.length - 1)); modo = 'normal'; desenhar(); transmitir(); }
+        else if (a === 'escala' && c.escala) carregarEscala(c.escala);
+        if (c.por) aviso('Comando do celular de ' + String(c.por).split(' ')[0] + '.');
+    }
+    function ativarRemoto() {
+        var doc = docAoVivo();
+        if (!doc || REMOTO.ativo) { if (REMOTO.ativo) { REMOTO.assumido = true; publicar(true); } return; }
+        REMOTO.ativo = true; REMOTO.assumido = true;
+        REMOTO.cancelar = doc.onSnapshot(function (snap) {
+            var d = (snap && snap.exists && snap.data()) || {};
+            var c = d.comando;
+            if (REMOTO.ultimoCmd === null) { REMOTO.ultimoCmd = c ? c.id : ''; }
+            else if (c && c.id !== REMOTO.ultimoCmd) {
+                REMOTO.ultimoCmd = c.id;
+                if (c.host === REMOTO.hostId) executarComando(c);
+            }
+            var outro = d.estado && d.estado.hostId && d.estado.hostId !== REMOTO.hostId && (d.estado.at || 0) > (REMOTO.desde || 0);
+            if (outro && REMOTO.assumido) { REMOTO.assumido = false; aviso('Outro computador assumiu o telão. Este parou de responder ao celular.'); transmitir(); }
+        }, function (e) { console.error('Telão ao vivo (escuta):', e); });
+        REMOTO.desde = Date.now();
+        clearInterval(REMOTO.batida);
+        REMOTO.batida = setInterval(function () { publicar(true); }, 30000);
+        publicar(true);
+    }
+
     /* ---------- Letras: cifra -> slides ---------- */
     var ACORDE = /^\(?[A-G][#b]?(?:maj|min|dim|aug|sus|add|m|M|º|°|\+|-|\d|\(|\)|#|b)*(?:\/[A-G][#b]?)?\)?$/;
     function linhaDeAcordes(l) {
@@ -347,10 +518,12 @@
 
     /* ---------- O que está no ar ---------- */
     function slideAtual() { var it = fila[atual]; return it && it.slides[slide] ? it.slides[slide] : null; }
-    function estiloTexto() {
+    function estiloTexto(sl) {
         var f = FONTES[tema.fonte] || FONTES.montserrat;
         var s = 'font-family:' + f[1] + ';font-weight:' + f[2] + ';';
-        s += 'font-size:calc(' + (tema.fonte === 'bebas' ? 9 : 7) + 'cqmin * ' + (Number(tema.tamanho) || 1) + ');';
+        var chars = sl ? sl.linhas.join(' ').length : 0;
+        var fator = chars > 260 ? 0.58 : chars > 190 ? 0.66 : chars > 130 ? 0.76 : chars > 90 ? 0.88 : 1;
+        s += 'font-size:calc(' + (tema.fonte === 'bebas' ? 9 : 7) + 'cqmin * ' + ((Number(tema.tamanho) || 1) * fator).toFixed(3) + ');';
         if (tema.maiusculas) s += 'text-transform:uppercase;';
         if (tema.fonte === 'bebas') s += 'letter-spacing:.02em;';
         var sombras = [];
@@ -384,8 +557,9 @@
         if (modo === 'logo') return '<div class="tl-logo">' + LOGO_SVG + '<b>CEP Pirapozinho</b></div>';
         var s = slideAtual(), h = '';
         if (modo !== 'limpo' && s) {
-            h += '<div class="tl-texto tl-' + (tema.posicao === 'baixo' ? 'baixo' : 'centro') + '" style="' + estiloTexto() + '">' + s.linhas.map(esc).join('<br>') + '</div>';
-            if (tema.titulo && fila[atual] && fila[atual].tipo === 'musica') h += '<div class="tl-rodape">' + esc(fila[atual].titulo) + '</div>';
+            h += '<div class="tl-texto tl-' + (tema.posicao === 'baixo' ? 'baixo' : 'centro') + '" style="' + estiloTexto(s) + '">' + s.linhas.map(esc).join('<br>') + '</div>';
+            if (s.ref) h += '<div class="tl-rodape tl-ref">' + esc(s.ref) + '</div>';
+            else if (tema.titulo && fila[atual] && fila[atual].tipo === 'musica') h += '<div class="tl-rodape">' + esc(fila[atual].titulo) + '</div>';
         }
         return h;
     }
@@ -409,6 +583,7 @@
         '@keyframes tlGira{to{transform:rotate(360deg)}}' +
         '@keyframes tlSobe{0%{transform:translateY(0);opacity:0}10%{opacity:1}85%{opacity:.8}100%{transform:translateY(-110cqh);opacity:0}}' +
         '@media (prefers-reduced-motion:reduce){.tl-anim i{animation-duration:200s !important}}' +
+        '.tl-ref{font-size:2.8cqmin;color:rgba(246,226,160,.92);letter-spacing:.16em}' +
         '.tl-ab{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.4cqmin;padding:0 6%;animation:tlEntra .5s ease-out}' +
         '.tl-ab-logo svg{width:10cqmin;height:10cqmin;filter:drop-shadow(0 .5cqmin 1.2cqmin rgba(0,0,0,.6))}' +
         '.tl-ab-titulo{margin-top:1cqmin;font:700 4cqmin Montserrat,Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.82);text-shadow:0 .3cqmin 1cqmin rgba(0,0,0,.6)}' +
@@ -456,6 +631,9 @@
         }
         document.querySelectorAll('[data-tl-modo]').forEach(function (b) { b.classList.toggle('is-on', b.getAttribute('data-tl-modo') === modo); });
         document.querySelectorAll('[data-tl-ab-btn]').forEach(function (b) { b.classList.toggle('is-on', modo === 'abertura'); });
+        var rc = document.getElementById('tl-remoto-chip');
+        if (rc) rc.classList.toggle('hidden', !(REMOTO.ativo && REMOTO.assumido));
+        publicar();
     }
 
     /* ---------- Navegação dos slides ---------- */
@@ -478,6 +656,7 @@
     }
     function tecla(e) {
         var alvo = e.target || {};
+        if (alvo.id === 'tl-ref' && e.key === 'Enter') { e.preventDefault(); return irParaReferencia(); }
         if (/^(INPUT|TEXTAREA|SELECT)$/.test(alvo.tagName || '') || alvo.isContentEditable) return;
         var k = e.key;
         if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); proximo(); }
@@ -508,6 +687,7 @@
         });
         setTimeout(function () { try { var dica = d.getElementById('tl-dica'); if (dica) dica.style.opacity = '0'; } catch (e) {} }, 6000);
         saida = w;
+        ativarRemoto();
         w.addEventListener('beforeunload', function () { setTimeout(transmitir, 50); });
         transmitir();
     }
@@ -516,6 +696,7 @@
     /* ---------- Tela cheia neste aparelho ---------- */
     function telaCheia() {
         if (cheia) return;
+        ativarRemoto();
         cheia = document.createElement('div');
         cheia.id = 'tl-cheia';
         cheia.innerHTML = '<div class="tl-cheia-raiz"></div><button type="button" class="tl-cheia-sair" aria-label="Sair da tela cheia">' + ic('x') + '</button><div class="tl-cheia-dica">Toque à direita para avançar, à esquerda para voltar</div>';
@@ -549,7 +730,7 @@
             '<div id="telao-op" class="hidden" role="dialog" aria-modal="true" aria-label="Telão">' +
             '<div class="tl-top">' +
                 '<div class="tl-top-l"><span class="i3d tone-blue tl-top-ic">' + ic('presentation') + '</span><div><b>Telão</b><small>Letras e versículos na tela da igreja</small></div></div>' +
-                '<div class="tl-top-r"><span id="tl-status" class="tl-status"><span></span>Telão fechado</span>' +
+                '<div class="tl-top-r"><span id="tl-remoto-chip" class="tl-remoto-chip hidden" title="Celulares e tela do palco conectados a este computador">' + ic('smartphone') + 'Celular e palco ligados</span><span id="tl-status" class="tl-status"><span></span>Telão fechado</span>' +
                 '<button type="button" class="md-btn md-btn-primary" data-tl="saida">' + ic('cast') + '<span>Abrir telão</span></button>' +
                 '<button type="button" class="md-btn md-btn-ghost" data-tl="cheia">' + ic('maximize') + '<span>Tela cheia aqui</span></button>' +
                 '<button type="button" class="md-icon-btn" data-tl="fechar" aria-label="Fechar o telão" title="Fechar">' + ic('x') + '</button></div>' +
@@ -577,7 +758,7 @@
     }
     function aberto() { var op = document.getElementById('telao-op'); return op && !op.classList.contains('hidden'); }
 
-    var ABAS = [['culto', 'Culto', 'list-music'], ['biblioteca', 'Músicas', 'library'], ['texto', 'Texto', 'type'], ['abertura', 'Abertura', 'timer'], ['estilo', 'Estilo', 'palette']];
+    var ABAS = [['culto', 'Culto', 'list-music'], ['biblioteca', 'Músicas', 'library'], ['biblia', 'Bíblia', 'book-open'], ['texto', 'Texto', 'type'], ['abertura', 'Abertura', 'timer'], ['estilo', 'Estilo', 'palette']];
     function desenhar() {
         if (!montado) return;
         var abas = document.querySelector('#telao-op .tl-abas');
@@ -587,6 +768,7 @@
         else if (aba === 'biblioteca') c.innerHTML = abaBiblioteca();
         else if (aba === 'texto') c.innerHTML = abaTexto();
         else if (aba === 'abertura') c.innerHTML = abaAbertura();
+        else if (aba === 'biblia') c.innerHTML = abaBiblia();
         else c.innerHTML = abaEstilo();
         desenharSlides();
         icones();
@@ -744,6 +926,15 @@
             desenhar();
             return aviso('"' + s.title + '" entrou no fim da ordem.');
         }
+        if (b.hasAttribute('data-tl-verso')) {
+            var nv = Number(b.getAttribute('data-tl-verso')), pos = bib.sel.indexOf(nv);
+            if (pos !== -1) bib.sel.splice(pos, 1);
+            else bib.sel.push(nv);
+            var sc = document.getElementById('tl-conteudo').scrollTop;
+            desenhar();
+            document.getElementById('tl-conteudo').scrollTop = sc;
+            return;
+        }
         if (b.hasAttribute('data-tl-usar')) return usarMidia(b.getAttribute('data-tl-usar'));
         if (b.hasAttribute('data-tl-apagar')) return apagarMidia(b.getAttribute('data-tl-apagar'));
         if (b.hasAttribute('data-tl-tema')) {
@@ -775,8 +966,25 @@
         if (acao === 'nova-letra') return novaLetra();
         if (acao === 'abertura') { if (modo === 'abertura') return pararAbertura(); aba = 'abertura'; return iniciarAbertura(); }
         if (acao === 'ab-iniciar') return iniciarAbertura();
+        if (acao === 'bib-ir') return irParaReferencia();
+        if (acao === 'bib-limpar') { bib.sel = []; return desenhar(); }
+        if (acao === 'bib-projetar' || acao === 'bib-fila') {
+            var itb = itemDaBiblia();
+            if (!itb.slides.length) return;
+            bib.sel = [];
+            if (acao === 'bib-projetar') return adicionar(itb, true);
+            fila.push(itb); if (atual < 0) atual = 0;
+            desenhar();
+            return aviso(itb.titulo + ' entrou na ordem do culto.');
+        }
         if (acao === 'ab-parar') return pararAbertura();
         if (acao === 'ab-mais') return maisUmMinuto();
+    }
+    function irParaReferencia() {
+        var campo = document.getElementById('tl-ref');
+        var r = lerReferencia(campo && campo.value);
+        if (!r) return aviso('Não entendi a referência. Tente algo como "Jo 3:16" ou "Salmos 23".', 'error');
+        abrirCapitulo(r.livro, r.cap, r.de, r.ate);
     }
     var tempoBusca = null;
     function digitar(e) {
@@ -805,6 +1013,8 @@
     function mudar(e) {
         var el = e.target;
         if (el.hasAttribute('data-tl-bool')) { tema[el.getAttribute('data-tl-bool')] = el.checked; salvarTema(); return transmitir(); }
+        if (el.id === 'tl-bib-livro') return abrirCapitulo(el.value, 1);
+        if (el.id === 'tl-bib-cap') return abrirCapitulo(bib.livro, Number(el.value));
         if (el.id === 'tl-fundo-arquivo' && el.files && el.files.length) return enviarArquivos(Array.prototype.slice.call(el.files), 'visual');
         if (el.id === 'tl-ab-audio' && el.files && el.files.length) return enviarArquivos(Array.prototype.slice.call(el.files), 'audio');
         if (el.id === 'tl-txt' && el.files && el.files.length) return importarTxt(Array.prototype.slice.call(el.files));
@@ -876,6 +1086,7 @@
         if (saida && !saida.closed) aviso('A janela do telão continua aberta. Reabra o Telão para controlar.');
     }
     window.abrirTelao = abrirTelao;
+    window.cepTelaoBiblia = { lerReferencia: lerReferencia, livros: LIVROS };
     window.fecharTelao = fechar;
     window.cepTelaoFecharSaida = fecharSaida;
     window.cepTelaoSlides = montarSlides; // usado nos testes
