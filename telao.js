@@ -24,7 +24,36 @@
         aurora: ['Aurora', 'linear-gradient(135deg, #062a2a 0%, #0d3b4f 40%, #2a1a4d 100%)'],
         chroma: ['Chroma verde', '#00b140']
     };
-    var PADRAO = { fonte: 'montserrat', fundo: 'grafite', tamanho: 1, maiusculas: false, sombra: true, contorno: false, posicao: 'centro', titulo: true, linhas: 4 };
+    /* Fundos em movimento: feitos só com CSS, leves e sem precisar de vídeo */
+    var ANIMADOS = {
+        luzes: ['Luzes suaves', 'radial-gradient(120% 90% at 50% 100%, #1a1408 0%, #07070c 60%)'],
+        aurora_viva: ['Aurora viva', 'linear-gradient(160deg, #03141c 0%, #071a2e 50%, #0c0a22 100%)'],
+        raios: ['Raios de luz', 'radial-gradient(110% 80% at 50% -10%, #2a2440 0%, #0b0a18 55%, #050509 100%)'],
+        particulas: ['Partículas', 'linear-gradient(180deg, #050814 0%, #0b1330 100%)'],
+        ondas: ['Ondas', 'linear-gradient(180deg, #050b1c 0%, #0a1a3a 100%)'],
+        gloria: ['Glória dourada', 'radial-gradient(100% 80% at 50% 110%, #2a1c06 0%, #0b0703 65%)']
+    };
+    function semente(n) { var x = Math.sin(n * 9301 + 49297) * 233280; return x - Math.floor(x); }
+    function animInterno(k) {
+        var h = '', i;
+        if (k === 'luzes') {
+            var cores = ['rgba(240,205,120,.38)', 'rgba(255,240,200,.22)', 'rgba(212,174,82,.32)', 'rgba(255,190,120,.2)'];
+            for (i = 0; i < 12; i++) h += '<i class="tl-b" style="left:' + Math.round(semente(i) * 100) + '%;top:' + Math.round(semente(i + 40) * 100) + '%;width:' + (8 + Math.round(semente(i + 80) * 18)) + 'cqmin;height:' + (8 + Math.round(semente(i + 80) * 18)) + 'cqmin;background:' + cores[i % 4] + ';animation-duration:' + (14 + Math.round(semente(i + 120) * 16)) + 's;animation-delay:-' + Math.round(semente(i + 160) * 20) + 's"></i>';
+        } else if (k === 'aurora_viva') {
+            h = '<i class="tl-blob" style="left:-10%;top:10%;background:rgba(20,184,166,.42);animation-duration:19s"></i><i class="tl-blob" style="left:45%;top:-15%;background:rgba(124,58,237,.4);animation-duration:23s;animation-delay:-6s"></i><i class="tl-blob" style="left:25%;top:45%;background:rgba(14,116,244,.36);animation-duration:27s;animation-delay:-12s"></i>';
+        } else if (k === 'raios') {
+            h = '<i class="tl-raios"></i><i class="tl-raios tl-raios-2"></i>';
+        } else if (k === 'particulas' || k === 'gloria') {
+            if (k === 'gloria') h = '<i class="tl-blob" style="left:5%;top:40%;background:rgba(212,150,40,.45);animation-duration:21s"></i><i class="tl-blob" style="left:45%;top:35%;background:rgba(240,190,90,.35);animation-duration:25s;animation-delay:-9s"></i>';
+            var n = k === 'gloria' ? 22 : 34;
+            for (i = 0; i < n; i++) h += '<i class="tl-p' + (k === 'gloria' ? ' tl-p-ouro' : '') + '" style="left:' + (semente(i + 200) * 100).toFixed(1) + '%;width:' + (0.5 + semente(i + 240) * 1.1).toFixed(2) + 'cqmin;height:' + (0.5 + semente(i + 240) * 1.1).toFixed(2) + 'cqmin;animation-duration:' + (9 + Math.round(semente(i + 280) * 14)) + 's;animation-delay:-' + Math.round(semente(i + 320) * 22) + 's"></i>';
+        } else if (k === 'ondas') {
+            h = '<i class="tl-onda" style="background:rgba(56,130,246,.2);animation-duration:22s"></i><i class="tl-onda" style="background:rgba(20,184,166,.16);animation-duration:31s;margin-left:-8%"></i><i class="tl-onda" style="background:rgba(147,197,253,.1);animation-duration:39s;margin-left:6%"></i>';
+        }
+        return '<div class="tl-anim">' + h + '</div>';
+    }
+
+    var PADRAO = { fonte: 'montserrat', fundo: 'luzes', tamanho: 1, maiusculas: false, sombra: true, contorno: false, posicao: 'centro', titulo: true, linhas: 4 };
 
     var tema = carregarTema();
     var midiaFundo = { tipo: '', url: '' };   // imagem ou vídeo escolhido neste aparelho
@@ -167,28 +196,49 @@
         if (sombras.length) s += 'text-shadow:' + sombras.join(',') + ';';
         return s;
     }
-    function htmlPalco() {
-        var fundo = tema.fundo === 'midia' && midiaFundo.url ? '#000' : (FUNDOS[tema.fundo] || FUNDOS.grafite)[1];
-        var h = '<div class="tl-palco" style="background:' + fundo + '">';
-        if (tema.fundo === 'midia' && midiaFundo.url && modo !== 'preto') {
-            h += midiaFundo.tipo === 'video'
+    function chaveFundo() { return tema.fundo + '|' + (tema.fundo === 'midia' ? midiaFundo.url : ''); }
+    function corFundo(k) {
+        if (k === 'midia') return midiaFundo.url ? '#000' : FUNDOS.grafite[1];
+        return (FUNDOS[k] || ANIMADOS[k] || FUNDOS.grafite)[1];
+    }
+    function fundoInterno(k) {
+        if (k === 'midia' && midiaFundo.url) {
+            return (midiaFundo.tipo === 'video'
                 ? '<video class="tl-midia" src="' + midiaFundo.url + '" autoplay muted loop playsinline></video>'
-                : '<div class="tl-midia" style="background-image:url(\'' + midiaFundo.url + '\')"></div>';
-            h += '<div class="tl-veu"></div>';
+                : '<div class="tl-midia" style="background-image:url(\'' + midiaFundo.url + '\')"></div>') + '<div class="tl-veu"></div>';
         }
-        if (modo === 'preto') return '<div class="tl-palco" style="background:#000"></div>';
-        if (modo === 'logo') {
-            return h + '<div class="tl-logo"><svg viewBox="0 0 24 24" fill="none" stroke="url(#tlg)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="tlg" x1="0" y1="2" x2="0" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#d4ae52"/><stop offset="1" stop-color="#a88227"/></linearGradient></defs><path d="M10 9h4"/><path d="M12 7v5"/><path d="M14 22v-4a2 2 0 0 0-4 0v4"/><path d="M18 22V5.618a1 1 0 0 0-.553-.894l-4.553-2.277a2 2 0 0 0-1.788 0L6.553 4.724A1 1 0 0 0 6 5.618V22"/><path d="m18 7 3.447 1.724a1 1 0 0 1 .553.894V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.618a1 1 0 0 1 .553-.894L6 7"/></svg><b>CEP Pirapozinho</b></div></div>';
-        }
-        var s = slideAtual();
+        return ANIMADOS[k] ? animInterno(k) : '';
+    }
+    var LOGO_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="url(#tlg)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="tlg" x1="0" y1="2" x2="0" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#d4ae52"/><stop offset="1" stop-color="#a88227"/></linearGradient></defs><path d="M10 9h4"/><path d="M12 7v5"/><path d="M14 22v-4a2 2 0 0 0-4 0v4"/><path d="M18 22V5.618a1 1 0 0 0-.553-.894l-4.553-2.277a2 2 0 0 0-1.788 0L6.553 4.724A1 1 0 0 0 6 5.618V22"/><path d="m18 7 3.447 1.724a1 1 0 0 1 .553.894V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.618a1 1 0 0 1 .553-.894L6 7"/></svg>';
+    function conteudoPalco() {
+        if (modo === 'logo') return '<div class="tl-logo">' + LOGO_SVG + '<b>CEP Pirapozinho</b></div>';
+        var s = slideAtual(), h = '';
         if (modo !== 'limpo' && s) {
             h += '<div class="tl-texto tl-' + (tema.posicao === 'baixo' ? 'baixo' : 'centro') + '" style="' + estiloTexto() + '">' + s.linhas.map(esc).join('<br>') + '</div>';
             if (tema.titulo && fila[atual] && fila[atual].tipo === 'musica') h += '<div class="tl-rodape">' + esc(fila[atual].titulo) + '</div>';
         }
-        return h + '</div>';
+        return h;
     }
     var CSS_PALCO =
-        '.tl-palco{position:absolute;inset:0;overflow:hidden;container-type:size;color:#fff;display:flex;align-items:center;justify-content:center}' +
+        '.tl-palco{position:absolute;inset:0;overflow:hidden;container-type:size;color:#fff}' +
+        '.tl-bg,.tl-camada,.tl-preto{position:absolute;inset:0}' +
+        '.tl-camada{z-index:2;display:flex;align-items:center;justify-content:center}' +
+        '.tl-preto{z-index:6;background:#000;opacity:0;transition:opacity .45s ease;pointer-events:none}' +
+        '.tl-palco.is-preto .tl-preto{opacity:1}' +
+        '.tl-anim{position:absolute;inset:0;overflow:hidden;container-type:size}' +
+        '.tl-anim i{position:absolute;display:block;pointer-events:none;will-change:transform}' +
+        '.tl-b{border-radius:50%;filter:blur(3cqmin);transform:translate(-50%,-50%);animation:tlFlutua 20s ease-in-out infinite alternate}' +
+        '.tl-blob{width:75%;height:75%;border-radius:50%;filter:blur(9cqmin);animation:tlDeriva 22s ease-in-out infinite alternate}' +
+        '.tl-raios{left:50%;top:-30%;width:160cqmax;height:160cqmax;margin-left:-80cqmax;background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,236,190,.13) 0deg 4deg,transparent 4deg 13deg);-webkit-mask:radial-gradient(circle at 50% 50%,#000 0%,transparent 55%);mask:radial-gradient(circle at 50% 50%,#000 0%,transparent 55%);animation:tlGira 80s linear infinite}' +
+        '.tl-raios-2{opacity:.6;animation-duration:120s;animation-direction:reverse}' +
+        '.tl-p{bottom:-3%;border-radius:50%;background:rgba(200,225,255,.85);box-shadow:0 0 1.2cqmin rgba(160,200,255,.9);animation:tlSobe 14s linear infinite}' +
+        '.tl-p-ouro{background:rgba(255,226,150,.95);box-shadow:0 0 1.4cqmin rgba(240,180,60,.95)}' +
+        '.tl-onda{left:-25%;width:150%;height:150%;top:74%;border-radius:43%;animation:tlGira 30s linear infinite}' +
+        '@keyframes tlFlutua{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-38%,-62%) scale(1.25)}100%{transform:translate(-60%,-44%) scale(.85)}}' +
+        '@keyframes tlDeriva{0%{transform:translate(0,0) scale(1)}50%{transform:translate(18%,-12%) scale(1.15)}100%{transform:translate(-14%,10%) scale(.9)}}' +
+        '@keyframes tlGira{to{transform:rotate(360deg)}}' +
+        '@keyframes tlSobe{0%{transform:translateY(0);opacity:0}10%{opacity:1}85%{opacity:.8}100%{transform:translateY(-110cqh);opacity:0}}' +
+        '@media (prefers-reduced-motion:reduce){.tl-anim i{animation-duration:200s !important}}' +
         '.tl-midia{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}' +
         '.tl-veu{position:absolute;inset:0;background:rgba(0,0,0,.38)}' +
         '.tl-texto{position:relative;z-index:1;width:88%;text-align:center;line-height:1.28;overflow-wrap:break-word;animation:tlEntra .28s ease-out}' +
@@ -199,7 +249,21 @@
         '.tl-logo b{font:800 5.4cqmin Montserrat,Inter,sans-serif;letter-spacing:.06em;background:linear-gradient(180deg,#fff3c4,#d4ae52 60%,#a88227);-webkit-background-clip:text;background-clip:text;color:transparent}' +
         '@keyframes tlEntra{from{opacity:0;transform:translateY(.6cqmin)}to{opacity:1;transform:none}}';
 
-    function pintar(alvo) { if (alvo) alvo.innerHTML = htmlPalco(); }
+    /* O fundo só é recriado quando muda; trocar de slide não reinicia vídeo nem animação */
+    function pintar(alvo) {
+        if (!alvo) return;
+        var chave = chaveFundo();
+        var palco = alvo.querySelector('.tl-palco');
+        if (!palco || palco.getAttribute('data-fundo') !== chave) {
+            alvo.innerHTML = '<div class="tl-palco" style="background:' + corFundo(tema.fundo) + '"><div class="tl-bg">' + fundoInterno(tema.fundo) + '</div><div class="tl-camada"></div><div class="tl-preto"></div></div>';
+            palco = alvo.querySelector('.tl-palco');
+            palco.setAttribute('data-fundo', chave);
+        }
+        var camada = palco.querySelector('.tl-camada');
+        var html = conteudoPalco();
+        if (camada.getAttribute('data-html') !== html) { camada.innerHTML = html; camada.setAttribute('data-html', html); }
+        palco.classList.toggle('is-preto', modo === 'preto');
+    }
     function transmitir() {
         if (saida && !saida.closed) {
             try { pintar(saida.document.getElementById('tl-raiz')); saida.document.title = 'Telão · ' + (fila[atual] ? fila[atual].titulo : 'CEP Pirapozinho'); } catch (e) { saida = null; }
@@ -408,10 +472,13 @@
             var f = FONTES[k];
             return '<button type="button" class="tl-opc' + (tema.fonte === k ? ' is-on' : '') + '" data-tl-tema="fonte:' + k + '" style="font-family:' + f[1].replace(/"/g, '&quot;') + ';font-weight:' + f[2] + '">' + esc(f[0]) + '</button>';
         }).join('') + '</div></div>';
-        h += '<div class="tl-bloco"><label class="tl-label">Fundo</label><div class="tl-fundos">' + Object.keys(FUNDOS).map(function (k) {
+        h += '<div class="tl-bloco"><label class="tl-label">Fundos em movimento</label><div class="tl-fundos">' + Object.keys(ANIMADOS).map(function (k) {
+            return '<button type="button" class="tl-fundo' + (tema.fundo === k ? ' is-on' : '') + '" data-tl-tema="fundo:' + k + '" title="' + esc(ANIMADOS[k][0]) + '"><span class="tl-fundo-anim" style="background:' + ANIMADOS[k][1] + '">' + animInterno(k) + '</span><small>' + esc(ANIMADOS[k][0]) + '</small></button>';
+        }).join('') + '</div></div>';
+        h += '<div class="tl-bloco"><label class="tl-label">Fundos parados</label><div class="tl-fundos">' + Object.keys(FUNDOS).map(function (k) {
             return '<button type="button" class="tl-fundo' + (tema.fundo === k ? ' is-on' : '') + '" data-tl-tema="fundo:' + k + '" title="' + esc(FUNDOS[k][0]) + '"><span style="background:' + FUNDOS[k][1] + '"></span><small>' + esc(FUNDOS[k][0]) + '</small></button>';
         }).join('') +
-            '<label class="tl-fundo' + (tema.fundo === 'midia' ? ' is-on' : '') + '" title="Imagem ou vídeo deste aparelho"><span class="tl-fundo-up">' + ic('image') + '</span><small>' + (midiaFundo.url ? (midiaFundo.tipo === 'video' ? 'Vídeo' : 'Imagem') : 'Imagem/vídeo') + '</small><input id="tl-fundo-arquivo" type="file" accept="image/*,video/*" hidden></label></div></div>';
+            '<label class="tl-fundo' + (tema.fundo === 'midia' ? ' is-on' : '') + '" title="Imagem ou vídeo deste aparelho"><span class="tl-fundo-up">' + ic('image') + '</span><small>' + (midiaFundo.url ? (midiaFundo.tipo === 'video' ? 'Meu vídeo' : 'Minha imagem') : 'Meu vídeo ou imagem') + '</small><input id="tl-fundo-arquivo" type="file" accept="image/*,video/*" hidden></label></div></div>';
         h += '<div class="tl-bloco"><label class="tl-label" for="tl-tamanho">Tamanho da letra</label><input id="tl-tamanho" type="range" min="0.6" max="1.6" step="0.05" value="' + tema.tamanho + '"></div>';
         h += '<div class="tl-bloco"><label class="tl-label">Linhas por slide</label><div class="tl-seg">' + [2, 3, 4, 6].map(function (n) { return '<button type="button" class="' + (Number(tema.linhas) === n ? 'is-on' : '') + '" data-tl-tema="linhas:' + n + '">' + n + '</button>'; }).join('') + '</div></div>';
         h += '<div class="tl-bloco"><label class="tl-label">Posição</label><div class="tl-seg"><button type="button" class="' + (tema.posicao !== 'baixo' ? 'is-on' : '') + '" data-tl-tema="posicao:centro">Centro</button><button type="button" class="' + (tema.posicao === 'baixo' ? 'is-on' : '') + '" data-tl-tema="posicao:baixo">Embaixo (live)</button></div></div>';

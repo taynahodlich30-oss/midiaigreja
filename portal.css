@@ -511,6 +511,7 @@ body.tl-aberto { overflow: hidden; }
 .tl-fundo span { width: 100%; aspect-ratio: 16 / 10; border-radius: 10px; border: 1px solid var(--line-2); }
 .tl-fundo.is-on span { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
 .tl-fundo small { font-size: .64rem; font-weight: 700; color: var(--muted); text-align: center; line-height: 1.2; }
+.tl-fundo span.tl-fundo-anim { position: relative; display: block; overflow: hidden; }
 .tl-fundo-up { display: grid; place-items: center; background: var(--surface-2); color: var(--gold-2); }
 .tl-fundo-up svg { width: 1.1rem; height: 1.1rem; }
 .tl-seg { display: flex; gap: .35rem; }
